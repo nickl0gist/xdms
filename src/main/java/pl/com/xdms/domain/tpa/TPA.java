@@ -1,0 +1,58 @@
+package pl.com.xdms.domain.tpa;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import pl.com.xdms.domain.manifest.ManifestReal;
+import pl.com.xdms.domain.supplier.SupplierAgreement;
+import pl.com.xdms.domain.user.Role;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
+import java.util.Set;
+
+@Entity
+@Table(name = "tpa")
+@Setter
+@Getter
+@ToString
+public class TPA {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long tpaID;
+
+    @NotBlank
+    @NotNull
+    @Size(min = 3)
+    private String name;
+
+    @NotBlank
+    @NotNull
+    private LocalDateTime departurePlan;
+
+
+    private LocalDateTime departureReal;
+
+    @NotBlank
+    @NotNull
+    @ManyToOne
+    @JoinColumn
+    private TpaStatus status;
+
+    @NotBlank
+    @NotNull
+    @ManyToOne
+    @JoinColumn
+    private TpaDaysSetting tpaDaysSetting;
+
+    @OneToMany
+    @JoinTable(
+            name = "tpa_manifest_real",
+            joinColumns = @JoinColumn(name = "tpaID"),
+            inverseJoinColumns = @JoinColumn(name = "manifestRealID"))
+    private Set<ManifestReal> manifestReals;
+}
