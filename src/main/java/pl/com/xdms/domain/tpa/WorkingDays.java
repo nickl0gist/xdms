@@ -7,6 +7,7 @@ import lombok.ToString;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.time.DayOfWeek;
 
 @Entity
 @Table(name = "working_days")
@@ -20,8 +21,7 @@ public class WorkingDays {
     private Long id;
 
     @NotNull
-    @Size(min = 6, max = 20)
-    private String dayName;
+    private DayOfWeek dayName;
 
     @Column(columnDefinition = "BIT default true")
     private Boolean isActive;
