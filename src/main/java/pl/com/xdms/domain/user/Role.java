@@ -20,18 +20,15 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @NotBlank
+    @NotNull(message = "Please enter name")
     @Column(unique = true)
     @Size(min = 4, max = 20)
     private String name;
 
-    @NotNull
-    @NotBlank
+    @NotBlank(message = "Please enter short description")
     @Size(min = 10, max = 20)
     private String description;
 
-    @NotNull
     @Column(columnDefinition = "BIT default true")
     private Boolean isActive;
 

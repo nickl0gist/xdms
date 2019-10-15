@@ -27,9 +27,8 @@ public class User {
     @Size(min = 1, max = 100)
     private String username;
 
-    @NotBlank
     @NotNull
-    @Size(min = 10, max = 100)
+    @Size(min = 10, max = 100, message = "password min=10 / max=100 ")
     private String password;
 
     @NotBlank
@@ -48,7 +47,6 @@ public class User {
     @Size(max = 200)
     private String email;
 
-    @NotBlank
     @NotNull
     @ManyToOne
     @JoinColumn

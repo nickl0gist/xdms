@@ -3,8 +3,8 @@ package pl.com.xdms.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.user.User;
 import pl.com.xdms.service.UserService;
 
@@ -24,6 +24,13 @@ public class UserController {
     @GetMapping("admin/users/getall")
     public List<User> showAllUsers(){
         return userService.getUsers();
+    }
+
+    @PostMapping("admin/users/create")
+    @ResponseStatus(HttpStatus.CREATED)
+    void addUser(@RequestBody User user) {
+        LOG.info(user.getRole().toString());
+        userService.save(user);
     }
 
 

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pl.com.xdms.controller.UserController;
 import pl.com.xdms.domain.user.User;
 import pl.com.xdms.repository.UserRepository;
 
@@ -13,12 +12,14 @@ import java.util.Optional;
 
 @Service
 public class UserService {
-    private static final Logger LOG = LoggerFactory.getLogger(UserController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
     private UserRepository userRepository;
+    private RoleService roleService;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, RoleService roleService) {
         this.userRepository = userRepository;
+        this.roleService = roleService;
     }
 
     public List<User> getUsers() {
@@ -27,7 +28,7 @@ public class UserService {
 
     public User getUserById(Long id) {
         Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()){
+        if (user.isPresent()) {
             return user.get();
         } else {
             return null;
@@ -43,17 +44,25 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void deleteUser(User user){
+    public void deleteUser(User user) {
         userRepository.deleteById(user.getId());
     }
 
-    public User updateUser(User user){
+    public User updateUser(User user) {
         Optional<User> updatedUser = userRepository.findById(user.getId());
-        if (updatedUser.isPresent()){
+        if (updatedUser.isPresent()) {
             userRepository.save(user);
         } else {
             return null;
         }
         return user;
+    }
+
+
+    public void save(User user) {
+        //Taking out the ID of role from request and find existing role
+        user.setRole(roleService.getRoleById(user.getRole().getId()));
+        LOG.info(user.toString());
+        userRepository.save(user);
     }
 }
