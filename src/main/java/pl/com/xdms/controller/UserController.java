@@ -11,6 +11,7 @@ import pl.com.xdms.service.UserService;
 import java.util.List;
 
 @RestController
+@RequestMapping("admin/users")
 public class UserController {
 
     private final UserService userService;
@@ -21,17 +22,15 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("admin/users/getall")
+    @GetMapping("/getall")
     public List<User> showAllUsers(){
         return userService.getUsers();
     }
 
-    @PostMapping("admin/users/create")
+    @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     void addUser(@RequestBody User user) {
         LOG.info(user.getRole().toString());
         userService.save(user);
     }
-
-
 }

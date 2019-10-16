@@ -1,8 +1,6 @@
 package pl.com.xdms.domain.user;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -12,9 +10,9 @@ import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "USERS")
-@Setter
-@Getter
-@ToString
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
     @Id
