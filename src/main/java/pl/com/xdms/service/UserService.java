@@ -40,7 +40,7 @@ public class UserService {
         stringBuilder.append(user.getFirstName()).append(" ");
         stringBuilder.append(user.getLastName()).append(" ");
         stringBuilder.append(user.getUsername()).append(" ");
-        LOG.warn(stringBuilder.toString());
+        LOG.info(stringBuilder.toString());
         userRepository.save(user);
     }
 
