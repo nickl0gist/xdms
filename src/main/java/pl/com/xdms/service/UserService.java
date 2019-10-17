@@ -44,8 +44,14 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void deleteUser(User user) {
-        userRepository.deleteById(user.getId());
+    public boolean deleteUser(Long id) {
+        User user = getUserById(id);
+        if(user != null){
+            userRepository.deleteById(id);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public User updateUser(User user) {
@@ -55,9 +61,8 @@ public class UserService {
         } else {
             return null;
         }
-        return user;
+        return userRepository.findById(user.getId()).get();
     }
-
 
     public void save(User user) {
         //Taking out the ID of role from request and find existing role
