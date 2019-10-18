@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import static org.springframework.http.HttpStatus.I_AM_A_TEAPOT;
+
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 public class UserExceptionHandler extends ResponseEntityExceptionHandler {
