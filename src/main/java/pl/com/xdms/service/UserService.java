@@ -22,8 +22,27 @@ public class UserService {
         this.roleService = roleService;
     }
 
-    public List<User> getUsers() {
-        return userRepository.findAll();
+    public List<User> getUsers(String orderBy, String direction) {
+        switch (orderBy){
+            case "firstname":
+                return "asc".equals(direction)
+                        ? userRepository.findAllByOrderByFirstNameAsc()
+                        : userRepository.findAllByOrderByFirstNameDesc();
+            case "lastname":
+                return "asc".equals(direction)
+                        ? userRepository.findAllByOrderByLastNameAsc()
+                        : userRepository.findAllByOrderByLastNameDesc();
+            case "username":
+                return "asc".equals(direction)
+                        ? userRepository.findAllByOrderByUsernameAsc()
+                        : userRepository.findAllByOrderByUsernameDesc();
+            case "role":
+                return "asc".equals(direction)
+                        ? userRepository.findAllByOrderByRoleAsc()
+                        : userRepository.findAllByOrderByRoleDesc();
+            default:
+                return userRepository.findAll();
+        }
     }
 
     public User getUserById(Long id) {

@@ -12,7 +12,7 @@ import pl.com.xdms.service.UserService;
 import java.util.List;
 
 @RestController
-@RequestMapping("admin/user")
+@RequestMapping("admin/users")
 public class UserController {
 
     private final UserService userService;
@@ -23,12 +23,17 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("")
+    @GetMapping
     public List<User> getAllUsers(){
-        return userService.getUsers();
+        return userService.getUsers("default", "default");
     }
 
-    @PostMapping("/create")
+    @GetMapping({"/{orderBy}/{direction}", "/{orderBy}"})
+    public List<User> getAllUsers(@PathVariable String orderBy, @PathVariable String direction){
+        return userService.getUsers(orderBy, direction);
+    }
+
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     void addUser(@RequestBody User user) {
         LOG.info(user.getRole().toString());
@@ -47,19 +52,19 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUserById(@PathVariable Long id){
         boolean success = userService.deleteUser(id);
         if (success){
             LOG.info("User {} deleted", id);
             return ResponseEntity.ok("deleted");
         } else {
-            LOG.warn("User wasn't find, returning error");
+            LOG.info("User wasn't find, returning error");
             return ResponseEntity.notFound().build();
         }
     }
 
-    @PutMapping("/update")
+    @PutMapping
     public ResponseEntity<User> updateUserById(@RequestBody User updatedUser){
         User repositoryUser = userService.updateUser(updatedUser);
         return (repositoryUser != null)
