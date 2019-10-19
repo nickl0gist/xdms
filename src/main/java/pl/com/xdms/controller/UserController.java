@@ -33,13 +33,6 @@ public class UserController {
         return userService.getUsers(orderBy, direction);
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    void addUser(@RequestBody User user) {
-        LOG.info(user.getRole().toString());
-        userService.save(user);
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id){
         User user = userService.getUserById(id);
@@ -52,6 +45,21 @@ public class UserController {
         }
     }
 
+    @PutMapping
+    public ResponseEntity<User> updateUserById(@RequestBody User updatedUser){
+        User repositoryUser = userService.updateUser(updatedUser);
+        return (repositoryUser != null)
+                ? ResponseEntity.ok(repositoryUser)
+                : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    void addUser(@RequestBody User user) {
+        LOG.info(user.getRole().toString());
+        userService.save(user);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUserById(@PathVariable Long id){
         boolean success = userService.deleteUser(id);
@@ -62,14 +70,6 @@ public class UserController {
             LOG.info("User wasn't find, returning error");
             return ResponseEntity.notFound().build();
         }
-    }
-
-    @PutMapping
-    public ResponseEntity<User> updateUserById(@RequestBody User updatedUser){
-        User repositoryUser = userService.updateUser(updatedUser);
-        return (repositoryUser != null)
-                ? ResponseEntity.ok(repositoryUser)
-                : ResponseEntity.notFound().build();
     }
 
 }

@@ -54,15 +54,6 @@ public class UserService {
         }
     }
 
-    public void saveUser(User user) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(user.getFirstName()).append(" ");
-        stringBuilder.append(user.getLastName()).append(" ");
-        stringBuilder.append(user.getUsername()).append(" ");
-        LOG.info(stringBuilder.toString());
-        userRepository.save(user);
-    }
-
     public boolean deleteUser(Long id) {
         User user = getUserById(id);
         if(user != null){
@@ -86,7 +77,12 @@ public class UserService {
     public void save(User user) {
         //Taking out the ID of role from request and find existing role
         user.setRole(roleService.getRoleById(user.getRole().getId()));
-        LOG.info(user.toString());
+
+        String userInfo = "FirstName: " + user.getFirstName()
+                + " / LastName:" + user.getLastName()
+                + " / UserName: " + user.getUsername();
+
+        LOG.info("User Creation: {}", userInfo);
         userRepository.save(user);
     }
 }

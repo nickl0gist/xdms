@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.domain.user.Role;
+import pl.com.xdms.domain.user.RoleEnum;
 import pl.com.xdms.repository.RoleRepository;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class RoleService {
 
     @Value("${default.user.role.name}")
     private String defaultUserRole;
+    private RoleEnum roleEnum;
 
     @Autowired
     public RoleService(RoleRepository roleRepository) {
@@ -39,7 +41,8 @@ public class RoleService {
     }
 
     public Role getDefaultUserRole(){
-        return roleRepository.findRoleByName(defaultUserRole);
+        this.roleEnum = RoleEnum.valueOf(defaultUserRole);
+        return roleRepository.findRoleByName(roleEnum);
     }
 
     public List<Role> getAllRoles() {

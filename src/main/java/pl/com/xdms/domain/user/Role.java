@@ -21,12 +21,11 @@ public class Role {
     private Long id;
 
     @NotNull(message = "Please enter name")
-    @Column(unique = true)
-    @Size(min = 4, max = 20)
-    private String name;
+    @Enumerated(EnumType.STRING)
+    private RoleEnum name;
 
     @NotBlank(message = "Please enter short description")
-    @Size(min = 10, max = 20)
+    @Size(min = 10, max = 200)
     private String description;
 
     @Column(columnDefinition = "BIT default true")
