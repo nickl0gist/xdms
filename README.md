@@ -1,6 +1,6 @@
-#XDMS REST API
+# XDMS REST API
 
-#####END POINTS
+#### END POINTS
 
 _User Controller:_
 
@@ -18,7 +18,8 @@ _User Controller:_
 * xdms.com/admin/users/__{id}__ [GET] - get one specific user by id.
 * xdms.com/admin/users - [PUT] - Updating specific user. The request should contain User entity.
 * xdms.com/admin/users - [POST] - The User entity given in the request will be persisted in DataBase.
-* xdms.com/admin/users/__{id}__ [DELETE] - Delete one specific user by id. It will return "deleted" message if user was deleted. 
+* xdms.com/admin/users/__{id}__ - [DELETE] - Delete one specific user by id. It will return "deleted" message if user was deleted. 
 You will get 404(NotFound) in case the user doesnt exist.  
 
+<a href="#user-controller">Link to Header</a>
 [link](#user-controller)
