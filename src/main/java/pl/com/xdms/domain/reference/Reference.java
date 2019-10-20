@@ -13,14 +13,14 @@ import javax.validation.constraints.*;
 import java.util.Set;
 
 @Entity
-@Table(name = "refrences")
+@Table(name = "REFERENCE")
 @Setter
 @Getter
 @ToString
 public class Reference {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long referenceID;
 
     @NotBlank
@@ -63,13 +63,11 @@ public class Reference {
     @NotBlank
     @NotNull
     @Min(1)
-    @Max(6)
     private int pcsPerPU;
 
     @NotBlank
     @NotNull
     @Min(1)
-    @Max(6)
     private int pcsPerHU;
 
     @NotBlank
@@ -80,12 +78,17 @@ public class Reference {
     @NotBlank
     @NotNull
     @Min(0)
-    double palletHeight;
+    int palletHeight;
 
     @NotBlank
     @NotNull
     @Min(0)
-    double palletLength;
+    int palletLength;
+
+    @NotBlank
+    @NotNull
+    @Min(0)
+    int palletWidth;
 
     @NotNull
     @Column(columnDefinition = "BIT default true", nullable=false)
