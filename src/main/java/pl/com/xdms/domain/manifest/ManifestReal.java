@@ -19,7 +19,7 @@ import java.util.Set;
 public class ManifestReal {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long manifestRealID;
 
     @NotBlank
@@ -51,6 +51,11 @@ public class ManifestReal {
     @Min(0)
     @Column(columnDefinition = "double default 0")
     private double grossWeight;
+
+    @NotBlank
+    @Min(0)
+    @Column(columnDefinition = "double default 0")
+    private double netWeight;
 
     @ManyToOne
     @NotNull

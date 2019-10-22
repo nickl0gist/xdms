@@ -1,8 +1,10 @@
 package pl.com.xdms.domain.customer;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import pl.com.xdms.domain.reference.Reference;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -17,8 +19,10 @@ import javax.validation.constraints.Size;
 public class CustomerAgreement {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long customerAgreementID;
+    @NotBlank
+    @NotNull
+    @Size(max = 30)
+    private String customerAgreementID;
 
     @NotBlank
     @NotNull
@@ -26,4 +30,12 @@ public class CustomerAgreement {
     @ManyToOne
     @JoinColumn
     private Customer customer;
+
+    @ManyToOne
+    @JoinTable(
+            name = "reference_customer_agreement",
+            joinColumns = @JoinColumn(name = "customerAgreementID"),
+            inverseJoinColumns = @JoinColumn(name = "referenceID"))
+    @JsonBackReference
+    private Reference references;
 }

@@ -1,5 +1,7 @@
 package pl.com.xdms.domain.manifest;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -19,7 +21,7 @@ import java.util.Set;
 public class Manifest {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long manifestID;
 
     @NotBlank
@@ -48,13 +50,15 @@ public class Manifest {
     private Supplier supplier;
 
     @OneToMany(mappedBy = "manifest")
+    @JsonManagedReference
     private Set<ManifestPlan> manifestsPlan;
 
-    @OneToMany
+    @ManyToOne
     @JoinTable(
             name = "ttt_manifest",
             joinColumns = @JoinColumn(name = "manifestID"),
             inverseJoinColumns = @JoinColumn(name = "tttID"))
-    private Set<TruckTimeTable> truckTimeTables;
+    @JsonBackReference
+    private TruckTimeTable truckTimeTables;
 
 }

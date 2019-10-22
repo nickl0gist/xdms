@@ -16,7 +16,7 @@ import javax.validation.constraints.NotNull;
 public class TpaStatus {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long statusID;
 
     @NotNull

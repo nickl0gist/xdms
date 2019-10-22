@@ -1,5 +1,6 @@
 package pl.com.xdms.domain.supplier;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -20,7 +21,7 @@ import java.util.Set;
 public class Supplier {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long supplierID;
 
     @NotBlank
@@ -62,5 +63,6 @@ public class Supplier {
     private Boolean isActive;
 
     @OneToMany(mappedBy = "supplier")
+    @JsonManagedReference
     private Set<Manifest> manifests;
 }

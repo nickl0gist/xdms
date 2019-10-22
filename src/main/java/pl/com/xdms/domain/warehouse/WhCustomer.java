@@ -6,7 +6,6 @@ import lombok.ToString;
 import pl.com.xdms.domain.customer.Customer;
 
 import javax.persistence.*;
-import java.util.Set;
 
 @Entity
 @Table(name ="warehouse_customer")
@@ -16,7 +15,7 @@ import java.util.Set;
 public class WhCustomer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long whCustomerID;
 
     @ManyToOne

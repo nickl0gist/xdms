@@ -1,11 +1,10 @@
 package pl.com.xdms.domain.tpa;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import pl.com.xdms.domain.manifest.ManifestReal;
-import pl.com.xdms.domain.supplier.SupplierAgreement;
-import pl.com.xdms.domain.user.Role;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -22,7 +21,7 @@ import java.util.Set;
 public class TPA {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long tpaID;
 
     @NotBlank
@@ -54,5 +53,6 @@ public class TPA {
             name = "tpa_manifest_real",
             joinColumns = @JoinColumn(name = "tpaID"),
             inverseJoinColumns = @JoinColumn(name = "manifestRealID"))
+    @JsonManagedReference
     private Set<ManifestReal> manifestReals;
 }

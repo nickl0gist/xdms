@@ -19,7 +19,7 @@ import java.util.Set;
 @ToString
 public class Customer {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long customerID;
 
     @NotBlank

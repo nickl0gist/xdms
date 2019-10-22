@@ -16,7 +16,7 @@ import javax.validation.constraints.NotNull;
 public class TTTStatus {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long tttStatusID;
 
     @NotBlank

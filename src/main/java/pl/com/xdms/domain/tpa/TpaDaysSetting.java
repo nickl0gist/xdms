@@ -8,7 +8,6 @@ import pl.com.xdms.domain.warehouse.WhCustomer;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
@@ -19,7 +18,7 @@ import java.time.LocalTime;
 public class TpaDaysSetting {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank

@@ -1,5 +1,6 @@
 package pl.com.xdms.domain.supplier;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -9,7 +10,6 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Set;
 
 @Entity
 @Table(name = "suplier_agreement")
@@ -19,8 +19,10 @@ import java.util.Set;
 public class SupplierAgreement {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long supplierAgreementID;
+    @NotBlank
+    @NotNull
+    @Size(max = 30)
+    private String supplierAgreementID;
 
     @NotBlank
     @NotNull
@@ -29,11 +31,12 @@ public class SupplierAgreement {
     @JoinColumn
     private Supplier supplier;
 
-    @OneToMany
+    @ManyToOne
     @JoinTable(
             name = "reference_supplier_agreement",
             joinColumns = @JoinColumn(name = "supplierAgreementID"),
             inverseJoinColumns = @JoinColumn(name = "referenceID"))
-    private Set<Reference> references;
+    @JsonBackReference
+    private Reference references;
 
 }

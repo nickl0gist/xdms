@@ -17,7 +17,7 @@ import javax.validation.constraints.Size;
 public class WHType {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long whTypeID;
 
     @Column(columnDefinition = "BIT default true")

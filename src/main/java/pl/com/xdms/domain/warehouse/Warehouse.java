@@ -3,7 +3,6 @@ package pl.com.xdms.domain.warehouse;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import pl.com.xdms.domain.user.Role;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -19,7 +18,7 @@ import javax.validation.constraints.Size;
 public class Warehouse {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long warehouseID;
 
     @NotBlank
@@ -59,6 +58,6 @@ public class Warehouse {
     @NotBlank
     @NotNull
     @ManyToOne
-    @JoinColumn
+    @JoinColumn(name = "wh_typeid")
     private WHType whType;
 }

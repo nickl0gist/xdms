@@ -1,11 +1,12 @@
 package pl.com.xdms.domain.reference;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import pl.com.xdms.domain.storloc.StorageLocation;
 import pl.com.xdms.domain.customer.CustomerAgreement;
 import pl.com.xdms.domain.manifest.ManifestPlan;
+import pl.com.xdms.domain.storloc.StorageLocation;
 import pl.com.xdms.domain.supplier.SupplierAgreement;
 
 import javax.persistence.*;
@@ -47,7 +48,7 @@ public class Reference {
     @NotBlank
     @NotNull
     @Min(0)
-    private double weightPU;
+    private double weightPu;
 
     @NotBlank
     @NotNull
@@ -111,6 +112,7 @@ public class Reference {
             name = "reference_supplier_agreement",
             joinColumns = @JoinColumn(name = "referenceID"),
             inverseJoinColumns = @JoinColumn(name = "supplierAgreementID"))
+    @JsonManagedReference
     private Set<SupplierAgreement> supplierAgreements;
 
     @OneToMany
@@ -118,6 +120,7 @@ public class Reference {
             name = "reference_customer_agreement",
             joinColumns = @JoinColumn(name = "referenceID"),
             inverseJoinColumns = @JoinColumn(name = "customerAgreementID"))
+    @JsonManagedReference
     private Set<CustomerAgreement> customerAgreements;
 
     @OneToMany
@@ -125,8 +128,10 @@ public class Reference {
             name = "reference_storage_location",
             joinColumns = @JoinColumn(name = "referenceID"),
             inverseJoinColumns = @JoinColumn(name = "storageLocationID"))
+    @JsonManagedReference
     private Set<StorageLocation> storageLocations;
 
     @OneToMany(mappedBy = "reference")
+    //@JsonBackReference
     private Set<ManifestPlan> manifestsPlan;
 }

@@ -29,7 +29,9 @@ public class ReferenceController {
     }
 
     @GetMapping
-    public List<Reference> getAllReferences(){
+    public List<Reference> getAllReferences() {
         return referenceService.getAllReferences();
     }
+
+
 }

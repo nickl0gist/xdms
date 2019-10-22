@@ -17,18 +17,18 @@ import javax.validation.constraints.Size;
 public class StorageLocation {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long storageLocationID;
 
     @NotBlank
     @NotNull
     @Column(unique = true)
-    @Size(min = 4, max = 10)
+    @Size(min = 4, max = 100)
     private String code;
 
     @NotBlank
     @NotNull
-    @Size(min = 4, max = 10)
+    @Size(min = 4, max = 100)
     private String name;
 
 }
