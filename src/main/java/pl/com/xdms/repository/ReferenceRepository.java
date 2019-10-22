@@ -11,4 +11,6 @@ import pl.com.xdms.domain.reference.Reference;
 
 public interface ReferenceRepository extends JpaRepository<Reference, Long> {
 
+    /*@Query(value = "", nativeQuery = true)
+    List<Reference> getAllWithJoiningCustomerSupplierStLocation();*/
 }

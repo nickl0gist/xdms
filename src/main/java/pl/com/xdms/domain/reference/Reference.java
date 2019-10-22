@@ -6,7 +6,6 @@ import lombok.Setter;
 import lombok.ToString;
 import pl.com.xdms.domain.customer.CustomerAgreement;
 import pl.com.xdms.domain.manifest.ManifestPlan;
-import pl.com.xdms.domain.storloc.StorageLocation;
 import pl.com.xdms.domain.supplier.SupplierAgreement;
 
 import javax.persistence.*;
@@ -123,13 +122,13 @@ public class Reference {
     @JsonManagedReference
     private Set<CustomerAgreement> customerAgreements;
 
-    @OneToMany
+/*    @OneToMany
     @JoinTable(
             name = "reference_storage_location",
             joinColumns = @JoinColumn(name = "referenceID"),
             inverseJoinColumns = @JoinColumn(name = "storageLocationID"))
     @JsonManagedReference
-    private Set<StorageLocation> storageLocations;
+    private Set<StorageLocation> storageLocations;*/
 
     @OneToMany(mappedBy = "reference")
     //@JsonBackReference

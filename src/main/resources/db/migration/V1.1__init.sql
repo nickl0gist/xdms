@@ -43,13 +43,6 @@ VALUES
   (5500000010, 2),
   (5500000100, 3);
 
-insert into suplier_agreement
-  (supplier_agreementid, supplier_supplierid)
-VALUES
-  (4400000001, 1),
-  (4400000010, 2),
-  (4400000100, 3);
-
 insert into storage_location
   (storage_locationid, code, name)
 VALUES
@@ -57,10 +50,12 @@ VALUES
   (2, "EX11", "KALUGA_LUGA"),
   (3, "EX10", "BUENOS");
 
-insert into reference_storage_location
-  (referenceid, storage_locationid)
+insert into suplier_agreement
+  (supplier_agreementid, supplier_supplierid, storage_locationid)
 VALUES
-  (1, 1), (2, 1), (2, 2), (2, 3);
+  (4400000001, 1, 1),
+  (4400000010, 2, 2),
+  (4400000100, 3, 3);
 
 insert into reference_supplier_agreement
   (referenceid, supplier_agreementid)

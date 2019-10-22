@@ -20,7 +20,7 @@
 		<java.version>1.8</java.version>
 		<flyway.user>root</flyway.user>
 		<flyway.password>NIKOlaj</flyway.password>
-		<flyway.url>jdbc:mysql://localhost:3306/xdms_test?useUnicode=true&amp;useJDBCCompliantTimezoneShift=true&amp;useLegacyDatetimeCode=false&amp;serverTimezone=UTC</flyway.url>
+		<flyway.url>jdbc:mysql://localhost:3306/xdms_test2?useUnicode=true&amp;useJDBCCompliantTimezoneShift=true&amp;useLegacyDatetimeCode=false&amp;serverTimezone=UTC</flyway.url>
 		<flyway.baselineOnMigrate>true</flyway.baselineOnMigrate>
 	</properties>
 	<dependencies>

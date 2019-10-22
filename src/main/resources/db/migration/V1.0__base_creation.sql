@@ -79,10 +79,10 @@ create table reference_supplier_agreement (
   supplier_agreementid varchar(30) not null,
   primary key (referenceid, supplier_agreementid)) engine=InnoDB;
 
-create table reference_storage_location (
+/*create table reference_storage_location (
   referenceid bigint not null,
   storage_locationid bigint not null,
-  primary key (referenceid, storage_locationid)) engine=InnoDB;
+  primary key (referenceid, storage_locationid)) engine=InnoDB;*/
 
 create table roles (
   id bigint not null auto_increment,
@@ -94,6 +94,7 @@ create table roles (
 create table suplier_agreement (
   supplier_agreementid varchar(30) not null,
   supplier_supplierid bigint not null,
+  storage_locationid bigint not null,
   primary key (supplier_agreementid)) engine=InnoDB;
 
 create table storage_location (
@@ -238,32 +239,31 @@ FKeesr8uocnnbiwbh0vt71ahltq foreign key (supplierid) references suppliers (suppl
 
 /*reference_customer_agreement*/
 alter table reference_customer_agreement
-add constraint FKhf7tu6cqj0xnqk9v9fryk43mc foreign key (referenceid)
+add constraint FK_reference_to_ca foreign key (referenceid)
 references reference (referenceid);
 
 alter table reference_customer_agreement
-add constraint FKokey7qkrvvexj21pajyrxruj4 foreign key (customer_agreementid)
+add constraint FK_customer_agreement foreign key (customer_agreementid)
 references customer_agreement (customer_agreementid);
-
-/*reference_storage_location*/
-alter table reference_storage_location
-add constraint FKjmy9nsp8bpth89a3n1gqvom82
-foreign key (storage_locationid) references storage_location (storage_locationid);
-alter table reference_storage_location
-add constraint FKsrfs339l31ynwd19mnufqv9hy
-foreign key (referenceid) references reference (referenceid);
 
 /*reference_supplier_agreement*/
 alter table reference_supplier_agreement
-add constraint FKnws1ft4k4ebo1a6ytg0fo55sw
+add constraint FK_reference_to_sa
 foreign key (referenceid) references reference (referenceid);
+
 alter table reference_supplier_agreement
-add constraint FKnp4uvnp4iivtyjyqtqg2u6sbd
+add constraint FK_supplier_agreement
 foreign key (supplier_agreementid) references suplier_agreement (supplier_agreementid);
 
 alter table suplier_agreement
-add constraint FKahck418ythrr37tiw3xjm21ha
-foreign key (supplier_supplierid) references suppliers (supplierid);
+  add constraint FKahck418ythrr37tiw3xjm21ha
+  foreign key (supplier_supplierid) references suppliers (supplierid);
+
+/* = storage_location to suplier_agreement = */
+alter table suplier_agreement
+  add constraint FK_suplier_agreement_to_storage_locationid
+  foreign key (storage_locationid)
+  references storage_location (storage_locationid);
 
 alter table tpa
 add constraint FK7s8srhwg1mj56ssrk7yxoey1x

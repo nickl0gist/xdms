@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import pl.com.xdms.domain.reference.Reference;
+import pl.com.xdms.domain.storloc.StorageLocation;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -39,4 +40,8 @@ public class SupplierAgreement {
     @JsonBackReference
     private Reference references;
 
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name="storage_locationid")
+    private StorageLocation storageLocation;
 }
