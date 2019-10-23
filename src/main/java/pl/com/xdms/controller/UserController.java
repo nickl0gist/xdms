@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.com.xdms.domain.user.Role;
 import pl.com.xdms.domain.user.User;
 import pl.com.xdms.service.UserService;
 
@@ -72,4 +73,8 @@ public class UserController {
         }
     }
 
+    @GetMapping("/userroles")
+    public List<Role> getAllRoles(){
+        return userService.getAllRoles();
+    }
 }
