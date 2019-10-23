@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import pl.com.xdms.domain.customer.CustomerAgreement;
-import pl.com.xdms.domain.manifest.ManifestPlan;
 import pl.com.xdms.domain.supplier.SupplierAgreement;
 
 import javax.persistence.*;
@@ -120,6 +119,7 @@ public class Reference {
             joinColumns = @JoinColumn(name = "referenceID"),
             inverseJoinColumns = @JoinColumn(name = "customerAgreementID"))
     @JsonManagedReference
+    //@JsonIgnoreProperties({"customer"})
     private Set<CustomerAgreement> customerAgreements;
 
 /*    @OneToMany
@@ -130,7 +130,7 @@ public class Reference {
     @JsonManagedReference
     private Set<StorageLocation> storageLocations;*/
 
-    @OneToMany(mappedBy = "reference")
-    //@JsonBackReference
-    private Set<ManifestPlan> manifestsPlan;
+/*    @OneToMany(mappedBy = "reference")
+    @JsonIgnore
+    private Set<ManifestPlan> manifestsPlan;*/
 }

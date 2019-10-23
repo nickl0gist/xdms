@@ -3,14 +3,12 @@ package pl.com.xdms.domain.customer;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import pl.com.xdms.domain.manifest.Manifest;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Set;
 
 @Entity
 @Table(name = "customers")
@@ -62,8 +60,8 @@ public class Customer {
     @NotNull
     private Boolean isActive;
 
-    @NotNull
+/*    @NotNull
     @OneToMany(mappedBy = "customer")
-    private Set<Manifest> manifests;
+    private Set<Manifest> manifests;*/
 
 }

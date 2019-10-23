@@ -11,7 +11,7 @@ import java.io.IOException;
 
 /**
  * Created on 18.10.2019
- * by Mykola Horkov
+ * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
 @Component

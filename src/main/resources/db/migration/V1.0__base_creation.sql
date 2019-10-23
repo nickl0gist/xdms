@@ -64,9 +64,9 @@ create table reference (
   weight_pu double precision not null,
   hs_code varchar(30) not null,
   is_active BIT default true not null,
-  designationde varchar(200),
   designationen varchar(200) not null,
   designationru varchar(200) not null,
+  designationde varchar(200),
   primary key (referenceid)) engine=InnoDB;
 
 create table reference_customer_agreement (

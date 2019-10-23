@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * Created on 19.10.2019
- * by Mykola Horkov
+ * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
 @RestController

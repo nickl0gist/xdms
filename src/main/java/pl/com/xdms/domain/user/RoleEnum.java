@@ -2,7 +2,7 @@ package pl.com.xdms.domain.user;
 
 /**
  * Created on 16.10.2019
- * by Mykola Horkov
+ * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
 public enum RoleEnum {

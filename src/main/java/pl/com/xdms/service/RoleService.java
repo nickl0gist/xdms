@@ -14,7 +14,7 @@ import java.util.Optional;
 
 /**
  * Created on 15.10.2019
- * by Mykola Horkov
+ * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
 @Service

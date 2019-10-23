@@ -8,7 +8,7 @@ import pl.com.xdms.filter.UserControllerFilter;
 
 /**
  * Created on 18.10.2019
- * by Mykola Horkov
+ * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
 @Configuration

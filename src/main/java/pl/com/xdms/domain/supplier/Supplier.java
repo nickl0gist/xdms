@@ -1,17 +1,14 @@
 package pl.com.xdms.domain.supplier;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import pl.com.xdms.domain.manifest.Manifest;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Set;
 
 @Entity
 @Table(name = "suppliers")
@@ -62,7 +59,7 @@ public class Supplier {
     @Column(columnDefinition = "BIT default true", nullable=false)
     private Boolean isActive;
 
-    @OneToMany(mappedBy = "supplier")
+/*    @OneToMany(mappedBy = "supplier")
     @JsonManagedReference
-    private Set<Manifest> manifests;
+    private Set<Manifest> manifests;*/
 }
