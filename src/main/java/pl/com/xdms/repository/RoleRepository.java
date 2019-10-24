@@ -6,5 +6,4 @@ import pl.com.xdms.domain.user.RoleEnum;
 
 public interface RoleRepository extends JpaRepository<Role, Long> {
     Role findRoleByName(RoleEnum name);
-
 }

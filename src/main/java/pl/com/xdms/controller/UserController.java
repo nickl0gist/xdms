@@ -47,7 +47,7 @@ public class UserController {
     }
 
     @PutMapping
-    public ResponseEntity<User> updateUserById(@RequestBody User updatedUser){
+    public ResponseEntity<User> updateUser(@RequestBody User updatedUser){
         User repositoryUser = userService.updateUser(updatedUser);
         return (repositoryUser != null)
                 ? ResponseEntity.ok(repositoryUser)
@@ -56,8 +56,8 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    void addUser(@RequestBody User user) {
-        LOG.info(user.getRole().toString());
+    public void addUser(@RequestBody User user) {
+        LOG.info("Try to create reference {}",user);
         userService.save(user);
     }
 

@@ -31,6 +31,7 @@ public class Reference {
     @NotBlank
     @NotNull
     @Size(min = 5, max = 200)
+    @Pattern(regexp = "^[A-Z0-9-]+$")
     private String name;
 
     @NotBlank
@@ -38,53 +39,43 @@ public class Reference {
     @Size(min = 4, max = 30)
     private String hsCode;
 
-    @NotBlank
     @NotNull
     @Min(0)
     private double weight;
 
-    @NotBlank
     @NotNull
     @Min(0)
     private double weightPu;
 
-    @NotBlank
     @NotNull
     @Min(0)
     private double weightHu;
 
-    @NotBlank
     @NotNull
     @Min(1)
     @Max(6)
     private int stackability;
 
-    @NotBlank
     @NotNull
     @Min(1)
     private int pcsPerPU;
 
-    @NotBlank
     @NotNull
     @Min(1)
     private int pcsPerHU;
 
-    @NotBlank
     @NotNull
     @Min(1)
     double palletWeight;
 
-    @NotBlank
     @NotNull
     @Min(0)
     int palletHeight;
 
-    @NotBlank
     @NotNull
     @Min(0)
     int palletLength;
 
-    @NotBlank
     @NotNull
     @Min(0)
     int palletWidth;

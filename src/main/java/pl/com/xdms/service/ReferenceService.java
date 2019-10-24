@@ -8,6 +8,7 @@ import pl.com.xdms.domain.reference.Reference;
 import pl.com.xdms.repository.ReferenceRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created on 19.10.2019
@@ -27,5 +28,32 @@ public class ReferenceService {
 
     public List<Reference> getAllReferences() {
         return referenceRepository.findAll();
+    }
+
+    public Reference getRefById(Long id) {
+        Optional<Reference> refOpt = referenceRepository.findById(id);
+        if (refOpt.isPresent()) {
+            return refOpt.get();
+        } else {
+            return null;
+        }
+    }
+
+    public Reference updateReference(Reference reference) {
+        Optional<Reference> referenceToUpdate = referenceRepository.findById(reference.getReferenceID());
+        if (referenceToUpdate.isPresent()) {
+            referenceRepository.save(reference);
+        } else {
+            return null;
+        }
+        return referenceRepository.findById(reference.getReferenceID()).get();
+    }
+
+    public void save(Reference reference) {
+        referenceRepository.save(reference);
+    }
+
+    public List<Reference> search(String searchString) {
+        return referenceRepository.findReferenceInSearch(searchString);
     }
 }
