@@ -12,6 +12,7 @@ import java.util.Optional;
 
 /**
  * Created on 19.10.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -56,4 +57,33 @@ public class ReferenceService {
     public List<Reference> search(String searchString) {
         return referenceRepository.findReferenceInSearch(searchString);
     }
+
+    public List<Reference> getAllReferences(String orderBy, String direction) {
+        switch (orderBy) {
+            case "number":
+                return "asc".equals(direction)
+                        ? referenceRepository.findAllByOrderByNumberAsc()
+                        : referenceRepository.findAllByOrderByNumberDesc();
+            case "name":
+                return "asc".equals(direction)
+                        ? referenceRepository.findAllByOrderByNameAsc()
+                        : referenceRepository.findAllByOrderByNameDesc();
+            case "hscode":
+                return "asc".equals(direction)
+                        ? referenceRepository.findAllByOrderByHsCodeAsc()
+                        : referenceRepository.findAllByOrderByHsCodeDesc();
+            case "sname":
+                return "asc".equals(direction)
+                        ? referenceRepository.findAllByOrdOrderBySupplierNameAsc()
+                        : referenceRepository.findAllByOrdOrderBySupplierNameDesc();
+            case "cname":
+                return "asc".equals(direction)
+                        ? referenceRepository.findAllByOrdOrderByCustomerNameAsc()
+                        : referenceRepository.findAllByOrdOrderByCustomerNameDesc();
+                default:
+                    return  referenceRepository.findAll();
+        }
+    }
+
+
 }

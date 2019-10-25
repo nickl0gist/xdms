@@ -41,6 +41,11 @@ public class ReferenceController {
         return referenceService.getAllReferences();
     }
 
+    @GetMapping({"/{orderBy}/{direction}", "/{orderBy}"})
+    public List<Reference> getAllReferences(@PathVariable String orderBy, @PathVariable String direction) {
+        return referenceService.getAllReferences(orderBy, direction);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Reference> getReferenceById(@PathVariable Long id){
         Reference reference = referenceService.getRefById(id);
