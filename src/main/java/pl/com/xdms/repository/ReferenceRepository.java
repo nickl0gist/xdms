@@ -26,7 +26,7 @@ public interface ReferenceRepository extends JpaRepository<Reference, Long> {
     List<Reference> findAllByOrderByHsCodeAsc();
     List<Reference> findAllByOrderByHsCodeDesc();
 
-    //TODO inspect queries to make propper sorting. resulting JSON is too long
+    //TODO inspect queries to make propper sorting. resulting JSON is too long, DTO usage?
 /*
     @Query(nativeQuery = true)
     List<Reference> findAllByOrdOrderBySupplierNameAsc();

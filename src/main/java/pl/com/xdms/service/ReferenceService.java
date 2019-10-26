@@ -72,14 +72,14 @@ public class ReferenceService {
                 return "asc".equals(direction)
                         ? referenceRepository.findAllByOrderByHsCodeAsc()
                         : referenceRepository.findAllByOrderByHsCodeDesc();
-            case "sname":
+            /*case "sname":
                 return "asc".equals(direction)
                         ? referenceRepository.findAllByOrdOrderBySupplierNameAsc()
                         : referenceRepository.findAllByOrdOrderBySupplierNameDesc();
             case "cname":
                 return "asc".equals(direction)
                         ? referenceRepository.findAllByOrdOrderByCustomerNameAsc()
-                        : referenceRepository.findAllByOrdOrderByCustomerNameDesc();
+                        : referenceRepository.findAllByOrdOrderByCustomerNameDesc();*/
                 default:
                     return  referenceRepository.findAll();
         }
