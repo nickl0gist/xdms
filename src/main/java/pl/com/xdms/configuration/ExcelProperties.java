@@ -1,6 +1,7 @@
 package pl.com.xdms.configuration;
 
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
@@ -19,8 +20,8 @@ import java.util.TreeMap;
 public class ExcelProperties {
 
     private TreeMap<String, Integer> columns;
-
+    @Value("${referencebase.column-width-index}")
     private int columnWidthIndex;
-
+    @Value("${referencebase.sheetName}")
     private String sheetName;
 }

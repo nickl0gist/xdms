@@ -12,7 +12,6 @@ import java.util.Optional;
 
 /**
  * Created on 19.10.2019
- *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -72,18 +71,16 @@ public class ReferenceService {
                 return "asc".equals(direction)
                         ? referenceRepository.findAllByOrderByHsCodeAsc()
                         : referenceRepository.findAllByOrderByHsCodeDesc();
-            /*case "sname":
+            case "sname":
                 return "asc".equals(direction)
-                        ? referenceRepository.findAllByOrdOrderBySupplierNameAsc()
-                        : referenceRepository.findAllByOrdOrderBySupplierNameDesc();
+                        ? referenceRepository.findAllByOrderBySupplierAsc()
+                        : referenceRepository.findAllByOrderBySupplierDesc();
             case "cname":
                 return "asc".equals(direction)
-                        ? referenceRepository.findAllByOrdOrderByCustomerNameAsc()
-                        : referenceRepository.findAllByOrdOrderByCustomerNameDesc();*/
+                        ? referenceRepository.findAllByOrderByCustomerAsc()
+                        : referenceRepository.findAllByOrderByCustomerDesc();
                 default:
                     return  referenceRepository.findAll();
         }
     }
-
-
 }

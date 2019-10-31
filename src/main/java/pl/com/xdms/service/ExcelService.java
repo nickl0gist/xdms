@@ -8,6 +8,7 @@ import org.apache.poi.xssf.usermodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.configuration.ExcelProperties;
 import pl.com.xdms.domain.reference.Reference;
@@ -34,6 +35,9 @@ public class ExcelService {
     private final ExcelProperties referenceBase;
     private final String sheetNameForReferences;
 
+    @Value("${field.divider}")
+    private String fieldDivider;
+
     @Autowired
     public ExcelService(ExcelProperties referenceBase) {
         this.referenceBase = referenceBase;
@@ -46,10 +50,11 @@ public class ExcelService {
 
             CreationHelper creationHelper = workbook.getCreationHelper();
             XSSFSheet sheet = workbook.createSheet(sheetNameForReferences);
-            LOG.info(referenceBase.toString());
+
             // Set which area the table should be placed in
             AreaReference areaReference = creationHelper.createAreaReference(
-                    new CellReference(0, 0), new CellReference(references.size(), referenceBase.getColumns().size() - 1));
+                    new CellReference(0, 0),
+                    new CellReference(references.size(), referenceBase.getColumns().size() - 1));
 
             // Create table
             XSSFTable table = sheet.createTable(areaReference);
@@ -67,99 +72,40 @@ public class ExcelService {
             tableStyle.setFirstColumn(false);
             tableStyle.setLastColumn(false);
 
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerFont.setColor(IndexedColors.WHITE.getIndex());
+            Font rowFont = workbook.createFont();
+            rowFont.setColor(IndexedColors.BLACK.getIndex());
 
-            CellStyle headerCellStyle = workbook.createCellStyle();
-            headerCellStyle.setFont(headerFont);
+            //Creating cell style
+            XSSFCellStyle cellStyle = getXssfCellStyle(workbook);
 
-
-            XSSFCellStyle cellStyle = workbook.createCellStyle();
-            cellStyle.setBorderBottom(THIN);
-            cellStyle.setBottomBorderColor(IndexedColors.BLUE.getIndex());
-            cellStyle.setBorderTop(THIN);
-            cellStyle.setTopBorderColor(IndexedColors.BLUE.getIndex());
-            cellStyle.setBorderLeft(THIN);
-            cellStyle.setLeftBorderColor(IndexedColors.BLUE.getIndex());
-            cellStyle.setBorderRight(THIN);
-            cellStyle.setRightBorderColor(IndexedColors.BLUE.getIndex());
-
-            // Row for Header
+            //Row for Header
             Row headerRow = sheet.createRow(0);
             headerRow.setHeight((short) 600);
 
+            //Inserting header names into header row
             int index = 0;
-            for (Map.Entry<String, Integer> entry : referenceBase.getColumns().entrySet()){
+            for (Map.Entry<String, Integer> entry : referenceBase.getColumns().entrySet()) {
                 Cell cell = headerRow.createCell(index);
-                sheet.setColumnWidth(index, entry.getValue()*referenceBase.getColumnWidthIndex());
-                cell.setCellValue(entry.getKey().substring(entry.getKey().lastIndexOf('.')+1));
-                cell.setCellStyle(headerCellStyle);
+                sheet.setColumnWidth(index, entry.getValue() * referenceBase.getColumnWidthIndex());
+                cell.setCellValue(entry.getKey().substring(entry.getKey().lastIndexOf('.') + 1));
                 cell.setCellStyle(cellStyle);
+                cell.getCellStyle().setFont(getHeaderFont(workbook));
                 index++;
             }
 
+            //inserting values from references into rows starting from 1
             int rowIdx = 1;
-
             for (Reference reference : references) {
+                String[] refAsList = reference.toStringForExcel(fieldDivider).split(fieldDivider);
                 Row row = sheet.createRow(rowIdx++);
-                //ID
-                row.createCell(0).setCellStyle(cellStyle);
-                row.getCell(0).setCellValue(reference.getReferenceID());
-                //NUMBER
-                row.createCell(1).setCellStyle(cellStyle);
-                row.getCell(1).setCellValue(reference.getNumber());
-                //NAME
-                row.createCell(2).setCellStyle(cellStyle);
-                row.getCell(2).setCellValue(reference.getName());
-                //DESIGNATION EN
-                row.createCell(3).setCellStyle(cellStyle);
-                row.getCell(3).setCellValue(reference.getDesignationEN());
-                //DESIGNATION RU
-                row.createCell(4).setCellStyle(cellStyle);
-                row.getCell(4).setCellValue(reference.getDesignationRU());
-                //HSCODE
-                row.createCell(5).setCellStyle(cellStyle);
-                row.getCell(5).setCellValue(reference.getHsCode());
-                //WEIGHT
-                row.createCell(6).setCellStyle(cellStyle);
-                row.getCell(6).setCellValue(reference.getWeight());
-                //WEIGHT PU
-                row.createCell(7).setCellStyle(cellStyle);
-                row.getCell(7).setCellValue(reference.getWeightPu());
-                //WEIGHT HU
-                row.createCell(8).setCellStyle(cellStyle);
-                row.getCell(8).setCellValue(reference.getWeightHu());
-                //STACKABILITI
-                row.createCell(9).setCellStyle(cellStyle);
-                row.getCell(9).setCellValue(reference.getStackability());
-                // PCS PER PU
-                row.createCell(10).setCellStyle(cellStyle);
-                row.getCell(10).setCellValue(reference.getPcsPerPU());
-                // PCS PER HU
-                row.createCell(11).setCellStyle(cellStyle);
-                row.getCell(11).setCellValue(reference.getPcsPerHU());
-                // PALLET WEIGHT
-                row.createCell(12).setCellStyle(cellStyle);
-                row.getCell(12).setCellValue(reference.getPalletWeight());
-                // PALLET HEIGHT
-                row.createCell(13).setCellStyle(cellStyle);
-                row.getCell(13).setCellValue(reference.getPalletHeight());
-                // PALLET LENGTH
-                row.createCell(14).setCellStyle(cellStyle);
-                row.getCell(14).setCellValue(reference.getPalletLength());
-                // PALLET WIDTH
-                row.createCell(15).setCellStyle(cellStyle);
-                row.getCell(15).setCellValue(reference.getPalletWidth());
-                // SUPPLIER
-                // CUSTOMER
-                // SUPPLIER AGREEMENT
-                // CUSTOMER AGREEMENT
-                // STORAGE LOCATION
-                // IS ACTIVE
-                row.createCell(21).setCellStyle(cellStyle);
-                row.getCell(21).setCellValue(reference.getIsActive());
-
+                row.setRowStyle(cellStyle);
+                row.setRowStyle(workbook.createCellStyle());
+                row.getRowStyle().setFont(rowFont);
+                row.getRowStyle().setWrapText(false);
+                for (int i = 0; i < refAsList.length; i++) {
+                    row.createCell(i).setCellStyle(row.getRowStyle());
+                    row.getCell(i).setCellValue(refAsList[i]);
+                }
             }
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
@@ -169,5 +115,23 @@ public class ExcelService {
         return null;
     }
 
-
+    private Font getHeaderFont(XSSFWorkbook workbook) {
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setColor(IndexedColors.WHITE.getIndex());
+        return headerFont;
+    }
+    private XSSFCellStyle getXssfCellStyle(XSSFWorkbook workbook) {
+        XSSFCellStyle cellStyle = workbook.createCellStyle();
+        cellStyle.setWrapText(true);
+        cellStyle.setBorderBottom(THIN);
+        cellStyle.setBottomBorderColor(IndexedColors.BLUE.getIndex());
+        cellStyle.setBorderTop(THIN);
+        cellStyle.setTopBorderColor(IndexedColors.BLUE.getIndex());
+        cellStyle.setBorderLeft(THIN);
+        cellStyle.setLeftBorderColor(IndexedColors.BLUE.getIndex());
+        cellStyle.setBorderRight(THIN);
+        cellStyle.setRightBorderColor(IndexedColors.BLUE.getIndex());
+        return cellStyle;
+    }
 }

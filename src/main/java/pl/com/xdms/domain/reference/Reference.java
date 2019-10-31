@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import pl.com.xdms.domain.customer.CustomerAgreement;
-import pl.com.xdms.domain.supplier.SupplierAgreement;
+import pl.com.xdms.domain.customer.Customer;
+import pl.com.xdms.domain.storloc.StorageLocation;
+import pl.com.xdms.domain.supplier.Supplier;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
-import java.util.Set;
 
 @Entity
 @Table(name = "REFERENCE")
@@ -25,7 +25,6 @@ public class Reference {
     @NotBlank
     @NotNull
     @Size(min = 4, max = 30)
-    @Column(unique = true)
     private String number;
 
     @NotBlank
@@ -45,11 +44,7 @@ public class Reference {
 
     @NotNull
     @Min(0)
-    private double weightPu;
-
-    @NotNull
-    @Min(0)
-    private double weightHu;
+    private double weightOfPackaging;
 
     @NotNull
     @Min(1)
@@ -81,7 +76,7 @@ public class Reference {
     int palletWidth;
 
     @NotNull
-    @Column(columnDefinition = "BIT default true", nullable=false)
+    @Column(columnDefinition = "BIT default true", nullable = false)
     private Boolean isActive;
 
     @NotBlank
@@ -96,7 +91,68 @@ public class Reference {
     @Size(max = 200)
     private String designationRU;
 
-    @OneToMany
+    @Size(max = 200)
+    @NotNull
+    @Column(unique = true)
+    @Pattern(regexp = "^[0-9]+$")
+    private String supplierAgreement;
+
+    @Size(max = 200)
+    @NotNull
+    @Column(unique = true)
+    @Pattern(regexp = "^[0-9]+$")
+    private String customerAgreement;
+
+    @NotNull
+    @Size(max = 50)
+    @ManyToOne
+    @JoinColumn
+    @JsonManagedReference
+    @ToString.Exclude
+    private Customer customer;
+
+    @NotBlank
+    @NotNull
+    @Size(max = 50)
+    @ManyToOne
+    @JoinColumn
+    @JsonManagedReference
+    @ToString.Exclude
+    private Supplier supplier;
+
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "storage_locationid")
+    private StorageLocation storageLocation;
+
+    public String toStringForExcel(String fieldDivider) {
+
+        return referenceID +
+                fieldDivider + number +
+                fieldDivider + name +
+                fieldDivider + designationEN +
+                fieldDivider + designationRU +
+                fieldDivider + hsCode +
+                fieldDivider + weight +
+                fieldDivider + weightOfPackaging +
+                fieldDivider + stackability +
+                fieldDivider + pcsPerPU +
+                fieldDivider + pcsPerHU +
+                fieldDivider + palletWeight +
+                fieldDivider + palletHeight +
+                fieldDivider + palletLength +
+                fieldDivider + palletWidth +
+                fieldDivider + supplier.getName() +
+                fieldDivider + supplierAgreement +
+                fieldDivider + customer.getName() +
+                fieldDivider + customerAgreement +
+                fieldDivider + storageLocation.getCode() +
+                fieldDivider + isActive;
+    }
+}
+
+
+    /*@OneToMany
     @JoinTable(
             name = "reference_supplier_agreement",
             joinColumns = @JoinColumn(name = "referenceID"),
@@ -111,7 +167,7 @@ public class Reference {
             inverseJoinColumns = @JoinColumn(name = "customerAgreementID"))
     @JsonManagedReference
     //@JsonIgnoreProperties({"customer"})
-    private Set<CustomerAgreement> customerAgreements;
+    private Set<CustomerAgreement> customerAgreements;*/
 
 /*    @OneToMany
     @JoinTable(
@@ -124,4 +180,4 @@ public class Reference {
 /*    @OneToMany(mappedBy = "reference")
     @JsonIgnore
     private Set<ManifestPlan> manifestsPlan;*/
-}
+

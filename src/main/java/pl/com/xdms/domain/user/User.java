@@ -49,5 +49,4 @@ public class User {
     @ManyToOne
     @JoinColumn
     private Role role;
-
 }

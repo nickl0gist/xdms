@@ -1,8 +1,8 @@
-create table customer_agreement (
+/*create table customer_agreement (
   customer_agreementid varchar(30) not null,
   customer_customerid bigint not null,
   primary key (customer_agreementid)) engine=InnoDB;
-
+*/
 create table customers (
   customerid bigint not null auto_increment,
   name varchar(150) not null,
@@ -49,27 +49,31 @@ create table manifests (
   supplierid bigint not null, primary key (manifestid)) engine=InnoDB;
 
 create table reference (
-  referenceid bigint not null auto_increment,
-  number varchar(30) not null,
-  name varchar(200) not null,
-  pcs_perpu integer not null,
-  pcs_perhu integer not null,
-  pallet_height integer not null,
-  pallet_length integer not null,
-  pallet_weight double precision not null,
-  pallet_width integer not null,
-  stackability integer not null,
-  weight double precision not null,
-  weight_hu double precision not null,
-  weight_pu double precision not null,
-  hs_code varchar(30) not null,
-  is_active BIT default true not null,
-  designationen varchar(200) not null,
-  designationru varchar(200) not null,
-  designationde varchar(200),
-  primary key (referenceid)) engine=InnoDB;
+	referenceid bigint not null auto_increment,
+	number varchar(30) not null,
+	name varchar(200) not null,
+	hs_code varchar(30) not null,
+	pcs_perpu integer not null,
+	pcs_perhu integer not null,
+	weight double precision not null,
+	weight_of_packaging double precision not null,
+	designationen varchar(200) not null,
+	designationru varchar(200) not null,
+	designationde varchar(200),
+	pallet_height integer not null,
+	pallet_length integer not null,
+	pallet_width integer not null,
+	pallet_weight double precision not null,
+	stackability integer not null,
+	customer_customerid bigint not null,
+	customer_agreement varchar(200) not null,
+	supplier_supplierid bigint not null,
+	supplier_agreement varchar(200) not null,
+	storage_locationid bigint not null,
+	is_active BIT default true not null,
+	primary key (referenceid)) engine=InnoDB;
 
-create table reference_customer_agreement (
+/*create table reference_customer_agreement (
   referenceid bigint not null,
   customer_agreementid varchar(30) not null,
   primary key (referenceid, customer_agreementid)) engine=InnoDB;
@@ -77,7 +81,7 @@ create table reference_customer_agreement (
 create table reference_supplier_agreement (
   referenceid bigint not null,
   supplier_agreementid varchar(30) not null,
-  primary key (referenceid, supplier_agreementid)) engine=InnoDB;
+  primary key (referenceid, supplier_agreementid)) engine=InnoDB;*/
 
 /*create table reference_storage_location (
   referenceid bigint not null,
@@ -91,11 +95,11 @@ create table roles (
   is_active BIT default true,
   primary key (id)) engine=InnoDB;
 
-create table suplier_agreement (
+/*create table suplier_agreement (
   supplier_agreementid varchar(30) not null,
   supplier_supplierid bigint not null,
   storage_locationid bigint not null,
-  primary key (supplier_agreementid)) engine=InnoDB;
+  primary key (supplier_agreementid)) engine=InnoDB;*/
 
 create table storage_location (
   storage_locationid bigint not null auto_increment,
@@ -200,20 +204,12 @@ create table working_days (
   is_active BIT default true,
   primary key (id)) engine=InnoDB;
 
-alter table customer_agreement add constraint
-  FK_customer_has_agreement foreign key (customer_customerid)
-  references customers (customerid);
-
 alter table customers add constraint UK_customer_code unique (customer_code);
 alter table manifests add constraint UK_manifest_code unique (manifest_code);
-alter table reference add constraint UK_ref_number unique (number);
 
-/*alter table reference_customer_agreement add constraint UK_rl1id0jix6976fo1ikry3vu09 unique (customer_agreementid)
-alter table reference_storage_location add constraint UK_i4vtrxqu6fhqmelu5sco48jmt unique (storage_locationid)
-alter table tpa_manifest_real add constraint UK_7j5p50symyoimu87n87os1euw unique (manifest_realid)
-alter table tpa_manifest_real add constraint UK_pt72pdep74yqgar64irt0vbn5 unique (tpaid)
-alter table ttt_manifest add constraint UK_fijik3g56ghj2d6a1nk1d4566 unique (manifestid)
-alter table reference_supplier_agreement add constraint UK_26ykruesknbxghbaxv75xdvod unique (supplier_agreementid)*/
+alter table reference add constraint FK_customer_customerid foreign key (customer_customerid) references customers (customerid);
+alter table reference add constraint FK_storage_locationid foreign key (storage_locationid) references storage_location (storage_locationid);
+alter table reference add constraint FK_supplier_supplierid foreign key (supplier_supplierid) references suppliers (supplierid);
 
 alter table storage_location add constraint UK_stor_loc_code unique (code);
 alter table suppliers add constraint UK_suppl_vendor_code unique (vendor_code);
@@ -238,33 +234,6 @@ alter table manifests add constraint
 FKeesr8uocnnbiwbh0vt71ahltq foreign key (supplierid) references suppliers (supplierid);
 
 /*reference_customer_agreement*/
-alter table reference_customer_agreement
-add constraint FK_reference_to_ca foreign key (referenceid)
-references reference (referenceid);
-
-alter table reference_customer_agreement
-add constraint FK_customer_agreement foreign key (customer_agreementid)
-references customer_agreement (customer_agreementid);
-
-/*reference_supplier_agreement*/
-alter table reference_supplier_agreement
-add constraint FK_reference_to_sa
-foreign key (referenceid) references reference (referenceid);
-
-alter table reference_supplier_agreement
-add constraint FK_supplier_agreement
-foreign key (supplier_agreementid) references suplier_agreement (supplier_agreementid);
-
-alter table suplier_agreement
-  add constraint FKahck418ythrr37tiw3xjm21ha
-  foreign key (supplier_supplierid) references suppliers (supplierid);
-
-/* = storage_location to suplier_agreement = */
-alter table suplier_agreement
-  add constraint FK_suplier_agreement_to_storage_locationid
-  foreign key (storage_locationid)
-  references storage_location (storage_locationid);
-
 alter table tpa
 add constraint FK7s8srhwg1mj56ssrk7yxoey1x
 foreign key (status_statusid) references tpa_status (statusid);
@@ -320,3 +289,45 @@ alter table users
 add constraint FK_user_has_role
 foreign key (role_id) references roles (id);
 
+
+/*alter table customer_agreement add constraint
+  FK_customer_has_agreement foreign key (customer_customerid)
+  references customers (customerid);*/
+/*alter table reference add constraint UK_ref_number unique (number);
+*/
+/*alter table reference add constraint UK_customer_agreement unique (customer_agreement)
+alter table reference add constraint UK_supplier_agreement unique (supplier_agreement)
+alter table reference_customer_agreement add constraint UK_rl1id0jix6976fo1ikry3vu09 unique (customer_agreementid)
+alter table reference_storage_location add constraint UK_i4vtrxqu6fhqmelu5sco48jmt unique (storage_locationid)
+alter table tpa_manifest_real add constraint UK_7j5p50symyoimu87n87os1euw unique (manifest_realid)
+alter table tpa_manifest_real add constraint UK_pt72pdep74yqgar64irt0vbn5 unique (tpaid)
+alter table ttt_manifest add constraint UK_fijik3g56ghj2d6a1nk1d4566 unique (manifestid)
+alter table reference_supplier_agreement add constraint UK_26ykruesknbxghbaxv75xdvod unique (supplier_agreementid)*/
+
+/*alter table reference_customer_agreement
+add constraint FK_reference_to_ca foreign key (referenceid)
+references reference (referenceid);*/
+/*
+alter table reference_customer_agreement
+add constraint FK_customer_agreement foreign key (customer_agreementid)
+references customer_agreement (customer_agreementid);
+*/
+/*reference_supplier_agreement*/
+/*alter table reference_supplier_agreement
+add constraint FK_reference_to_sa
+foreign key (referenceid) references reference (referenceid);
+*/
+/*alter table reference_supplier_agreement
+add constraint FK_supplier_agreement
+foreign key (supplier_agreementid) references suplier_agreement (supplier_agreementid);
+*/
+/*alter table suplier_agreement
+  add constraint FKahck418ythrr37tiw3xjm21ha
+  foreign key (supplier_supplierid) references suppliers (supplierid);
+*/
+/* = storage_location to suplier_agreement = */
+/*alter table suplier_agreement
+  add constraint FK_suplier_agreement_to_storage_locationid
+  foreign key (storage_locationid)
+  references storage_location (storage_locationid);
+*/
