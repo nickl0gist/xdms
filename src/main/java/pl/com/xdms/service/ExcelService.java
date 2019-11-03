@@ -2,27 +2,33 @@ package pl.com.xdms.service;
 
 import lombok.Data;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.AreaReference;
-import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.configuration.ExcelProperties;
+import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.reference.Reference;
+import pl.com.xdms.domain.storloc.StorageLocation;
+import pl.com.xdms.domain.supplier.Supplier;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import static org.apache.poi.ss.usermodel.BorderStyle.THIN;
 
 /**
  * Created on 26.10.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -32,106 +38,304 @@ public class ExcelService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExcelService.class);
 
-    private final ExcelProperties referenceBase;
-    private final String sheetNameForReferences;
+    private final ExcelProperties referenceBaseProps;
+    private final ReferenceService referenceService;
+    private final StorageLocationService storageLocationService;
+    private final CustomerService customerService;
+    private final SupplierService supplierService;
 
-    @Value("${field.divider}")
-    private String fieldDivider;
 
     @Autowired
-    public ExcelService(ExcelProperties referenceBase) {
-        this.referenceBase = referenceBase;
-        this.sheetNameForReferences = referenceBase.getSheetName();
+    public ExcelService(ExcelProperties referenceBaseProps,
+                        ReferenceService referenceService,
+                        StorageLocationService storageLocationService,
+                        CustomerService customerService,
+                        SupplierService supplierService) {
+
+        this.referenceBaseProps = referenceBaseProps;
+        this.referenceService = referenceService;
+        this.storageLocationService = storageLocationService;
+        this.customerService = customerService;
+        this.supplierService = supplierService;
     }
 
-    public ByteArrayInputStream referencesToExcel(List<Reference> references) {
-        try (XSSFWorkbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+    /**
+     * @param filePath - Path to the file .xlsx which was sent by the user. This file should contain references to be
+     *                 updated or saved in database
+     * @return - List of References
+     */
+    public List<Reference> readExcel(Path filePath) {
+        LOG.warn(filePath.toString());
+        try {
+            //get excel workbook
+            Workbook workbook = WorkbookFactory.create(new FileInputStream(filePath.toString()));
+            Sheet sheet = workbook.getSheetAt(0);
+            return readSheet(sheet);
+        } catch (IOException e) {
+            LOG.warn(e.getStackTrace().toString());
+        }
+        return new ArrayList<>();
+    }
 
-            CreationHelper creationHelper = workbook.getCreationHelper();
-            XSSFSheet sheet = workbook.createSheet(sheetNameForReferences);
-
-            // Set which area the table should be placed in
-            AreaReference areaReference = creationHelper.createAreaReference(
-                    new CellReference(0, 0),
-                    new CellReference(references.size(), referenceBase.getColumns().size() - 1));
-
-            // Create table
-            XSSFTable table = sheet.createTable(areaReference);
-            table.setName(sheetNameForReferences);
-            table.setDisplayName(sheetNameForReferences);
-
-            // For now, create the initial style in a low-level way
-            table.getCTTable().addNewTableStyleInfo();
-            table.getCTTable().getTableStyleInfo().setName("TableStyleMedium2");
-
-            // Style the table
-            XSSFTableStyleInfo tableStyle = (XSSFTableStyleInfo) table.getStyle();
-            tableStyle.setShowColumnStripes(false);
-            tableStyle.setShowRowStripes(true);
-            tableStyle.setFirstColumn(false);
-            tableStyle.setLastColumn(false);
-
-            Font rowFont = workbook.createFont();
-            rowFont.setColor(IndexedColors.BLACK.getIndex());
-
-            //Creating cell style
-            XSSFCellStyle cellStyle = getXssfCellStyle(workbook);
-
-            //Row for Header
-            Row headerRow = sheet.createRow(0);
-            headerRow.setHeight((short) 600);
-
-            //Inserting header names into header row
-            int index = 0;
-            for (Map.Entry<String, Integer> entry : referenceBase.getColumns().entrySet()) {
-                Cell cell = headerRow.createCell(index);
-                sheet.setColumnWidth(index, entry.getValue() * referenceBase.getColumnWidthIndex());
-                cell.setCellValue(entry.getKey().substring(entry.getKey().lastIndexOf('.') + 1));
-                cell.setCellStyle(cellStyle);
-                cell.getCellStyle().setFont(getHeaderFont(workbook));
-                index++;
+    /**
+     * @param sheet - instance of Excel Sheet from Workbook which was sent by user.
+     * @return List of References initialized from given sheet.
+     */
+    private List<Reference> readSheet(Sheet sheet) {
+        Iterator<Row> rowIterator = sheet.rowIterator();
+        List<Reference> referenceList = new ArrayList<>();
+        //iterate through rows
+        while (rowIterator.hasNext()) {
+            Reference reference = new Reference();
+            Row row = rowIterator.next();
+            //skip header row
+            if (row.getRowNum() == 0 || row.getRowNum() == 1) {
+                continue;
             }
-
-            //inserting values from references into rows starting from 1
-            int rowIdx = 1;
-            for (Reference reference : references) {
-                String[] refAsList = reference.toStringForExcel(fieldDivider).split(fieldDivider);
-                Row row = sheet.createRow(rowIdx++);
-                row.setRowStyle(cellStyle);
-                row.setRowStyle(workbook.createCellStyle());
-                row.getRowStyle().setFont(rowFont);
-                row.getRowStyle().setWrapText(false);
-                for (int i = 0; i < refAsList.length; i++) {
-                    row.createCell(i).setCellStyle(row.getRowStyle());
-                    row.getCell(i).setCellValue(refAsList[i]);
+            Iterator<Cell> cellIterator = row.cellIterator();
+            //Iterate each cell in row
+            while (cellIterator.hasNext()) {
+                Cell cell = cellIterator.next();
+                int cellIndex = cell.getColumnIndex();
+                switch (cellIndex) {
+                    case 0:
+                        Long id = (((Double) getValueFromCell(cell)).longValue() == 0)
+                                ? null
+                                : ((Double) getValueFromCell(cell)).longValue();
+                        reference.setReferenceID(id);
+                        break;
+                    case 1:
+                        String number = (cell.getCellType() == CellType.NUMERIC)
+                                ? ((Double) getValueFromCell(cell)).longValue() + ""
+                                : cell.getStringCellValue();
+                        reference.setNumber(number);
+                        break;
+                    case 2:
+                        reference.setName((String) getValueFromCell(cell));
+                        break;
+                    case 3:
+                        reference.setDesignationEN((String) getValueFromCell(cell));
+                        break;
+                    case 4:
+                        reference.setDesignationRU((String) getValueFromCell(cell));
+                        break;
+                    case 5:
+                        String hsCoode = (cell.getCellType() == CellType.NUMERIC)
+                                ? ((Double) getValueFromCell(cell)).longValue() + ""
+                                : cell.getStringCellValue();
+                        reference.setHsCode(hsCoode);
+                        break;
+                    case 6:
+                        reference.setWeight((Double) getValueFromCell(cell));
+                        break;
+                    case 7:
+                        reference.setWeightOfPackaging((Double) getValueFromCell(cell));
+                        break;
+                    case 8:
+                        reference.setStackability(((Double) getValueFromCell(cell)).intValue());
+                        break;
+                    case 9:
+                        reference.setPcsPerPU(((Double) getValueFromCell(cell)).intValue());
+                        break;
+                    case 10:
+                        reference.setPcsPerHU(((Double) getValueFromCell(cell)).intValue());
+                        break;
+                    case 11:
+                        reference.setPalletWeight((Double) getValueFromCell(cell));
+                        break;
+                    case 12:
+                        reference.setPalletHeight(((Double) getValueFromCell(cell)).intValue());
+                        break;
+                    case 13:
+                        reference.setPalletLength(((Double) getValueFromCell(cell)).intValue());
+                        break;
+                    case 14:
+                        reference.setPalletWidth(((Double) getValueFromCell(cell)).intValue());
+                        break;
+                    case 15:
+                        Supplier supplier = supplierService.getSupplierByName(cell.getStringCellValue());
+                        reference.setSupplier(supplier);
+                        break;
+                    case 16:
+                        String supplierAgreement = (cell.getCellType() == CellType.NUMERIC)
+                                ? ((Double) getValueFromCell(cell)).longValue() + ""
+                                : cell.getStringCellValue();
+                        reference.setSupplierAgreement(supplierAgreement);
+                        break;
+                    case 17:
+                        Customer customer = customerService.getCustomerByName(cell.getStringCellValue());
+                        reference.setCustomer(customer);
+                        break;
+                    case 18:
+                        String customerAgreement = (cell.getCellType() == CellType.NUMERIC)
+                                ? ((Double) getValueFromCell(cell)).longValue() + ""
+                                : cell.getStringCellValue();
+                        reference.setCustomerAgreement(customerAgreement);
+                        break;
+                    case 19:
+                        StorageLocation storageLocation = storageLocationService.getStorageLocationByCode(cell.getStringCellValue());
+                        reference.setStorageLocation(storageLocation);
+                        break;
+                    case 20:
+                        reference.setIsActive((Boolean) getValueFromCell(cell));
+                        break;
                 }
+            }
+            LOG.info("Reference : {}", reference);
+            referenceList.add(reference);
+        }
+
+        return referenceList;
+    }
+
+    /**
+     * Utility method to get cell value based on cell type
+     *
+     * @param cell - Cell Entity.
+     * @return
+     */
+    private Object getValueFromCell(Cell cell) {
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case BOOLEAN:
+                return cell.getBooleanCellValue();
+            case NUMERIC:
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return cell.getDateCellValue();
+                }
+                return cell.getNumericCellValue();
+            case FORMULA:
+                return cell.getCellFormula();
+            case BLANK:
+                return 0.0;
+            default:
+                return 0.0;
+        }
+    }
+
+    /**
+     * Method is used to make user be able to download reference base in .xlsx file.
+     *
+     * @param references list of references from controller.
+     * @return ByteArrayInputStream with template filled by the information from DB.
+     * The file will be filled starting from index pointed in *rowIdx*
+     */
+    public ByteArrayInputStream referencesToExcelFromTemplate(List<Reference> references) {
+        try (XSSFWorkbook workbook = (XSSFWorkbook) WorkbookFactory.create(
+                new FileInputStream(referenceBaseProps.getPathToReferenceTemplate()));
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            XSSFSheet sheet = workbook.getSheetAt(0);
+            int rowIdx = 2;
+            for (Reference reference : references) {
+                Row row = sheet.createRow(rowIdx++);
+                fillRowWithData(reference, row, getXssfCellStyle(workbook));
             }
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.warn(e.getMessage());
         }
         return null;
     }
 
-    private Font getHeaderFont(XSSFWorkbook workbook) {
-        Font headerFont = workbook.createFont();
-        headerFont.setBold(true);
-        headerFont.setColor(IndexedColors.WHITE.getIndex());
-        return headerFont;
+    private void fillRowWithData(Reference reference, Row row, CellStyle style) {
+        Cell idCell = row.createCell(0);
+        idCell.setCellValue(reference.getReferenceID());
+        idCell.setCellStyle(style);
+
+        Cell numberCell = row.createCell(1);
+        numberCell.setCellValue(reference.getNumber());
+        numberCell.setCellStyle(style);
+
+        Cell nameCell = row.createCell(2);
+        nameCell.setCellValue(reference.getName());
+        nameCell.setCellStyle(style);
+
+        Cell desEnCell = row.createCell(3);
+        desEnCell.setCellValue(reference.getDesignationEN());
+        desEnCell.setCellStyle(style);
+
+        Cell desRuCell = row.createCell(4);
+        desRuCell.setCellValue(reference.getDesignationRU());
+        desRuCell.setCellStyle(style);
+
+        Cell hsCodeCell = row.createCell(5);
+        hsCodeCell.setCellValue(reference.getHsCode());
+        hsCodeCell.setCellStyle(style);
+
+        Cell weightCell = row.createCell(6);
+        weightCell.setCellValue(reference.getWeight());
+        weightCell.setCellStyle(style);
+
+        Cell weightOfPackCell = row.createCell(7);
+        weightOfPackCell.setCellValue(reference.getWeightOfPackaging());
+        weightOfPackCell.setCellStyle(style);
+
+        Cell stakabilityCell = row.createCell(8);
+        stakabilityCell.setCellValue(reference.getStackability());
+        stakabilityCell.setCellStyle(style);
+
+        Cell pcsPerPuCell = row.createCell(9);
+        pcsPerPuCell.setCellValue(reference.getPcsPerPU());
+        pcsPerPuCell.setCellStyle(style);
+
+        Cell pcsPerHuCell = row.createCell(10);
+        pcsPerHuCell.setCellValue(reference.getPcsPerHU());
+        pcsPerHuCell.setCellStyle(style);
+
+        Cell palletWeightCell = row.createCell(11);
+        palletWeightCell.setCellValue(reference.getPalletWeight());
+        palletWeightCell.setCellStyle(style);
+
+        Cell palletHeightCell = row.createCell(12);
+        palletHeightCell.setCellValue(reference.getPalletHeight());
+        palletHeightCell.setCellStyle(style);
+
+        Cell palletLengthCell = row.createCell(13);
+        palletLengthCell.setCellValue(reference.getPalletLength());
+        palletLengthCell.setCellStyle(style);
+
+        Cell palletWidthCell = row.createCell(14);
+        palletWidthCell.setCellValue(reference.getPalletWidth());
+        palletWidthCell.setCellStyle(style);
+
+        Cell supplierCell = row.createCell(15);
+        supplierCell.setCellValue(reference.getSupplier().getName());
+        supplierCell.setCellStyle(style);
+
+        Cell supplierAgrCell = row.createCell(16);
+        supplierAgrCell.setCellValue(reference.getSupplierAgreement());
+        supplierAgrCell.setCellStyle(style);
+
+        Cell customerCell = row.createCell(17);
+        customerCell.setCellValue(reference.getCustomer().getName());
+        customerCell.setCellStyle(style);
+
+        Cell customerAgrCell = row.createCell(18);
+        customerAgrCell.setCellValue(reference.getCustomerAgreement());
+        customerAgrCell.setCellStyle(style);
+
+        Cell slCodeCell = row.createCell(19);
+        slCodeCell.setCellValue(reference.getStorageLocation().getCode());
+        slCodeCell.setCellStyle(style);
+
+        Cell isActiveCell = row.createCell(20);
+        isActiveCell.setCellValue(reference.getIsActive());
+        isActiveCell.setCellStyle(style);
     }
+
     private XSSFCellStyle getXssfCellStyle(XSSFWorkbook workbook) {
         XSSFCellStyle cellStyle = workbook.createCellStyle();
-        cellStyle.setWrapText(true);
+        cellStyle.setWrapText(false);
         cellStyle.setBorderBottom(THIN);
-        cellStyle.setBottomBorderColor(IndexedColors.BLUE.getIndex());
+        cellStyle.setBottomBorderColor(IndexedColors.BLACK.getIndex());
         cellStyle.setBorderTop(THIN);
-        cellStyle.setTopBorderColor(IndexedColors.BLUE.getIndex());
+        cellStyle.setTopBorderColor(IndexedColors.BLACK1.getIndex());
         cellStyle.setBorderLeft(THIN);
-        cellStyle.setLeftBorderColor(IndexedColors.BLUE.getIndex());
+        cellStyle.setLeftBorderColor(IndexedColors.BLACK.getIndex());
         cellStyle.setBorderRight(THIN);
-        cellStyle.setRightBorderColor(IndexedColors.BLUE.getIndex());
+        cellStyle.setRightBorderColor(IndexedColors.BLACK1.getIndex());
         return cellStyle;
     }
 }

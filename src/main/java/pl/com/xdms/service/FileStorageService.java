@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import pl.com.xdms.configuration.FileStorageProperties;
 import pl.com.xdms.controller.ReferenceController;
@@ -43,18 +42,13 @@ public class FileStorageService {
         }
     }
 
-    public String storeFile(MultipartFile file) {
-        // Normalize file name
-        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-
+    public Path storeFile(MultipartFile file) {
         //Changing fileName to unique name with saving extension
         //RandomStringUtils is used to get random String
-        fileName = String.format("%s.%s",
+        String fileName = String.format("%s.%s",
                 RandomStringUtils.randomAlphanumeric(20),
                 file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf('.') + 1));
-
         try {
-
             if (file.isEmpty()) {
                 throw new FileStorageException("Failed to store empty file " + fileName);
             }
@@ -62,14 +56,13 @@ public class FileStorageService {
             if(fileName.contains("..")) {
                 throw new FileStorageException("Sorry! Filename contains invalid path sequence " + fileName);
             }
-
             // Copy file to the target location (Replacing existing file with the same name)
             Path targetLocation = this.fileStorageLocation.resolve(fileName);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
             LOG.info("Saving File name: {}; Path: {}", fileName, targetLocation);
 
-            return fileName;
+            return targetLocation;
         } catch (IOException ex) {
             throw new FileStorageException("Could not store file " + fileName + ". Please try again!", ex);
         }

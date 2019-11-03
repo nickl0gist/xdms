@@ -1,6 +1,6 @@
 package pl.com.xdms.domain.supplier;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -27,6 +27,7 @@ public class Supplier {
     @NotBlank
     @Size(min = 5, max = 150)
     @NotNull
+    @Column(unique = true)
     private String name;
 
     @NotBlank
@@ -63,7 +64,8 @@ public class Supplier {
     private Boolean isActive;
 
     @OneToMany(mappedBy = "supplier")
-    @JsonBackReference
+    //@JsonManagedReference(value="reference-supplier")
+    @JsonIgnore
     private Set<Reference> referenceSet;
 
 

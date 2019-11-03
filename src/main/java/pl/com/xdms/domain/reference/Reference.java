@@ -1,9 +1,6 @@
 package pl.com.xdms.domain.reference;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.storloc.StorageLocation;
 import pl.com.xdms.domain.supplier.Supplier;
@@ -16,6 +13,8 @@ import javax.validation.constraints.*;
 @Setter
 @Getter
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class Reference {
 
     @Id
@@ -25,12 +24,12 @@ public class Reference {
     @NotBlank
     @NotNull
     @Size(min = 4, max = 30)
+    @Pattern(regexp = "^[A-Z0-9-]+$")
     private String number;
 
     @NotBlank
     @NotNull
     @Size(min = 5, max = 200)
-    @Pattern(regexp = "^[A-Z0-9-]+$")
     private String name;
 
     @NotBlank
@@ -104,19 +103,16 @@ public class Reference {
     private String customerAgreement;
 
     @NotNull
-    @Size(max = 50)
     @ManyToOne
     @JoinColumn
-    @JsonManagedReference
+    //@JsonBackReference(value="reference-customer")
     @ToString.Exclude
     private Customer customer;
 
-    @NotBlank
     @NotNull
-    @Size(max = 50)
     @ManyToOne
     @JoinColumn
-    @JsonManagedReference
+    //@JsonBackReference(value="reference-supplier")
     @ToString.Exclude
     private Supplier supplier;
 
@@ -124,31 +120,6 @@ public class Reference {
     @ManyToOne
     @JoinColumn(name = "storage_locationid")
     private StorageLocation storageLocation;
-
-    public String toStringForExcel(String fieldDivider) {
-
-        return referenceID +
-                fieldDivider + number +
-                fieldDivider + name +
-                fieldDivider + designationEN +
-                fieldDivider + designationRU +
-                fieldDivider + hsCode +
-                fieldDivider + weight +
-                fieldDivider + weightOfPackaging +
-                fieldDivider + stackability +
-                fieldDivider + pcsPerPU +
-                fieldDivider + pcsPerHU +
-                fieldDivider + palletWeight +
-                fieldDivider + palletHeight +
-                fieldDivider + palletLength +
-                fieldDivider + palletWidth +
-                fieldDivider + supplier.getName() +
-                fieldDivider + supplierAgreement +
-                fieldDivider + customer.getName() +
-                fieldDivider + customerAgreement +
-                fieldDivider + storageLocation.getCode() +
-                fieldDivider + isActive;
-    }
 }
 
 

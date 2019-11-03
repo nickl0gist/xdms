@@ -6,11 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import pl.com.xdms.domain.reference.Reference;
-import pl.com.xdms.payload.UploadFileResponse;
-import pl.com.xdms.service.FileStorageService;
 import pl.com.xdms.service.ReferenceService;
 
 import java.util.List;
@@ -26,13 +22,11 @@ public class ReferenceController {
     private static final Logger LOG = LoggerFactory.getLogger(ReferenceController.class);
 
     private final ReferenceService referenceService;
-    private final FileStorageService fileStorageService;
+
 
     @Autowired
-    public ReferenceController(ReferenceService referenceService,
-                               FileStorageService fileStorageService) {
+    public ReferenceController(ReferenceService referenceService) {
         this.referenceService = referenceService;
-        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping
@@ -76,20 +70,6 @@ public class ReferenceController {
     @GetMapping("/search/{searchString}")
     public List<Reference> searchReferencesByString(@PathVariable String searchString){
         return referenceService.search(searchString);
-    }
-
-    //TODO Change to upload the Excel file with references and update DB.
-    @PostMapping("/uploadFile")
-    public UploadFileResponse uploadFile(@RequestParam("file") MultipartFile file) {
-        String fileName = fileStorageService.storeFile(file);
-
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("coordinator/references/downloadFile/")
-                .path(fileName)
-                .toUriString();
-
-        return new UploadFileResponse(fileName, fileDownloadUri,
-                file.getContentType(), file.getSize());
     }
 
     //TODO check updated Objects and new Objects from controllers if they are created properly before sending them

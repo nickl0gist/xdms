@@ -53,6 +53,10 @@ public class ReferenceService {
         referenceRepository.save(reference);
     }
 
+    public void save(List<Reference> references) {
+        referenceRepository.saveAll(references);
+    }
+
     public List<Reference> search(String searchString) {
         return referenceRepository.findReferenceInSearch(searchString);
     }

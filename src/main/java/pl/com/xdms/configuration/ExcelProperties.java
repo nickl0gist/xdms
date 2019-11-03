@@ -6,8 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 
-import java.util.TreeMap;
-
 /**
  * Created on 28.10.2019
  * @author Mykola Horkov
@@ -18,10 +16,6 @@ import java.util.TreeMap;
 @ConfigurationProperties(prefix = "referencebase")
 @Data
 public class ExcelProperties {
-
-    private TreeMap<String, Integer> columns;
-    @Value("${referencebase.column-width-index}")
-    private int columnWidthIndex;
-    @Value("${referencebase.sheetName}")
-    private String sheetName;
+    @Value("${referencebase.template}")
+    private String pathToReferenceTemplate;
 }

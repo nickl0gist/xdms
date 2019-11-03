@@ -1,6 +1,6 @@
 package pl.com.xdms.domain.customer;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -26,6 +26,7 @@ public class Customer {
     @NotBlank
     @NotNull
     @Size(min = 5, max = 150)
+    @Column(unique = true)
     private String name;
 
     @NotBlank
@@ -64,7 +65,8 @@ public class Customer {
     private Boolean isActive;
 
     @OneToMany(mappedBy = "customer")
-    @JsonBackReference
+    //@JsonManagedReference(value="reference-customer")
+    @JsonIgnore
     private Set<Reference> referenceSet;
 
 /*    @NotNull
