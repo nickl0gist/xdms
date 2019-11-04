@@ -20,9 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import static org.apache.poi.ss.usermodel.BorderStyle.THIN;
 
@@ -64,7 +62,7 @@ public class ExcelService {
      *                 updated or saved in database
      * @return - List of References
      */
-    public List<Reference> readExcel(Path filePath) {
+    public Map<Integer,Reference> readExcel(Path filePath) {
         LOG.warn(filePath.toString());
         try {
             //get excel workbook
@@ -74,16 +72,16 @@ public class ExcelService {
         } catch (IOException e) {
             LOG.warn(e.getStackTrace().toString());
         }
-        return new ArrayList<>();
+        return new HashMap<>();
     }
 
     /**
      * @param sheet - instance of Excel Sheet from Workbook which was sent by user.
      * @return List of References initialized from given sheet.
      */
-    private List<Reference> readSheet(Sheet sheet) {
+    private Map<Integer,Reference> readSheet(Sheet sheet) {
         Iterator<Row> rowIterator = sheet.rowIterator();
-        List<Reference> referenceList = new ArrayList<>();
+        Map<Integer,Reference> referenceMap = new HashMap<>();
         //iterate through rows
         while (rowIterator.hasNext()) {
             Reference reference = new Reference();
@@ -114,10 +112,16 @@ public class ExcelService {
                         reference.setName((String) getValueFromCell(cell));
                         break;
                     case 3:
-                        reference.setDesignationEN((String) getValueFromCell(cell));
+                        String designationEn = (cell.getCellType() == CellType.BLANK)
+                                ? null
+                                :(String) getValueFromCell(cell);
+                        reference.setDesignationEN(designationEn);
                         break;
                     case 4:
-                        reference.setDesignationRU((String) getValueFromCell(cell));
+                        String designationRu = (cell.getCellType() == CellType.BLANK)
+                                ? null
+                                :(String) getValueFromCell(cell);
+                        reference.setDesignationRU(designationRu);
                         break;
                     case 5:
                         String hsCoode = (cell.getCellType() == CellType.NUMERIC)
@@ -182,10 +186,10 @@ public class ExcelService {
                 }
             }
             LOG.info("Reference : {}", reference);
-            referenceList.add(reference);
+            referenceMap.put(row.getRowNum()+1,reference);
         }
 
-        return referenceList;
+        return referenceMap;
     }
 
     /**

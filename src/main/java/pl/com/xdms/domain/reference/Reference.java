@@ -21,102 +21,102 @@ public class Reference {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long referenceID;
 
-    @NotBlank
-    @NotNull
-    @Size(min = 4, max = 30)
-    @Pattern(regexp = "^[A-Z0-9-]+$")
+    @NotBlank (message = "{validation.notblank.message}")
+    @NotNull (message = "{validation.notnull.message}")
+    @Size(min = 4, max = 30, message = "{validation.reference.number.pattern}")
+    @Pattern(regexp = "^[A-Z0-9-]+", message = "{validation.reference.number.message}")
     private String number;
 
-    @NotBlank
-    @NotNull
-    @Size(min = 5, max = 200)
+    @NotBlank (message = "{validation.reference.notblank}")
+    @NotNull (message = "{validation.reference.notnull}")
+    @Size(min = 5, max = 200, message = "{validation.reference.name.size}")
     private String name;
 
-    @NotBlank
-    @NotNull
-    @Size(min = 4, max = 30)
+    @NotBlank (message = "{validation.notblank.message}")
+    @NotNull (message = "{validation.notnull.message}")
+    @Size(min = 4, message = "{validation.reference.hscode.size}")
     private String hsCode;
 
-    @NotNull
-    @Min(0)
+    @NotNull (message = "{validation.notnull.message}")
+    @Min(value = 0, message = "{validation.minimal.zero}")
     private double weight;
 
-    @NotNull
-    @Min(0)
+    @NotNull (message = "{validation.notnull.message}")
+    @Min(value = 0, message = "{validation.minimal.zero }")
     private double weightOfPackaging;
 
-    @NotNull
-    @Min(1)
-    @Max(6)
+    @NotNull (message = "{validation.notnull.message}")
+    @Min(value = 1, message = "{validation.reference.min.1}")
+    @Max(value = 6, message = "{validation.reference.max.6}")
     private int stackability;
 
-    @NotNull
-    @Min(1)
+    @NotNull (message = "{validation.notnull.message}")
+    @Min(value = 1, message = "{validation.reference.min.pcsPerPu}")
     private int pcsPerPU;
 
-    @NotNull
-    @Min(1)
+    @NotNull (message = "{validation.notnull.message}")
+    @Min(value = 1, message = "{validation.reference.min.pcsPerHu}")
     private int pcsPerHU;
 
-    @NotNull
-    @Min(1)
+    @NotNull (message = "{validation.notnull.message}")
+    @Min(value = 1, message = "{validation.reference.min.palletWeight}")
     double palletWeight;
 
-    @NotNull
-    @Min(0)
+    @NotNull (message = "{validation.notnull.message}")
+    @Min(value = 0, message = "{validation.minimal.zero }")
     int palletHeight;
 
-    @NotNull
-    @Min(0)
+    @NotNull (message = "{validation.notnull.message}")
+    @Min(value = 0, message = "{validation.minimal.zero }")
     int palletLength;
 
-    @NotNull
-    @Min(0)
+    @NotNull (message = "{validation.notnull.message}")
+    @Min(value = 0, message = "{validation.minimal.zero }")
     int palletWidth;
 
-    @NotNull
+    @NotNull (message = "{validation.notnull.message}")
     @Column(columnDefinition = "BIT default true", nullable = false)
     private Boolean isActive;
 
-    @NotBlank
-    @NotNull
-    @Size(min = 5, max = 200)
+    @NotBlank (message = "{validation.notblank.message}")
+    @NotNull (message = "{validation.notnull.message}")
+    @Size(min = 5, max = 200, message = "{filed.reference.designation}")
     private String designationEN;
 
-    @Size(max = 200)
+    @Size(max = 200, message = "{filed.reference.designation}")
     private String designationDE;
 
-    @NotNull
-    @Size(max = 200)
+    @NotNull (message = "{validation.notnull.message}")
+    @Size(max = 200, message = "{filed.reference.designation}")
     private String designationRU;
 
     @Size(max = 200)
-    @NotNull
+    @NotNull (message = "{validation.notnull.message}")
     @Column(unique = true)
-    @Pattern(regexp = "^[0-9]+$")
+    @Pattern(regexp = "^[0-9]+", message = "{validation.reference.agreement.message}")
     private String supplierAgreement;
 
     @Size(max = 200)
-    @NotNull
+    @NotNull (message = "{validation.notnull.message}")
     @Column(unique = true)
-    @Pattern(regexp = "^[0-9]+$")
+    @Pattern(regexp = "^[0-9]+", message = "{validation.reference.agreement.message}")
     private String customerAgreement;
 
-    @NotNull
+    @NotNull (message = "{validation.notnull.message}")
     @ManyToOne
     @JoinColumn
     //@JsonBackReference(value="reference-customer")
     @ToString.Exclude
     private Customer customer;
 
-    @NotNull
+    @NotNull (message = "{validation.notnull.message}")
     @ManyToOne
     @JoinColumn
     //@JsonBackReference(value="reference-supplier")
     @ToString.Exclude
     private Supplier supplier;
 
-    @NotNull
+    @NotNull (message = "{validation.notnull.message}")
     @ManyToOne
     @JoinColumn(name = "storage_locationid")
     private StorageLocation storageLocation;

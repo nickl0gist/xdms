@@ -3,16 +3,21 @@ package pl.com.xdms.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.reference.Reference;
 import pl.com.xdms.service.ReferenceService;
+import pl.com.xdms.service.RequestErrorService;
 
+import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created on 19.10.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -22,11 +27,13 @@ public class ReferenceController {
     private static final Logger LOG = LoggerFactory.getLogger(ReferenceController.class);
 
     private final ReferenceService referenceService;
+    private final RequestErrorService requestErrorService;
 
 
     @Autowired
-    public ReferenceController(ReferenceService referenceService) {
+    public ReferenceController(ReferenceService referenceService, RequestErrorService requestErrorService) {
         this.referenceService = referenceService;
+        this.requestErrorService = requestErrorService;
     }
 
     @GetMapping
@@ -40,9 +47,9 @@ public class ReferenceController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Reference> getReferenceById(@PathVariable Long id){
+    public ResponseEntity<Reference> getReferenceById(@PathVariable Long id) {
         Reference reference = referenceService.getRefById(id);
-        if (reference != null){
+        if (reference != null) {
             LOG.info("Reference found {}", reference);
             return ResponseEntity.ok(reference);
         } else {
@@ -51,9 +58,16 @@ public class ReferenceController {
         }
     }
 
+    @GetMapping("/search/{searchString}")
+    public List<Reference> searchReferencesByString(@PathVariable String searchString) {
+        return referenceService.search(searchString);
+    }
+
     @PutMapping
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Reference> updateReference(@RequestBody Reference reference){
+    public ResponseEntity<Reference> updateReference(@RequestBody @Valid Reference reference, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()){
+            return getReferenceResponseEntity(reference, bindingResult);
+        }
         Reference repositoryReference = referenceService.updateReference(reference);
         return (repositoryReference != null)
                 ? ResponseEntity.ok(repositoryReference)
@@ -61,18 +75,27 @@ public class ReferenceController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public void addReference(@RequestBody Reference reference){
-        LOG.info("Try to create reference with Id:{} , number:{}",reference.getReferenceID(), reference.getNumber());
+    public ResponseEntity<Reference> addReference(@RequestBody @Valid Reference reference, BindingResult bindingResult) {
+        LOG.info("Try to create reference with Id:{} , number:{}", reference.getReferenceID(), reference.getNumber());
+        if (bindingResult.hasErrors()) {
+            return getReferenceResponseEntity(reference, bindingResult);
+        }
         referenceService.save(reference);
+        return ResponseEntity.status(201).build();
     }
 
-    @GetMapping("/search/{searchString}")
-    public List<Reference> searchReferencesByString(@PathVariable String searchString){
-        return referenceService.search(searchString);
+    /**
+     * If reference from Put/Post (updating/creating) request has validation errors
+     * the method will create response headers from BindingResult errors.
+     * @param reference which failed check.
+     * @param bindingResult keeps errors occurred after reference was checked
+     * @return Response entity with reference in body and errors as http headers.
+     */
+    private ResponseEntity<Reference> getReferenceResponseEntity(@Valid @RequestBody Reference reference, BindingResult bindingResult) {
+        HttpHeaders headers = new HttpHeaders();
+        Map<String, String> map = requestErrorService.getErrors(bindingResult);
+        LOG.warn("Errors : {}", map.entrySet());
+        headers.setAll(map);
+        return ResponseEntity.status(422).headers(headers).body(reference);
     }
-
-    //TODO check updated Objects and new Objects from controllers if they are created properly before sending them
-    // to Database?
-
 }

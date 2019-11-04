@@ -10,6 +10,7 @@ import pl.com.xdms.domain.user.Role;
 import pl.com.xdms.domain.user.User;
 import pl.com.xdms.service.UserService;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -47,7 +48,7 @@ public class UserController {
     }
 
     @PutMapping
-    public ResponseEntity<User> updateUser(@RequestBody User updatedUser){
+    public ResponseEntity<User> updateUser(@RequestBody @Valid User updatedUser){
         User repositoryUser = userService.updateUser(updatedUser);
         return (repositoryUser != null)
                 ? ResponseEntity.ok(repositoryUser)
@@ -56,7 +57,7 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void addUser(@RequestBody User user) {
+    public void addUser(@RequestBody @Valid User user) {
         LOG.info("Try to create reference {}",user);
         userService.save(user);
     }

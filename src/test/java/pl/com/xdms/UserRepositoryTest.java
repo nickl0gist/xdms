@@ -57,12 +57,13 @@ public class UserRepositoryTest {
 
     @Test
     public void whenFindById_thenReturnUser() {
-        //When
+        // given
         User alex = new User(null,"AlexO", "passwordddd", "alex", "testAlex", "email@ert.tu", roleForTests);
         entityManager.persist(alex);
         entityManager.flush();
+        // when
         User found = userRepository.findById(1L).get();
-
+        // then
         Assert.assertEquals(found.getUsername(), alex.getUsername());
     }
 }

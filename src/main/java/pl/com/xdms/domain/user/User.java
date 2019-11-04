@@ -19,33 +19,33 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @NotNull
+    @NotBlank (message = "{validation.reference.notblank}")
+    @NotNull (message = "{validation.reference.notnull}")
     @Column(unique = true)
     @Size(min = 1, max = 100)
     private String username;
 
-    @NotNull
+    @NotNull (message = "{validation.reference.notnull}")
     @Size(min = 10, max = 100, message = "password min=10 / max=100 ")
     private String password;
 
-    @NotBlank
-    @NotNull
+    @NotBlank (message = "{validation.reference.notblank}")
+    @NotNull (message = "{validation.reference.notnull}")
     @Size(max = 50)
     private String firstName;
 
-    @NotBlank
-    @NotNull
+    @NotBlank (message = "{validation.reference.notblank}")
+    @NotNull (message = "{validation.reference.notnull}")
     @Size(max = 50)
     private String lastName;
 
-    @NotBlank
-    @NotNull
+    @NotBlank (message = "{validation.reference.notblank}")
+    @NotNull (message = "{validation.reference.notnull}")
     @Email
     @Size(max = 200)
     private String email;
 
-    @NotNull
+    @NotNull (message = "{validation.reference.notnull}")
     @ManyToOne
     @JoinColumn
     private Role role;

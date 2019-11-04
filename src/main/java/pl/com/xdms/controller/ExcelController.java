@@ -8,6 +8,7 @@ import org.springframework.core.io.InputStreamSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.com.xdms.domain.reference.Reference;
@@ -15,12 +16,20 @@ import pl.com.xdms.service.ExcelService;
 import pl.com.xdms.service.FileStorageService;
 import pl.com.xdms.service.ReferenceService;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import java.io.ByteArrayInputStream;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created on 28.10.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -44,7 +53,7 @@ public class ExcelController {
     }
 
     @GetMapping("/download/references.xlsx")
-    public ResponseEntity<InputStreamSource> downloadReferencesBase(){
+    public ResponseEntity<InputStreamSource> downloadReferencesBase() {
 
         List<Reference> references = referenceService.getAllReferences();
         ByteArrayInputStream in = excelService.referencesToExcelFromTemplate(references);
@@ -61,16 +70,38 @@ public class ExcelController {
     @PostMapping("/references/uploadFile")
     public List<Reference> uploadFile(@RequestParam("file") MultipartFile file) {
         Path filePath = fileStorageService.storeFile(file);
+        Map<Integer, Reference> referenceMap = excelService.readExcel(filePath);
 
-        List<Reference> referenceList = excelService.readExcel(filePath);
-        return referenceList;
+        return referenceMap.entrySet()
+                .stream()
+                .map(x -> referenceValidation(x.getKey(), x.getValue()))
+                .collect(Collectors.toList());
         //referenceService.save(referenceList);
+    }
+
+    private Reference referenceValidation(Integer key, Reference reference) {
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+        Set<ConstraintViolation<Reference>> constraintValidator = validator.validate(reference);
+        if (!constraintValidator.isEmpty()) {
+            LOG.warn("Row {} : {}", key, constraintValidator);
+            reference.setIsActive(false);
+        }
+        return reference;
     }
 
     @PostMapping("/references/saveall")
     @ResponseStatus(HttpStatus.CREATED)
-    public void saveAllReferences(@RequestBody List<Reference> referenceList){
+    public ResponseEntity<List<Reference>> saveAllReferences(@RequestBody List<@Valid Reference> referenceList, BindingResult bindingResult) {
+/*        if (bindingResult.hasErrors()) {
+            return ResponseEntity.status(423)
+                    .header("Message", "Some of references have unsupported properties")
+                    .body(referenceList);
+        }*/
         referenceList.forEach(x -> LOG.info(x.toString()));
-        referenceService.save(referenceList);
+        referenceService.save(referenceList.stream()
+                .filter(Reference::getIsActive)
+                .collect(Collectors.toList())
+        );
+        return ResponseEntity.status(201).header("Message", "Only Active References were saved").body(referenceList);
     }
 }
