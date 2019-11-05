@@ -6,9 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.com.xdms.domain.reference.Reference;
@@ -17,7 +15,6 @@ import pl.com.xdms.service.FileStorageService;
 import pl.com.xdms.service.ReferenceService;
 
 import javax.validation.ConstraintViolation;
-import javax.validation.Valid;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import java.io.ByteArrayInputStream;
@@ -29,7 +26,6 @@ import java.util.stream.Collectors;
 
 /**
  * Created on 28.10.2019
- *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -67,6 +63,10 @@ public class ExcelController {
                 .body(new InputStreamResource(in));
     }
 
+    /**
+     * @param file - excel file from user with references.
+     * @return - list of validated references. Not valid references will have status isAstive = false.
+     */
     @PostMapping("/references/uploadFile")
     public List<Reference> uploadFile(@RequestParam("file") MultipartFile file) {
         Path filePath = fileStorageService.storeFile(file);
@@ -76,9 +76,14 @@ public class ExcelController {
                 .stream()
                 .map(x -> referenceValidation(x.getKey(), x.getValue()))
                 .collect(Collectors.toList());
-        //referenceService.save(referenceList);
     }
 
+    /**
+     * Check if reference is Valid. If it isn`t isActive field will be set to false.
+     * @param key - number of row in Excel sheet staring from 1
+     * @param reference - Reference mapped from Excel row
+     * @return - Reference instance
+     */
     private Reference referenceValidation(Integer key, Reference reference) {
         Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
         Set<ConstraintViolation<Reference>> constraintValidator = validator.validate(reference);
@@ -89,14 +94,13 @@ public class ExcelController {
         return reference;
     }
 
+    /**
+     * Controller saves on Active references
+     * @param referenceList to be persisted in Database
+     * @return status "Created" and reference list from request with both statuses.
+     */
     @PostMapping("/references/saveall")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<List<Reference>> saveAllReferences(@RequestBody List<@Valid Reference> referenceList, BindingResult bindingResult) {
-/*        if (bindingResult.hasErrors()) {
-            return ResponseEntity.status(423)
-                    .header("Message", "Some of references have unsupported properties")
-                    .body(referenceList);
-        }*/
+    public ResponseEntity<List<Reference>> saveAllReferences(@RequestBody List<Reference> referenceList) {
         referenceList.forEach(x -> LOG.info(x.toString()));
         referenceService.save(referenceList.stream()
                 .filter(Reference::getIsActive)
