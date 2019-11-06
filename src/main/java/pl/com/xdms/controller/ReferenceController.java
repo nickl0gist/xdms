@@ -13,7 +13,6 @@ import pl.com.xdms.service.RequestErrorService;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created on 19.10.2019
@@ -63,10 +62,12 @@ public class ReferenceController {
         return referenceService.search(searchString);
     }
 
+    @SuppressWarnings("Duplicates")
     @PutMapping
     public ResponseEntity<Reference> updateReference(@RequestBody @Valid Reference reference, BindingResult bindingResult) {
         if (bindingResult.hasErrors()){
-            return getReferenceResponseEntity(reference, bindingResult);
+            HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
+            return ResponseEntity.status(422).headers(headers).body(reference);
         }
         Reference repositoryReference = referenceService.updateReference(reference);
         return (repositoryReference != null)
@@ -78,24 +79,10 @@ public class ReferenceController {
     public ResponseEntity<Reference> addReference(@RequestBody @Valid Reference reference, BindingResult bindingResult) {
         LOG.info("Try to create reference with Id:{} , number:{}", reference.getReferenceID(), reference.getNumber());
         if (bindingResult.hasErrors()) {
-            return getReferenceResponseEntity(reference, bindingResult);
+            HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
+            return ResponseEntity.status(422).headers(headers).body(reference);
         }
         referenceService.save(reference);
         return ResponseEntity.status(201).build();
-    }
-
-    /**
-     * If reference from Put/Post (updating/creating) request has validation errors
-     * the method will create response headers from BindingResult errors.
-     * @param reference which failed check.
-     * @param bindingResult keeps errors occurred after reference was checked
-     * @return Response entity with reference in body and errors as http headers.
-     */
-    private ResponseEntity<Reference> getReferenceResponseEntity(@Valid @RequestBody Reference reference, BindingResult bindingResult) {
-        HttpHeaders headers = new HttpHeaders();
-        Map<String, String> map = requestErrorService.getErrors(bindingResult);
-        LOG.warn("Errors : {}", map.entrySet());
-        headers.setAll(map);
-        return ResponseEntity.status(422).headers(headers).body(reference);
     }
 }

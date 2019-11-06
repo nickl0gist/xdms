@@ -7,9 +7,10 @@ package pl.com.xdms.domain.user;
  */
 public enum RoleEnum {
     ADMIN_ROLE ("ADMIN_ROLE"),
-    TEST_ROLE ("TEST_ROLE"),
     USER_ROLE ("USER_ROLE"),
-    GUEST_ROLE ("GUEST_ROLE");
+    GUEST_ROLE ("GUEST_ROLE"),
+    PLANNER_ROLE ("PLANNER_ROLE"),
+    TRAFFIC_ROLE ("TRAFFIC_ROLE");
 
     private String code;
 

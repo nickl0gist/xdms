@@ -6,7 +6,7 @@ _User Controller:_
 
 * xdms.com/admin/users - [GET] get all users list
 
-* xdms.com/admin/users/__{orderBy}/{direction}__ - [GET] - get all users with ordering by:
+* xdms.com/admin/users/orderby/__{orderBy}/{direction}__ - [GET] - get all users with ordering by:
 - `{orderBy}`:
   * username;
   * firstname;
