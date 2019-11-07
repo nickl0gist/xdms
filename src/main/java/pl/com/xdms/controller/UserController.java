@@ -70,7 +70,7 @@ public class UserController {
         }
         log.info("Try to create reference {}",user);
         userService.save(user);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(201).build();
     }
 
     @DeleteMapping("/{id}")

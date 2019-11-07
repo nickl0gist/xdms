@@ -12,13 +12,13 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import pl.com.xdms.controller.UserController;
+import pl.com.xdms.domain.user.Role;
 import pl.com.xdms.domain.user.User;
+import pl.com.xdms.service.RoleService;
 import pl.com.xdms.service.UserService;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -45,7 +45,7 @@ public class UserControllerTest {
     private UserService userService;
 
     @Autowired
-    private UserController userController;
+    private RoleService roleService;
 
     @Test
     public void getAllUsersTest() throws Exception {
@@ -90,20 +90,16 @@ public class UserControllerTest {
         Long id = 1L;
         User user = userService.getUserById(id);
         user.setUsername(null);
+        user.setPassword("Fooo");
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(user);
         this.mockMvc.perform(put("/admin/users").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
-                .andExpect(content().string(json.replaceAll("^ +| +$|\\R |, +|\\{ ", "")
-                        .replace(" : ", ":")
-                        .replaceAll("   \"| \"", "\"")
-                        .replaceAll("}", "").trim() + "}}"
-                ))
+                .andExpect(content().string(jsonClean(json)))
                 .andExpect(header().exists("user-username_NotNull"))
                 .andExpect(header().exists("user-username_NotBlank"))
                 .andExpect(header().exists("user-password_Size"));
-
     }
 
     @Test
@@ -113,6 +109,81 @@ public class UserControllerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(""));
+    }
+
+    @Test
+    public void createUserTestStatusOk() throws Exception {
+        User user = new User();
+        Role role = roleService.getRoleById(1L);
+        user.setUsername("USerName");
+        user.setFirstName("kokoko");
+        user.setLastName("KUKUKUKUKU");
+        user.setPassword("trewsdfgtr");
+        user.setRole(role);
+        user.setEmail("email@email.em");
+
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(user);
+        this.mockMvc.perform(post("/admin/users").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(201));
+
+    }
+
+    @Test
+    public void createUserTestStatusNOk() throws Exception {
+        User user = new User();
+        Role role = roleService.getRoleById(1L);
+        user.setLastName("KUKUKUKUKU");
+        user.setPassword("trs");
+        user.setRole(role);
+        user.setEmail("email@email.em");
+
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(user);
+        this.mockMvc.perform(put("/admin/users").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(422))
+                .andExpect(content().string(jsonClean(json)))
+                .andExpect(header().exists("user-username_NotNull"))
+                .andExpect(header().exists("user-username_NotBlank"))
+                .andExpect(header().exists("user-password_Size"))
+                .andExpect(header().exists("user-firstName_NotBlank"))
+                .andExpect(header().exists("user-firstName_NotNull"));
+    }
+
+    @Test
+    public void deleteUserByIdStatusOk() throws Exception{
+        Long id = 1L;
+        this.mockMvc.perform(delete("/admin/users/"+id))
+                .andDo(print())
+                .andExpect(content().string("deleted"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void deleteUserByIdStringParameter() throws Exception{
+        String id = "test";
+        this.mockMvc.perform(delete("/admin/users/"+id))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(""));
+    }
+
+    @Test
+    public void deleteUserByIdNotFound() throws Exception{
+        Long id = 10L;
+        this.mockMvc.perform(delete("/admin/users/"+id))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(""));
+    }
+
+    private String jsonClean(String json){
+        return json.replaceAll("^ +| +$|\\R |, +|\\{ ", "")
+                .replace(" : ", ":")
+                .replaceAll("   \"| \"", "\"")
+                .replaceAll("}", "").trim() + "}}";
     }
 
 }

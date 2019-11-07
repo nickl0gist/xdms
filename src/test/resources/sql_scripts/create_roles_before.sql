@@ -10,5 +10,5 @@ values
 insert into users
   (id,username, first_name, last_name, email, password, role_id)
 VALUES
-  (1,'Admin', 'Adm Name', 'Adm Last Name', 'admin@bla.pl', 'admin_pas', 1),
+  (1,'Admin', 'Adm Name', 'Adm Last Name', 'admin@bla.pl', 'admin_pass', 1),
   (2,'User', 'User Name', 'User Last Name', 'user@bla.pl', 'user_pass', 2);
