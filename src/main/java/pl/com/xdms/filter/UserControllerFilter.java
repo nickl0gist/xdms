@@ -1,7 +1,6 @@
 package pl.com.xdms.filter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.*;
@@ -14,15 +13,12 @@ import java.io.IOException;
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
+@Slf4j
 @Component
 public class UserControllerFilter implements Filter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(UserControllerFilter.class);
-
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-
-    }
+    public void init(FilterConfig filterConfig) throws ServletException {    }
 
     @Override
     public void doFilter(ServletRequest servletRequest,
@@ -32,13 +28,11 @@ public class UserControllerFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) servletRequest;
         HttpServletResponse res = (HttpServletResponse) servletResponse;
 
-        LOG.info(req.getRequestURI());
+        log.info(req.getRequestURI());
         res.sendRedirect("/admin/users/role/asc");
         //filterChain.doFilter(servletRequest, servletResponse);
     }
 
     @Override
-    public void destroy() {
-
-    }
+    public void destroy() {    }
 }

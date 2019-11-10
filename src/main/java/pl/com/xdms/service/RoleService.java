@@ -1,7 +1,6 @@
 package pl.com.xdms.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,14 +16,13 @@ import java.util.Optional;
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
+@Slf4j
 @Service
 public class RoleService {
-    private static final Logger LOG = LoggerFactory.getLogger(RoleService.class);
     private RoleRepository roleRepository;
 
     @Value("${default.user.role.name}")
     private String defaultUserRole;
-    private RoleEnum roleEnum;
 
     @Autowired
     public RoleService(RoleRepository roleRepository) {
@@ -40,12 +38,12 @@ public class RoleService {
         }
     }
 
-    public Role getDefaultUserRole(){
-        this.roleEnum = RoleEnum.valueOf(defaultUserRole);
+    private Role getDefaultUserRole(){
+        RoleEnum roleEnum = RoleEnum.valueOf(defaultUserRole);
         return roleRepository.findRoleByName(roleEnum);
     }
 
-    public List<Role> getAllRoles() {
+    List<Role> getAllRoles() {
         return roleRepository.findAll();
     }
 }

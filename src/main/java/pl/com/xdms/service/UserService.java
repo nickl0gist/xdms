@@ -1,7 +1,6 @@
 package pl.com.xdms.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.domain.user.Role;
@@ -11,9 +10,9 @@ import pl.com.xdms.repository.UserRepository;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class UserService {
-    private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
     private UserRepository userRepository;
     private RoleService roleService;
 
@@ -83,7 +82,7 @@ public class UserService {
                 + " / LastName:" + user.getLastName()
                 + " / UserName: " + user.getUsername();
 
-        LOG.info("User Creation: {}", userInfo);
+        log.info("User Creation: {}", userInfo);
         userRepository.save(user);
     }
 

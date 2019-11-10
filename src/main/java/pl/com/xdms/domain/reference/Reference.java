@@ -35,6 +35,7 @@ public class Reference {
     @NotBlank (message = "{validation.notblank.message}")
     @NotNull (message = "{validation.notnull.message}")
     @Size(min = 4, message = "{validation.reference.hscode.size}")
+    @Pattern(regexp = "^[0-9]+", message = "{validation.reference.hsCode}")
     private String hsCode;
 
     @NotNull (message = "{validation.notnull.message}")

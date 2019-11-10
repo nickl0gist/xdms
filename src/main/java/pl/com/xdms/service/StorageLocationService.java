@@ -23,11 +23,11 @@ public class StorageLocationService {
 
     public StorageLocation getStorageLocationByCode(String code){
         Optional<StorageLocation> storLocOpt = storageLocationRepository.getFirstByCode(code);
-        if(storLocOpt.isPresent()){
-           return storLocOpt.get();
-        } else {
-            return null;
-        }
+        return storLocOpt.orElse(null);
     }
 
+    public StorageLocation getStorageLocationById(Long id) {
+        Optional<StorageLocation> storLocOpt = storageLocationRepository.findById(id);
+        return storLocOpt.orElse(null);
+    }
 }

@@ -24,10 +24,11 @@ public class CustomerService {
 
     public Customer getCustomerByName(String name){
         Optional<Customer> customerOptional = customerRepository.findByName(name);
-        if(customerOptional.isPresent()){
-            return customerOptional.get();
-        } else {
-            return null;
-        }
+        return  customerOptional.orElse(null);
+    }
+
+    public Customer getCustomerById (Long id){
+        Optional<Customer> customerOptional = customerRepository.findById(id);
+        return  customerOptional.orElse(null);
     }
 }

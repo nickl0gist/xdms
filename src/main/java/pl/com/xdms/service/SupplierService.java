@@ -24,10 +24,11 @@ public class SupplierService {
 
     public Supplier getSupplierByName(String name){
         Optional<Supplier> supplierOptional = supplierRepository.findByName(name);
-        if(supplierOptional.isPresent()){
-            return supplierOptional.get();
-        } else {
-            return null;
-        }
+        return supplierOptional.orElse(null);
+    }
+
+    public Supplier getSupplierById(Long id) {
+        Optional<Supplier> supplierOptional = supplierRepository.findById(id);
+        return supplierOptional.orElse(null);
     }
 }
