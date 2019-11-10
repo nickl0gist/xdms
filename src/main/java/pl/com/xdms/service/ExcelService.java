@@ -1,12 +1,11 @@
 package pl.com.xdms.service;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.configuration.ExcelProperties;
@@ -15,12 +14,11 @@ import pl.com.xdms.domain.reference.Reference;
 import pl.com.xdms.domain.storloc.StorageLocation;
 import pl.com.xdms.domain.supplier.Supplier;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.*;
+import java.io.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import static org.apache.poi.ss.usermodel.BorderStyle.THIN;
 
@@ -32,16 +30,14 @@ import static org.apache.poi.ss.usermodel.BorderStyle.THIN;
  */
 @Service
 @Data
+@Slf4j
 public class ExcelService {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ExcelService.class);
 
     private final ExcelProperties referenceBaseProps;
     private final ReferenceService referenceService;
     private final StorageLocationService storageLocationService;
     private final CustomerService customerService;
     private final SupplierService supplierService;
-
 
     @Autowired
     public ExcelService(ExcelProperties referenceBaseProps,
@@ -58,19 +54,18 @@ public class ExcelService {
     }
 
     /**
-     * @param filePath - Path to the file .xlsx which was sent by the user. This file should contain references to be
+     * @param file - Path to the file .xlsx which was sent by the user. This file should contain references to be
      *                 updated or saved in database
      * @return - List of References
      */
-    public Map<Integer,Reference> readExcel(Path filePath) {
-        LOG.warn(filePath.toString());
-        try {
+    public Map<Long,Reference> readExcel(File file) {
+        log.warn("File received {}", file.getPath());
+        try(Workbook workbook = WorkbookFactory.create(file)) {
             //get excel workbook
-            Workbook workbook = WorkbookFactory.create(new FileInputStream(filePath.toString()));
             Sheet sheet = workbook.getSheetAt(0);
             return readSheet(sheet);
         } catch (IOException e) {
-            LOG.warn(e.getStackTrace().toString());
+            log.warn("Cannot get Sheet from given file {}", e.toString());
         }
         return new HashMap<>();
     }
@@ -79,9 +74,9 @@ public class ExcelService {
      * @param sheet - instance of Excel Sheet from Workbook which was sent by user.
      * @return List of References initialized from given sheet.
      */
-    private Map<Integer,Reference> readSheet(Sheet sheet) {
+    private Map<Long,Reference> readSheet(Sheet sheet) {
         Iterator<Row> rowIterator = sheet.rowIterator();
-        Map<Integer,Reference> referenceMap = new HashMap<>();
+        Map<Long,Reference> referenceMap = new HashMap<>();
         //iterate through rows
         while (rowIterator.hasNext()) {
             Reference reference = new Reference();
@@ -185,8 +180,8 @@ public class ExcelService {
                         break;
                 }
             }
-            LOG.info("Reference : {}", reference);
-            referenceMap.put(row.getRowNum()+1,reference);
+            log.info("Reference : {}", reference);
+            referenceMap.put(row.getRowNum()+1L,reference);
         }
 
         return referenceMap;
@@ -194,7 +189,6 @@ public class ExcelService {
 
     /**
      * Utility method to get cell value based on cell type
-     *
      * @param cell - Cell Entity.
      * @return
      */
@@ -220,7 +214,6 @@ public class ExcelService {
 
     /**
      * Method is used to make user be able to download reference base in .xlsx file.
-     *
      * @param references list of references from controller.
      * @return ByteArrayInputStream with template filled by the information from DB.
      * The file will be filled starting from index pointed in *rowIdx*
@@ -238,7 +231,7 @@ public class ExcelService {
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
         } catch (IOException e) {
-            LOG.warn(e.getMessage());
+            log.warn(e.getMessage());
         }
         return null;
     }

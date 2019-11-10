@@ -1,7 +1,6 @@
 package pl.com.xdms.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.InputStreamSource;
@@ -31,9 +30,8 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("coordinator/excel")
+@Slf4j
 public class ExcelController {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ExcelController.class);
 
     private final ExcelService excelService;
     private final ReferenceService referenceService;
@@ -70,7 +68,7 @@ public class ExcelController {
     @PostMapping("/references/uploadFile")
     public List<Reference> uploadFile(@RequestParam("file") MultipartFile file) {
         Path filePath = fileStorageService.storeFile(file);
-        Map<Integer, Reference> referenceMap = excelService.readExcel(filePath);
+        Map<Long, Reference> referenceMap = excelService.readExcel(filePath.toFile());
 
         return referenceMap.entrySet()
                 .stream()
@@ -84,11 +82,11 @@ public class ExcelController {
      * @param reference - Reference mapped from Excel row
      * @return - Reference instance
      */
-    private Reference referenceValidation(Integer key, Reference reference) {
+    private Reference referenceValidation(Long key, Reference reference) {
         Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
         Set<ConstraintViolation<Reference>> constraintValidator = validator.validate(reference);
         if (!constraintValidator.isEmpty()) {
-            LOG.warn("Row {} : {}", key, constraintValidator);
+            log.warn("Row {} : {}", key, constraintValidator);
             reference.setIsActive(false);
         }
         return reference;
@@ -101,7 +99,7 @@ public class ExcelController {
      */
     @PostMapping("/references/saveall")
     public ResponseEntity<List<Reference>> saveAllReferences(@RequestBody List<Reference> referenceList) {
-        referenceList.forEach(x -> LOG.info(x.toString()));
+        referenceList.forEach(x -> log.info(x.toString()));
         referenceService.save(referenceList.stream()
                 .filter(Reference::getIsActive)
                 .collect(Collectors.toList())

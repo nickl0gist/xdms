@@ -1,5 +1,6 @@
 package pl.com.xdms.domain.storloc;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -14,6 +15,7 @@ import javax.validation.constraints.Size;
 @Setter
 @Getter
 @ToString
+@EqualsAndHashCode
 public class StorageLocation {
 
     @Id
