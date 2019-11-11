@@ -2,6 +2,7 @@ package pl.com.xdms;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,36 @@ public class ReferenceControllerTest {
     private SupplierService supplierService;
     @Autowired
     private StorageLocationService storageLocationService;
+
+    private Reference newRef;
+
+    @Before
+    public void init(){
+        newRef = new Reference();
+        Customer customer = customerService.getCustomerById(1L);
+        Supplier supplier = supplierService.getSupplierById(1L);
+        StorageLocation storageLocation = storageLocationService.getStorageLocationById(1L);
+        newRef.setCustomer(customer);
+        newRef.setSupplier(supplier);
+        newRef.setStorageLocation(storageLocation);
+        newRef.setNumber("1234567890-XXX");
+        newRef.setName("Reference Test Name");
+        newRef.setHsCode("80908090");
+        newRef.setWeight(50.50);
+        newRef.setWeightOfPackaging(10);
+        newRef.setStackability(2);
+        newRef.setPcsPerHU(100);
+        newRef.setPcsPerPU(1000);
+        newRef.setIsActive(true);
+        newRef.setPalletWidth(1000);
+        newRef.setPalletLength(800);
+        newRef.setPalletHeight(1500);
+        newRef.setPalletWeight(15);
+        newRef.setDesignationEN("Description of Material");
+        newRef.setDesignationRU("Описание Товара");
+        newRef.setSupplierAgreement("550011223355");
+        newRef.setCustomerAgreement("880088008800");
+    }
 
     @Test
     public void getAllReferences() throws Exception {
@@ -135,30 +166,6 @@ public class ReferenceControllerTest {
 
     @Test
     public void addNewReferenceStatusCreated() throws Exception {
-        Reference newRef = new Reference();
-        Customer customer = customerService.getCustomerById(1L);
-        Supplier supplier = supplierService.getSupplierById(1L);
-        StorageLocation storageLocation = storageLocationService.getStorageLocationById(1L);
-        newRef.setCustomer(customer);
-        newRef.setSupplier(supplier);
-        newRef.setStorageLocation(storageLocation);
-        newRef.setNumber("1234567890-XXX");
-        newRef.setName("Reference Test Name");
-        newRef.setHsCode("80908090");
-        newRef.setWeight(50.50);
-        newRef.setWeightOfPackaging(10);
-        newRef.setStackability(2);
-        newRef.setPcsPerHU(100);
-        newRef.setPcsPerPU(1000);
-        newRef.setIsActive(true);
-        newRef.setPalletWidth(1000);
-        newRef.setPalletLength(800);
-        newRef.setPalletHeight(1500);
-        newRef.setPalletWeight(15);
-        newRef.setDesignationEN("Description of Material");
-        newRef.setDesignationRU("Описание Товара");
-        newRef.setSupplierAgreement("550011223355");
-        newRef.setCustomerAgreement("880088008800");
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newRef);
 
@@ -169,30 +176,12 @@ public class ReferenceControllerTest {
 
     @Test
     public void addNewReferenceStatusBadEntity() throws Exception {
-        Reference newRef = new Reference();
-        Customer customer = customerService.getCustomerById(1L);
-        Supplier supplier = supplierService.getSupplierById(1L);
-        StorageLocation storageLocation = storageLocationService.getStorageLocationById(1L);
-        newRef.setCustomer(customer);
-        newRef.setSupplier(supplier);
-        newRef.setStorageLocation(storageLocation);
+
         newRef.setNumber("1234567890-XXXq!");
-        newRef.setName("Reference Test Name");
         newRef.setHsCode("80908090ds");
-        newRef.setWeight(50.50);
-        newRef.setWeightOfPackaging(10);
-        newRef.setStackability(2);
-        newRef.setPcsPerHU(100);
-        newRef.setPcsPerPU(1000);
-        newRef.setIsActive(true);
-        newRef.setPalletWidth(1000);
-        newRef.setPalletLength(800);
-        newRef.setPalletHeight(1500);
-        newRef.setPalletWeight(15);
-        newRef.setDesignationEN("Description of Material");
-        newRef.setDesignationRU("Описание Товара");
         newRef.setSupplierAgreement("55001122335as5");
         newRef.setCustomerAgreement("88008800880s0");
+
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newRef);
 

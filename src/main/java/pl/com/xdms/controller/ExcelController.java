@@ -99,7 +99,7 @@ public class ExcelController {
      */
     @PostMapping("/references/saveall")
     public ResponseEntity<List<Reference>> saveAllReferences(@RequestBody List<Reference> referenceList) {
-        referenceList.forEach(x -> log.info(x.toString()));
+        referenceList.forEach(x -> log.info("Reference to be save: {}", x.toString()));
         referenceService.save(referenceList.stream()
                 .filter(Reference::getIsActive)
                 .collect(Collectors.toList())

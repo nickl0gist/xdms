@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -19,15 +20,20 @@ import pl.com.xdms.service.ReferenceService;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Created on 10.11.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -53,7 +59,8 @@ public class ExcelControllerTest {
      * Tests that The References from Downloaded file in .xlsx are the same as in Database.
      * We get file and uploading back to server and comparing parsed References from it's rows with
      * References which were get from <tt>referenceService</tt>
-     * Excel uploading and and downloading are in use.
+     * Excel downloading is in use. <tt>ExcelService</tt> is used to parse the rows to Reference Entities
+     *
      * @throws Exception
      */
     @Test
@@ -68,16 +75,50 @@ public class ExcelControllerTest {
         Map<Long, Reference> testFileMap = excelService.readExcel(tempFile)
                 .entrySet()
                 .stream()
-                .collect(Collectors.toMap(x->x.getKey()-2L, x-> x.getValue()));
+                .collect(Collectors.toMap(x -> x.getKey() - 2L, x -> x.getValue()));
 
         List<Reference> referenceList = referenceService.getAllReferences();
         Map<Long, Reference> test = referenceList.stream().collect(Collectors.toMap(Reference::getReferenceID, x -> x));
 
-        log.info("Result {}",testFileMap.equals(test));
-        Assert.assertEquals(testFileMap.get(1L).getReferenceID(),test.get(1L).getReferenceID());
-        Assert.assertEquals(testFileMap.get(2L).getName(),test.get(2L).getName());
-        Assert.assertEquals(testFileMap.get(3L).getDesignationEN(),test.get(3L).getDesignationEN());
+        log.info("Result {}", testFileMap.equals(test));
+        Assert.assertEquals(testFileMap.get(1L).getReferenceID(), test.get(1L).getReferenceID());
+        Assert.assertEquals(testFileMap.get(2L).getName(), test.get(2L).getName());
+        Assert.assertEquals(testFileMap.get(3L).getDesignationEN(), test.get(3L).getDesignationEN());
+    }
 
+    @Test
+    public void parsingUploadedFileWithReferencesTestStatusOk() throws Exception {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource("excelTests/referencesTests.xlsx").getFile());
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file.toPath()));
+
+        mockMvc.perform(multipart("/coordinator/excel/references/uploadFile").file(mockMultipartFile))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(6)));
+
+    }
+
+    @Test
+    public void uploadParsedReferencesFromFileTestBadEntity() throws Exception {
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource("excelTests/referencesTests.xlsx").getFile());
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file.toPath()));
+
+        MvcResult result = mockMvc.perform(multipart("/coordinator/excel/references/uploadFile").file(mockMultipartFile)).andReturn();
+
+        String json = result.getResponse().getContentAsString();
+
+        mockMvc.perform(post("/coordinator/excel/references/saveall").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andExpect(status().is(201))
+                .andExpect(header().stringValues("Message", "Only Active References were saved"))
+                .andExpect(jsonPath("$[3].referenceID").value(isEmptyOrNullString()))
+                .andExpect(jsonPath("$[3].isActive").value(false))
+                .andExpect(jsonPath("$[4].referenceID").value(isEmptyOrNullString()))
+                .andExpect(jsonPath("$[4].isActive").value(false))
+                .andExpect(jsonPath("$[5].referenceID").value(isEmptyOrNullString()))
+                .andExpect(jsonPath("$[5].isActive").value(false));
     }
 
 }
