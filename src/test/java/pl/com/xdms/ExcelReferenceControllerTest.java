@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Slf4j
-public class ExcelControllerTest {
+public class ExcelReferenceControllerTest {
     @Autowired
     private MockMvc mockMvc;
 

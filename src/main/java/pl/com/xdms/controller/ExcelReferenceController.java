@@ -31,16 +31,16 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("coordinator/excel")
 @Slf4j
-public class ExcelController {
+public class ExcelReferenceController {
 
     private final ExcelService excelService;
     private final ReferenceService referenceService;
     private final FileStorageService fileStorageService;
 
     @Autowired
-    public ExcelController(ExcelService excelService,
-                           ReferenceService referenceService,
-                           FileStorageService fileStorageService) {
+    public ExcelReferenceController(ExcelService excelService,
+                                    ReferenceService referenceService,
+                                    FileStorageService fileStorageService) {
         this.excelService = excelService;
         this.referenceService = referenceService;
         this.fileStorageService = fileStorageService;
