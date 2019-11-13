@@ -15,7 +15,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import pl.com.xdms.domain.reference.Reference;
-import pl.com.xdms.service.ExcelService;
+import pl.com.xdms.service.ExcelServiceReference;
 import pl.com.xdms.service.ReferenceService;
 
 import java.io.File;
@@ -50,7 +50,7 @@ public class ExcelReferenceControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private ExcelService excelService;
+    private ExcelServiceReference excelServiceReference;
 
     @Autowired
     private ReferenceService referenceService;
@@ -72,7 +72,7 @@ public class ExcelReferenceControllerTest {
         File tempFile = File.createTempFile("test", ".xlsx", null);
         FileOutputStream fos = new FileOutputStream(tempFile);
         fos.write(result.getResponse().getContentAsByteArray());
-        Map<Long, Reference> testFileMap = excelService.readExcel(tempFile)
+        Map<Long, Reference> testFileMap = excelServiceReference.readExcel(tempFile)
                 .entrySet()
                 .stream()
                 .collect(Collectors.toMap(x -> x.getKey() - 2L, x -> x.getValue()));

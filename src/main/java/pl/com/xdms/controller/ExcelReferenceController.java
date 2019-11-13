@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.com.xdms.domain.reference.Reference;
-import pl.com.xdms.service.ExcelService;
+import pl.com.xdms.service.ExcelServiceReference;
 import pl.com.xdms.service.FileStorageService;
 import pl.com.xdms.service.ReferenceService;
 
@@ -33,15 +33,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ExcelReferenceController {
 
-    private final ExcelService excelService;
+    private final ExcelServiceReference excelServiceReference;
     private final ReferenceService referenceService;
     private final FileStorageService fileStorageService;
 
     @Autowired
-    public ExcelReferenceController(ExcelService excelService,
+    public ExcelReferenceController(ExcelServiceReference excelServiceReference,
                                     ReferenceService referenceService,
                                     FileStorageService fileStorageService) {
-        this.excelService = excelService;
+        this.excelServiceReference = excelServiceReference;
         this.referenceService = referenceService;
         this.fileStorageService = fileStorageService;
     }
@@ -50,7 +50,7 @@ public class ExcelReferenceController {
     public ResponseEntity<InputStreamSource> downloadReferencesBase() {
 
         List<Reference> references = referenceService.getAllReferences();
-        ByteArrayInputStream in = excelService.referencesToExcelFromTemplate(references);
+        ByteArrayInputStream in = excelServiceReference.instanceToExcelFromTemplate(references);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "attachment; filename=references.xlsx");
@@ -68,7 +68,7 @@ public class ExcelReferenceController {
     @PostMapping("/references/uploadFile")
     public List<Reference> uploadFile(@RequestParam("file") MultipartFile file) {
         Path filePath = fileStorageService.storeFile(file);
-        Map<Long, Reference> referenceMap = excelService.readExcel(filePath.toFile());
+        Map<Long, Reference> referenceMap = excelServiceReference.readExcel(filePath.toFile());
 
         return referenceMap.entrySet()
                 .stream()
