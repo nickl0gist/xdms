@@ -60,7 +60,6 @@ public class ExcelReferenceControllerTest {
      * We get file and uploading back to server and comparing parsed References from it's rows with
      * References which were get from <tt>referenceService</tt>
      * Excel downloading is in use. <tt>ExcelService</tt> is used to parse the rows to Reference Entities
-     *
      * @throws Exception
      */
     @Test

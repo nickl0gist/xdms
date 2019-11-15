@@ -106,6 +106,11 @@ public interface ExcelService<T> {
         }
     }
 
+    /**
+     * Methods which are converting cell values to Java type values
+     * @param cell Cell entity from Excel
+     * @return Java Type values
+     */
     default Boolean getBooleanFromCell(Cell cell){
         return (cell.getCellType() == CellType.BOOLEAN)
                 ? (Boolean) getValueFromCell(cell)
