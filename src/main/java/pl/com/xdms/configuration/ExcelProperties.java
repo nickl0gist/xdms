@@ -16,6 +16,11 @@ import org.springframework.context.annotation.PropertySource;
 @ConfigurationProperties(prefix = "referencebase")
 @Data
 public class ExcelProperties {
-    @Value("${referencebase.template}")
+    @Value("${reference.base.template}")
     private String pathToReferenceTemplate;
+    //private Resource pathToReferenceTemplate;
+
+    @Value("${storage.location.template}")
+    private String pathToStorageLocationTemplate;
+    //private Resource pathToStorageLocationTemplate;
 }

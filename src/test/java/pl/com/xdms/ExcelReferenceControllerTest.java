@@ -15,7 +15,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import pl.com.xdms.domain.reference.Reference;
-import pl.com.xdms.service.ExcelServiceReference;
+import pl.com.xdms.service.ExcelReferenceService;
 import pl.com.xdms.service.ReferenceService;
 
 import java.io.File;
@@ -33,7 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Created on 10.11.2019
- *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -46,11 +45,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Slf4j
 public class ExcelReferenceControllerTest {
+
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
-    private ExcelServiceReference excelServiceReference;
+    private ExcelReferenceService excelReferenceService;
 
     @Autowired
     private ReferenceService referenceService;
@@ -72,7 +72,7 @@ public class ExcelReferenceControllerTest {
         File tempFile = File.createTempFile("test", ".xlsx", null);
         FileOutputStream fos = new FileOutputStream(tempFile);
         fos.write(result.getResponse().getContentAsByteArray());
-        Map<Long, Reference> testFileMap = excelServiceReference.readExcel(tempFile)
+        Map<Long, Reference> testFileMap = excelReferenceService.readExcel(tempFile)
                 .entrySet()
                 .stream()
                 .collect(Collectors.toMap(x -> x.getKey() - 2L, x -> x.getValue()));
@@ -110,7 +110,7 @@ public class ExcelReferenceControllerTest {
 
         String json = result.getResponse().getContentAsString();
 
-        mockMvc.perform(post("/coordinator/excel/references/saveall").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/coordinator/excel/references/save_all").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andExpect(status().is(201))
                 .andExpect(header().stringValues("Message", "Only Active References were saved"))
                 .andExpect(jsonPath("$[3].referenceID").value(isEmptyOrNullString()))

@@ -2,7 +2,9 @@ insert into storage_location
   (storage_locationid, code, name)
 VALUES
   (1, 'EX01', 'SL - EX01'),
-  (2, 'EX11', 'SL - EX11');
+  (2, 'EX11', 'SL - EX11'),
+  (3, 'EX25', 'SL - EX25'),
+  (4, 'EX40', 'SL - EX40');
 
 insert into suppliers
   (supplierid, name, vendor_code, country,  city, email, post_code, street)

@@ -38,7 +38,7 @@ public class StorageLocationController {
 
     @GetMapping("/{id}")
     public ResponseEntity getStorLocById (@PathVariable Long id){
-        StorageLocation storageLocation = storageLocationService.getUserById(id);
+        StorageLocation storageLocation = storageLocationService.getStorLocById(id);
         if (storageLocation != null){
             log.info("Storage Location found {}", storageLocation);
             return ResponseEntity.ok(storageLocation);

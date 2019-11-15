@@ -36,7 +36,7 @@ public class StorageLocationService {
         return storageLocationRepository.findAll();
     }
 
-    public StorageLocation getUserById(Long id) {
+    public StorageLocation getStorLocById(Long id) {
         Optional<StorageLocation> sl = storageLocationRepository.findById(id);
         return sl.orElse(null);
     }
@@ -53,5 +53,9 @@ public class StorageLocationService {
 
     public void save(StorageLocation storageLocation) {
         storageLocationRepository.save(storageLocation);
+    }
+
+    public void save(List<StorageLocation> storageLocationList) {
+        storageLocationRepository.saveAll(storageLocationList);
     }
 }

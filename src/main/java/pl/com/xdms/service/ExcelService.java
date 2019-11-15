@@ -6,6 +6,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +39,7 @@ public interface ExcelService<T> {
      * @return ByteArrayInputStream with template filled by the information from DB.
      * The file will be filled starting from index pointed in *rowIdx*
      */
-    ByteArrayInputStream instanceToExcelFromTemplate(List<T> objList);
+    ByteArrayInputStream instanceToExcelFromTemplate(List<T> objList) throws IOException;
 
     /**
      * @param object - values of properties T object will be parsed into cell values of the row
@@ -88,4 +90,50 @@ public interface ExcelService<T> {
                 return 0.0;
         }
     }
+
+    /**
+     * The method used for parsing of given file to excel file.
+     * @param file to be parsed to Workbook
+     * @return map with entities of file is ok, empty map if any Exception was occurred.
+     */
+    default Map<Long, T> readFile(File file){
+        try(Workbook workbook = WorkbookFactory.create(file)) {
+            //get excel workbook
+            Sheet sheet = workbook.getSheetAt(0);
+            return readSheet(sheet);
+        } catch (IOException e) {
+            return new HashMap<>();
+        }
+    }
+
+    default Boolean getBooleanFromCell(Cell cell){
+        return (cell.getCellType() == CellType.BOOLEAN)
+                ? (Boolean) getValueFromCell(cell)
+                : false;
+    }
+
+    default String getStringFromNumericCell(Cell cell) {
+        return (cell.getCellType() == CellType.NUMERIC)
+                ? ((Double) getValueFromCell(cell)).longValue() + ""
+                : cell.getStringCellValue() + "";
+    }
+
+    default Double getDoubleFromCell(Cell cell) {
+        return (cell.getCellType() == CellType.NUMERIC)
+                ? (Double) getValueFromCell(cell)
+                : 0.0;
+    }
+
+    default String getStringFromCell(Cell cell) {
+        return (cell.getCellType() != CellType.STRING)
+                ? null
+                : (String) getValueFromCell(cell);
+    }
+
+    default Long getLongFromCell(Cell cell) {
+        return (((Double) getValueFromCell(cell)).longValue() == 0)
+                ? null
+                : ((Double) getValueFromCell(cell)).longValue();
+    }
+
 }

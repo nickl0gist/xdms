@@ -33,4 +33,7 @@ public class StorageLocation {
     @Size(min = 4, max = 100)
     private String name;
 
+    @Transient
+    private Boolean isActive;
+
 }

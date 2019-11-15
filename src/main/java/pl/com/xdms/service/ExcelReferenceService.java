@@ -21,13 +21,14 @@ import java.util.Map;
 
 /**
  * Created on 26.10.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
 @Service
 @Data
 @Slf4j
-public class ExcelServiceReference implements ExcelService<Reference> {
+public class ExcelReferenceService implements ExcelService<Reference> {
 
     private final ExcelProperties referenceBaseProps;
     private final ReferenceService referenceService;
@@ -36,7 +37,7 @@ public class ExcelServiceReference implements ExcelService<Reference> {
     private final SupplierService supplierService;
 
     @Autowired
-    public ExcelServiceReference(ExcelProperties referenceBaseProps,
+    public ExcelReferenceService(ExcelProperties referenceBaseProps,
                                  ReferenceService referenceService,
                                  StorageLocationService storageLocationService,
                                  CustomerService customerService,
@@ -50,30 +51,25 @@ public class ExcelServiceReference implements ExcelService<Reference> {
     }
 
     @Override
-    public Map<Long,Reference> readExcel(File file) {
-        log.warn("File received {}", file.getPath());
-        try(Workbook workbook = WorkbookFactory.create(file)) {
-            //get excel workbook
-            Sheet sheet = workbook.getSheetAt(0);
-            return readSheet(sheet);
-        } catch (IOException e) {
-            log.warn("Cannot get Sheet from given file {}", e.toString());
+    public Map<Long, Reference> readExcel(File file) {
+        log.warn("File with References received {}", file.getPath());
+        Map<Long, Reference> map = readFile(file);
+        if (map.isEmpty()) {
+            log.warn("Error occurred while reading the file with References");
         }
-        return new HashMap<>();
+        return map;
     }
 
     @Override
-    public Map<Long,Reference> readSheet(Sheet sheet) {
+    public Map<Long, Reference> readSheet(Sheet sheet) {
         Iterator<Row> rowIterator = sheet.rowIterator();
-        Map<Long,Reference> referenceMap = new HashMap<>();
+        Map<Long, Reference> referenceMap = new HashMap<>();
         //iterate through rows
         while (rowIterator.hasNext()) {
             Reference reference = new Reference();
             Row row = rowIterator.next();
             //skip header row
-            if (row.getRowNum() == 0 || row.getRowNum() == 1) {
-                continue;
-            }
+            if (row.getRowNum() == 0 || row.getRowNum() == 1) continue;
             Iterator<Cell> cellIterator = row.cellIterator();
             //Iterate each cell in row
             while (cellIterator.hasNext()) {
@@ -81,205 +77,170 @@ public class ExcelServiceReference implements ExcelService<Reference> {
                 int cellIndex = cell.getColumnIndex();
                 switch (cellIndex) {
                     case 0:
-                        Long id = (((Double) getValueFromCell(cell)).longValue() == 0)
-                                ? null
-                                : ((Double) getValueFromCell(cell)).longValue();
-                        reference.setReferenceID(id);
+                        reference.setReferenceID(getLongFromCell(cell));
                         break;
                     case 1:
-                        String number = (cell.getCellType() == CellType.NUMERIC)
-                                ? ((Double) getValueFromCell(cell)).longValue() + ""
-                                : cell.getStringCellValue();
-                        reference.setNumber(number);
+                        reference.setNumber(getStringFromCell(cell));
                         break;
                     case 2:
-                        reference.setName((String) getValueFromCell(cell));
+                        reference.setName(getStringFromCell(cell));
                         break;
                     case 3:
-                        String designationEn = (cell.getCellType() == CellType.BLANK)
-                                ? null
-                                :(String) getValueFromCell(cell);
-                        reference.setDesignationEN(designationEn);
+                        reference.setDesignationEN(getStringFromCell(cell));
                         break;
                     case 4:
-                        String designationRu = (cell.getCellType() == CellType.BLANK)
-                                ? null
-                                :(String) getValueFromCell(cell);
-                        reference.setDesignationRU(designationRu);
+                        reference.setDesignationRU(getStringFromCell(cell));
                         break;
                     case 5:
-                        String hsCoode = (cell.getCellType() == CellType.NUMERIC)
-                                ? ((Double) getValueFromCell(cell)).longValue() + ""
-                                : cell.getStringCellValue();
-                        reference.setHsCode(hsCoode);
+                        reference.setHsCode(getStringFromNumericCell(cell));
                         break;
                     case 6:
-                        reference.setWeight((Double) getValueFromCell(cell));
+                        reference.setWeight(getDoubleFromCell(cell));
                         break;
                     case 7:
-                        reference.setWeightOfPackaging((Double) getValueFromCell(cell));
+                        reference.setWeightOfPackaging(getDoubleFromCell(cell));
                         break;
                     case 8:
-                        reference.setStackability(((Double) getValueFromCell(cell)).intValue());
+                        reference.setStackability(getDoubleFromCell(cell).intValue());
                         break;
                     case 9:
-                        reference.setPcsPerPU(((Double) getValueFromCell(cell)).intValue());
+                        reference.setPcsPerPU(getDoubleFromCell(cell).intValue());
                         break;
                     case 10:
-                        reference.setPcsPerHU(((Double) getValueFromCell(cell)).intValue());
+                        reference.setPcsPerHU(getDoubleFromCell(cell).intValue());
                         break;
                     case 11:
-                        reference.setPalletWeight((Double) getValueFromCell(cell));
+                        reference.setPalletWeight(getDoubleFromCell(cell).intValue());
                         break;
                     case 12:
-                        reference.setPalletHeight(((Double) getValueFromCell(cell)).intValue());
+                        reference.setPalletHeight(getDoubleFromCell(cell).intValue());
                         break;
                     case 13:
-                        reference.setPalletLength(((Double) getValueFromCell(cell)).intValue());
+                        reference.setPalletLength(getDoubleFromCell(cell).intValue());
                         break;
                     case 14:
-                        reference.setPalletWidth(((Double) getValueFromCell(cell)).intValue());
+                        reference.setPalletWidth(getDoubleFromCell(cell).intValue());
                         break;
                     case 15:
-                        Supplier supplier = supplierService.getSupplierByName(cell.getStringCellValue());
+                        Supplier supplier = supplierService.getSupplierByName(getStringFromCell(cell));
                         reference.setSupplier(supplier);
                         break;
                     case 16:
-                        String supplierAgreement = (cell.getCellType() == CellType.NUMERIC)
-                                ? ((Double) getValueFromCell(cell)).longValue() + ""
-                                : cell.getStringCellValue();
-                        reference.setSupplierAgreement(supplierAgreement);
+                        reference.setSupplierAgreement(getStringFromNumericCell(cell));
                         break;
                     case 17:
-                        Customer customer = customerService.getCustomerByName(cell.getStringCellValue());
+                        Customer customer = customerService.getCustomerByName(getStringFromCell(cell));
                         reference.setCustomer(customer);
                         break;
                     case 18:
-                        String customerAgreement = (cell.getCellType() == CellType.NUMERIC)
-                                ? ((Double) getValueFromCell(cell)).longValue() + ""
-                                : cell.getStringCellValue();
-                        reference.setCustomerAgreement(customerAgreement);
+                        reference.setCustomerAgreement(getStringFromNumericCell(cell));
                         break;
                     case 19:
-                        StorageLocation storageLocation = storageLocationService.getStorageLocationByCode(cell.getStringCellValue());
+                        StorageLocation storageLocation = storageLocationService.getStorageLocationByCode(getStringFromCell(cell));
                         reference.setStorageLocation(storageLocation);
                         break;
                     case 20:
-                        reference.setIsActive((Boolean) getValueFromCell(cell));
+                        reference.setIsActive(getBooleanFromCell(cell));
                         break;
                 }
             }
             log.info("Reference : {}", reference);
-            referenceMap.put(row.getRowNum()+1L,reference);
+            referenceMap.put(row.getRowNum() + 1L, reference);
         }
-
         return referenceMap;
     }
 
     @Override
-    public ByteArrayInputStream instanceToExcelFromTemplate(List<Reference> objList) {
+    public ByteArrayInputStream instanceToExcelFromTemplate(List<Reference> referenceList) {
+
         try (XSSFWorkbook workbook = (XSSFWorkbook) WorkbookFactory.create(
                 new FileInputStream(referenceBaseProps.getPathToReferenceTemplate()));
+             //new FileInputStream(referenceBaseProps.getPathToReferenceTemplate().getFile()));
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             XSSFSheet sheet = workbook.getSheetAt(0);
             int rowIdx = 2;
-            for (Reference reference : objList) {
+            CellStyle style = getXssfCellStyle(workbook);
+            for (Reference reference : referenceList) {
                 Row row = sheet.createRow(rowIdx++);
-                fillRowWithData(reference, row, getXssfCellStyle(workbook));
+                fillRowWithData(reference, row, style);
             }
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
         } catch (IOException e) {
-            log.warn(e.getMessage());
+            log.warn("Error occurred while creating file with References from database: {}", e.getMessage());
+            return null;
         }
-        return null;
     }
 
     @Override
     public void fillRowWithData(Reference reference, Row row, CellStyle style) {
         Cell idCell = row.createCell(0);
         idCell.setCellValue(reference.getReferenceID());
-        idCell.setCellStyle(style);
 
         Cell numberCell = row.createCell(1);
         numberCell.setCellValue(reference.getNumber());
-        numberCell.setCellStyle(style);
 
         Cell nameCell = row.createCell(2);
         nameCell.setCellValue(reference.getName());
-        nameCell.setCellStyle(style);
 
         Cell desEnCell = row.createCell(3);
         desEnCell.setCellValue(reference.getDesignationEN());
-        desEnCell.setCellStyle(style);
 
         Cell desRuCell = row.createCell(4);
         desRuCell.setCellValue(reference.getDesignationRU());
-        desRuCell.setCellStyle(style);
 
         Cell hsCodeCell = row.createCell(5);
         hsCodeCell.setCellValue(reference.getHsCode());
-        hsCodeCell.setCellStyle(style);
 
         Cell weightCell = row.createCell(6);
         weightCell.setCellValue(reference.getWeight());
-        weightCell.setCellStyle(style);
 
         Cell weightOfPackCell = row.createCell(7);
         weightOfPackCell.setCellValue(reference.getWeightOfPackaging());
-        weightOfPackCell.setCellStyle(style);
 
         Cell stakabilityCell = row.createCell(8);
         stakabilityCell.setCellValue(reference.getStackability());
-        stakabilityCell.setCellStyle(style);
 
         Cell pcsPerPuCell = row.createCell(9);
         pcsPerPuCell.setCellValue(reference.getPcsPerPU());
-        pcsPerPuCell.setCellStyle(style);
 
         Cell pcsPerHuCell = row.createCell(10);
         pcsPerHuCell.setCellValue(reference.getPcsPerHU());
-        pcsPerHuCell.setCellStyle(style);
 
         Cell palletWeightCell = row.createCell(11);
         palletWeightCell.setCellValue(reference.getPalletWeight());
-        palletWeightCell.setCellStyle(style);
 
         Cell palletHeightCell = row.createCell(12);
         palletHeightCell.setCellValue(reference.getPalletHeight());
-        palletHeightCell.setCellStyle(style);
 
         Cell palletLengthCell = row.createCell(13);
         palletLengthCell.setCellValue(reference.getPalletLength());
-        palletLengthCell.setCellStyle(style);
 
         Cell palletWidthCell = row.createCell(14);
         palletWidthCell.setCellValue(reference.getPalletWidth());
-        palletWidthCell.setCellStyle(style);
 
         Cell supplierCell = row.createCell(15);
         supplierCell.setCellValue(reference.getSupplier().getName());
-        supplierCell.setCellStyle(style);
 
         Cell supplierAgrCell = row.createCell(16);
         supplierAgrCell.setCellValue(reference.getSupplierAgreement());
-        supplierAgrCell.setCellStyle(style);
 
         Cell customerCell = row.createCell(17);
         customerCell.setCellValue(reference.getCustomer().getName());
-        customerCell.setCellStyle(style);
 
         Cell customerAgrCell = row.createCell(18);
         customerAgrCell.setCellValue(reference.getCustomerAgreement());
-        customerAgrCell.setCellStyle(style);
 
         Cell slCodeCell = row.createCell(19);
         slCodeCell.setCellValue(reference.getStorageLocation().getCode());
-        slCodeCell.setCellStyle(style);
 
         Cell isActiveCell = row.createCell(20);
         isActiveCell.setCellValue(reference.getIsActive());
-        isActiveCell.setCellStyle(style);
+
+        Iterator<Cell> cellIterator = row.cellIterator();
+        while (cellIterator.hasNext()) {
+            cellIterator.next().setCellStyle(style);
+        }
     }
 
 
