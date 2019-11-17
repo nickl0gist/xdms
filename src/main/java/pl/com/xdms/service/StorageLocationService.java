@@ -36,11 +36,6 @@ public class StorageLocationService {
         return storageLocationRepository.findAll();
     }
 
-    public StorageLocation getStorLocById(Long id) {
-        Optional<StorageLocation> sl = storageLocationRepository.findById(id);
-        return sl.orElse(null);
-    }
-
     public StorageLocation update(StorageLocation storageLocation) {
         Optional<StorageLocation> updatedStorageLocation = storageLocationRepository.findById(storageLocation.getStorageLocationID());
         if(updatedStorageLocation.isPresent()){

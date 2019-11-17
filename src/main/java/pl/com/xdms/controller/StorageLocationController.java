@@ -32,13 +32,13 @@ public class StorageLocationController {
     }
 
     @GetMapping
-    public List<StorageLocation> getAllStroLocs(){
+    public List<StorageLocation> getAllStorageLocations(){
         return storageLocationService.getAllStorLocs();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity getStorLocById (@PathVariable Long id){
-        StorageLocation storageLocation = storageLocationService.getStorLocById(id);
+    public ResponseEntity getStorageLocationById (@PathVariable Long id){
+        StorageLocation storageLocation = storageLocationService.getStorageLocationById(id);
         if (storageLocation != null){
             log.info("Storage Location found {}", storageLocation);
             return ResponseEntity.ok(storageLocation);
@@ -62,7 +62,7 @@ public class StorageLocationController {
     }
 
     @PostMapping
-    public ResponseEntity<StorageLocation> addStorLock(@RequestBody @Valid StorageLocation storageLocation, BindingResult bindingResult){
+    public ResponseEntity<StorageLocation> createStorageLocation(@RequestBody @Valid StorageLocation storageLocation, BindingResult bindingResult){
         if (bindingResult.hasErrors()){
             HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
             return ResponseEntity.status(422).headers(headers).body(storageLocation);
