@@ -2,7 +2,7 @@
 
 #### END POINTS
 
-## _User Controller:_ ##
+##### _User Controller:_ #####
 
 * xdms.com/admin/users - [GET] get all users list
 
