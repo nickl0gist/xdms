@@ -25,7 +25,7 @@ You will get 404(NotFound) in case the user doesnt exist.
 * xdms.com/admin/users/userroles - [GET] - get all existing roles for users.
 
 <a href="#user_controller">Link to Header</a>
-[link](#user_controller)
+[link](#user-content-user-controller)
 
 _Reference Controller:_
 
