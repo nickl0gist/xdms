@@ -1,8 +1,8 @@
 # XDMS REST API
 
-#### END POINTS
+### END POINTS
 
-##### _User Controller:_ #####
+#### _User Controller:_ ####
 
 * xdms.com/admin/users - [GET] get all users list
 
@@ -24,8 +24,8 @@ You will get 404(NotFound) in case the user doesnt exist.
 
 * xdms.com/admin/users/userroles - [GET] - get all existing roles for users.
 
-<a href="#user_controller">Link to Header</a>
-[link](#user-content-user-controller)
+
+[User Controller](#user-content-user-controller)
 
 _Reference Controller:_
 
