@@ -64,6 +64,7 @@ public class ReferenceController {
     @SuppressWarnings("Duplicates")
     @PutMapping
     public ResponseEntity<Reference> updateReference(@RequestBody @Valid Reference reference, BindingResult bindingResult) {
+        log.info("Try to update reference ID: {}, number:{}", reference.getReferenceID(), reference.getNumber());
         if (bindingResult.hasErrors()){
             HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
             return ResponseEntity.status(422).headers(headers).body(reference);
@@ -76,10 +77,9 @@ public class ReferenceController {
 
     @PostMapping
     public ResponseEntity<Reference> addReference(@RequestBody @Valid Reference reference, BindingResult bindingResult) {
-        log.info("Try to create reference with Id:{} , number:{}", reference.getReferenceID(), reference.getNumber());
+        log.info("Try to create reference number:{}, SA: {}", reference.getNumber(), reference.getSupplierAgreement());
         if (bindingResult.hasErrors()) {
-            HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
-            return ResponseEntity.status(422).headers(headers).body(reference);
+            return ResponseEntity.status(422).headers(requestErrorService.getErrorHeaders(bindingResult)).body(reference);
         }
         referenceService.save(reference);
         return ResponseEntity.status(201).build();

@@ -7,10 +7,14 @@ VALUES
   (4, 'EX40', 'SL - EX40');
 
 insert into suppliers
-  (supplierid, name, vendor_code, country,  city, email, post_code, street)
+  (supplierid, name, vendor_code, country,  city, email, post_code, street, is_active )
 VALUES
-  (1, 'BARTON', 111000, 'PL', 'London', 'londom@barton.pl', '06-717', 'Hilton- 55'),
-  (2, 'NoName', 999777, 'FR', 'Washington', 'washington@NoName.fr', '777-777', 'Brayton- 555');
+  (1, 'BARTON', 111000, 'PL', 'London', 'londom@barton.pl', '06-717', 'Hilton- 55', true),
+  (2, 'NoName', 222000, 'FR', 'Amsterdam', 'Amsterdam@NoName.fr', '058-777', 'Kaszta- 555', true),
+  (3, 'ABCDE', 666000, 'AR', 'Grojec', 'Grojec@NoName.fr', '718-777', 'Brayton- 555', true),
+  (4, 'BCDEFG', 777777, 'GE', 'Berlin', 'Berlin@NoName.fr', '222-777', 'Kinsey- 555', false),
+  (5, 'XYZDEO', 707070, 'UK', 'Moscow', 'Moscow@NoName.fr', '301-777', 'Livs- 555', true),
+  (6, 'KLNMO', 555000, 'PT', 'New York', 'Moscow@NoName.fr', '101-777', 'Topolowa- 555', false);
 
 insert into customers
   (customerid, name, customer_code, country, city, email, is_active, post_code, street)

@@ -1,7 +1,6 @@
 package pl.com.xdms.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.domain.reference.Reference;
@@ -15,10 +14,10 @@ import java.util.Optional;
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
+@Slf4j
 @Service
 public class ReferenceService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReferenceService.class);
     private ReferenceRepository referenceRepository;
 
     @Autowired
@@ -46,7 +45,7 @@ public class ReferenceService {
         } else {
             return null;
         }
-        return referenceRepository.findById(reference.getReferenceID()).get();
+        return referenceRepository.findById(reference.getReferenceID()).orElse(null);
     }
 
     public void save(Reference reference) {

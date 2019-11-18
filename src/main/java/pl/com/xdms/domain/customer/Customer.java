@@ -7,10 +7,7 @@ import lombok.ToString;
 import pl.com.xdms.domain.reference.Reference;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.util.Set;
 
 @Entity
@@ -32,7 +29,8 @@ public class Customer {
     @NotBlank
     @NotNull
     @Column(unique = true)
-    private Long customerCode;
+    @Pattern(regexp = "^[0-9]+")
+    private String customerCode;
 
     @NotBlank
     @NotNull

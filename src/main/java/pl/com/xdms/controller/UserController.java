@@ -41,10 +41,10 @@ public class UserController {
     public ResponseEntity<User> getUserById(@PathVariable Long id){
         User user = userService.getUserById(id);
         if (user != null){
-            log.info("found {}", user);
+            log.info("User was found {}", user);
             return ResponseEntity.ok(user);
         } else {
-            log.warn("not found, returning error");
+            log.warn("User with id: {} not found, returning error", id);
             return ResponseEntity.notFound().build();
         }
     }

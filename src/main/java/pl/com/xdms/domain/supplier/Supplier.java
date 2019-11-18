@@ -8,10 +8,7 @@ import lombok.ToString;
 import pl.com.xdms.domain.reference.Reference;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.util.Set;
 
 @Entity
@@ -35,7 +32,8 @@ public class Supplier {
     @NotBlank
     @Column(unique = true)
     @NotNull
-    private Long vendorCode;
+    @Pattern(regexp = "^[0-9]+")
+    private String vendorCode;
 
     @NotBlank
     @Size(min = 5, max = 30)
