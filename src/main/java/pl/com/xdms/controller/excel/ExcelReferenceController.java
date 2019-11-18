@@ -1,29 +1,20 @@
-package pl.com.xdms.controller;
+package pl.com.xdms.controller.excel;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.InputStreamSource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.com.xdms.domain.reference.Reference;
-import pl.com.xdms.service.ExcelReferenceService;
 import pl.com.xdms.service.FileStorageService;
 import pl.com.xdms.service.ReferenceService;
+import pl.com.xdms.service.excel.ExcelReferenceService;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -34,7 +25,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("coordinator/excel")
 @Slf4j
-public class ExcelReferenceController implements ExcelController<Reference>{
+public class ExcelReferenceController implements ExcelController<Reference> {
 
     private final ExcelReferenceService excelReferenceService;
     private final ReferenceService referenceService;
@@ -52,21 +43,8 @@ public class ExcelReferenceController implements ExcelController<Reference>{
     @Override
     @GetMapping("/download/references.xlsx")
     public ResponseEntity<InputStreamSource> downloadBase() throws IOException {
-
         List<Reference> references = referenceService.getAllReferences();
-        ByteArrayInputStream in = excelReferenceService.instanceToExcelFromTemplate(references);
-        in.close();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "attachment; filename=references.xlsx");
-        headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-
-        InputStreamResource isr = new InputStreamResource(in);
-
-        return ResponseEntity
-                .ok()
-                .headers(headers)
-                .body(isr);
+        return getInputStreamSourceResponseEntity(references, excelReferenceService);
     }
 
     @SuppressWarnings("Duplicates")
@@ -85,10 +63,7 @@ public class ExcelReferenceController implements ExcelController<Reference>{
 
     @Override
     public Reference entityValidation(Long key, Reference reference) {
-        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        Set<ConstraintViolation<Reference>> constraintValidator = validator.validate(reference);
-        if (!constraintValidator.isEmpty()) {
-            log.warn("Row would not be persisted {} : {}", key, constraintValidator);
+        if (!validation(key, reference, log)){
             reference.setIsActive(false);
         }
         return reference;
@@ -103,21 +78,5 @@ public class ExcelReferenceController implements ExcelController<Reference>{
                 .collect(Collectors.toList())
         );
         return ResponseEntity.status(201).header("Message", "Only Active References were saved").body(referenceList);
-    }
-
-    @GetMapping("/download/file")
-    public ResponseEntity<InputStreamSource> downloadFile() throws IOException {
-        log.warn("Start");
-
-        ByteArrayInputStream in = new ByteArrayInputStream(Files.readAllBytes(Paths.get("E:/UBU/_XDMS/src/main/resources/exceltemps/references.xlsx")));
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "attachment; filename=references.xlsx");
-        log.warn("End");
-
-        return ResponseEntity
-                .ok()
-                .headers(headers)
-                .body(new InputStreamResource(in));
     }
 }

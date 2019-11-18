@@ -15,7 +15,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import pl.com.xdms.domain.reference.Reference;
-import pl.com.xdms.service.ExcelReferenceService;
+import pl.com.xdms.service.excel.ExcelReferenceService;
 import pl.com.xdms.service.ReferenceService;
 
 import java.io.File;

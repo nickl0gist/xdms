@@ -1,4 +1,4 @@
-package pl.com.xdms.service;
+package pl.com.xdms.service.excel;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +12,10 @@ import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.reference.Reference;
 import pl.com.xdms.domain.storloc.StorageLocation;
 import pl.com.xdms.domain.supplier.Supplier;
+import pl.com.xdms.service.CustomerService;
+import pl.com.xdms.service.ReferenceService;
+import pl.com.xdms.service.StorageLocationService;
+import pl.com.xdms.service.SupplierService;
 
 import java.io.*;
 import java.util.HashMap;
@@ -52,7 +56,7 @@ public class ExcelReferenceService implements ExcelService<Reference> {
 
     @Override
     public Map<Long, Reference> readExcel(File file) {
-        log.warn("File with References received {}", file.getPath());
+        log.info("File with References received {}", file.getPath());
         Map<Long, Reference> map = readFile(file);
         if (map.isEmpty()) {
             log.warn("Error occurred while reading the file with References");

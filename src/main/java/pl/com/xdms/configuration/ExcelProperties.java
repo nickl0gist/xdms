@@ -23,4 +23,8 @@ public class ExcelProperties {
     @Value("${storage.location.template}")
     private String pathToStorageLocationTemplate;
     //private Resource pathToStorageLocationTemplate;
+
+    @Value("${supplier.base.template}")
+    private String pathToSupplierTemplate;
+    //private Resource pathToSupplierTemplate;
 }

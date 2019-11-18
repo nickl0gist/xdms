@@ -1,10 +1,8 @@
-package pl.com.xdms.controller;
+package pl.com.xdms.controller.excel;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.InputStreamSource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,19 +10,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import pl.com.xdms.domain.storloc.StorageLocation;
-import pl.com.xdms.service.ExcelStorageLocationService;
 import pl.com.xdms.service.FileStorageService;
 import pl.com.xdms.service.StorageLocationService;
+import pl.com.xdms.service.excel.ExcelStorageLocationService;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -55,15 +48,7 @@ public class ExcelStorageLocationController implements ExcelController<StorageLo
     @GetMapping("/download/storage_locations.xlsx")
     public ResponseEntity<InputStreamSource> downloadBase() throws IOException {
         List<StorageLocation> storageLocations = storageLocationService.getAllStorLocs();
-        ByteArrayInputStream in = excelStorageLocationService.instanceToExcelFromTemplate(storageLocations);
-        in.close();
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "attachment; filename=storage_locations.xlsx");
-        headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        return ResponseEntity
-                .ok()
-                .headers(headers)
-                .body(new InputStreamResource(in));
+        return getInputStreamSourceResponseEntity(storageLocations, excelStorageLocationService);
     }
 
     @SuppressWarnings("Duplicates")
@@ -80,15 +65,11 @@ public class ExcelStorageLocationController implements ExcelController<StorageLo
     }
 
     @Override
-    public StorageLocation entityValidation(Long key, StorageLocation entity) {
-        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        log.warn(entity.toString());
-        Set<ConstraintViolation<StorageLocation>> constraintValidator = validator.validate(entity);
-        if (!constraintValidator.isEmpty()) {
-            log.warn("Row {} would not be persisted: {}", key, constraintValidator);
-            entity.setIsActive(false);
+    public StorageLocation entityValidation(Long key, StorageLocation storageLocation) {
+        if (!validation(key, storageLocation, log)){
+            storageLocation.setIsActive(false);
         }
-        return entity;
+        return storageLocation;
     }
 
     @Override

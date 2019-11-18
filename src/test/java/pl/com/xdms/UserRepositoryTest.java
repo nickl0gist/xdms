@@ -62,7 +62,7 @@ public class UserRepositoryTest {
         entityManager.persist(alex);
         entityManager.flush();
         // when
-        User found = userRepository.findById(1L).get();
+        User found = userRepository.findById(3L).get();
         // then
         Assert.assertEquals(found.getUsername(), alex.getUsername());
     }

@@ -1,4 +1,4 @@
-package pl.com.xdms.service;
+package pl.com.xdms.service.excel;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
@@ -102,7 +102,7 @@ public interface ExcelService<T> {
             Sheet sheet = workbook.getSheetAt(0);
             return readSheet(sheet);
         } catch (IOException e) {
-            return new HashMap<>();
+            return new HashMap<Long, T>();
         }
     }
 

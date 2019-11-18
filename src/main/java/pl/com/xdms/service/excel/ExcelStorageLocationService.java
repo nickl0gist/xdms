@@ -1,4 +1,4 @@
-package pl.com.xdms.service;
+package pl.com.xdms.service.excel;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +70,7 @@ public class ExcelStorageLocationService implements ExcelService<StorageLocation
                         break;
                     case 3:
                         storageLocation.setIsActive(getBooleanFromCell(cell)) ;
+                        break;
                 }
                 storageLocationMap.put(row.getRowNum() + 1L, storageLocation);
             }
