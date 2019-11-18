@@ -17,6 +17,9 @@ public interface ReferenceRepository extends JpaRepository<Reference, Long> {
     @Query(nativeQuery = true)
     List<Reference> findReferenceInSearch(String searchWord);
 
+    @Query(nativeQuery = true)
+    List<Reference> findAllByIsActiveEquals(Boolean isActive);
+
     List<Reference> findAllByOrderByNameAsc();
     List<Reference> findAllByOrderByNameDesc();
 
@@ -31,5 +34,6 @@ public interface ReferenceRepository extends JpaRepository<Reference, Long> {
 
     List<Reference> findAllByOrderBySupplierAsc();
     List<Reference> findAllByOrderBySupplierDesc();
+
 
 }

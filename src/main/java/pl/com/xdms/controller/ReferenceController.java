@@ -55,6 +55,16 @@ public class ReferenceController {
         }
     }
 
+    @GetMapping("/active")
+    public List<Reference> getActiveSuppliers(){
+        return referenceService.getReferenceWhereIsActive(true);
+    }
+
+    @GetMapping("/not_active")
+    public List<Reference> getNotActiveSuppliers(){
+        return referenceService.getReferenceWhereIsActive(false);
+    }
+
     @GetMapping("/search/{searchString}")
     @ResponseStatus(HttpStatus.OK)
     public List<Reference> searchReferencesByString(@PathVariable String searchString) {

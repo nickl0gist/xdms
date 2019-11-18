@@ -86,4 +86,8 @@ public class ReferenceService {
                     return  referenceRepository.findAll();
         }
     }
+
+    public List<Reference> getReferenceWhereIsActive(Boolean isActive) {
+        return referenceRepository.findAllByIsActiveEquals(isActive);
+    }
 }

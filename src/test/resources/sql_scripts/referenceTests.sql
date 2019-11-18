@@ -31,6 +31,6 @@ VALUES
   (1, '44444XXX', 'Head Rest', '80090905', 1000, 100, 50, 1.5,
   'designatione Head Rest', 'designatione Подголовник', 1200, 1000, 800,	15, 1, 1, '5500000001', 1, '440000000', 1,true),
   (2, '11111XXX-CO', 'Anchor belt',	'89090909', 1500, 200, 25, 2.3,
-  'designatione Anchor belt', 'designatione Якорь длинный, не короткий', 1100, 900, 1000,	20, 2, 2, '5500001111', 2, '4400022222', 2, true),
+  'designatione Anchor belt', 'designatione Якорь длинный, не короткий', 1100, 900, 1000,	20, 2, 2, '5500001111', 2, '4400022222', 2, false),
   (3, '11111YYY', 'Anchor belt-test',	'81111111', 1500, 200, 25, 2.3,
   'designatione Anchor belt', 'Testt Test Tessst тест ', 1100, 900, 1000,	20, 2, 2, '5500000000', 2, '440001111', 2, true);

@@ -136,6 +136,22 @@ public class ReferenceControllerTest {
     }
 
     @Test
+    public void getOnlyActiveReference() throws Exception {
+        mockMvc.perform(get("/coordinator/references/active"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)));
+    }
+
+    @Test
+    public void getOnlyNotActiveReference() throws Exception {
+        mockMvc.perform(get("/coordinator/references/not_active"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
+    }
+
+    @Test
     public void updateReferenceTestStatusOk() throws Exception {
         Long id = 1L;
         Reference reference = referenceService.getRefById(id);
