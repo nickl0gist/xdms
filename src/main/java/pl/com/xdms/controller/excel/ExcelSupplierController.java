@@ -43,7 +43,6 @@ public class ExcelSupplierController implements ExcelController<Supplier> {
         this.fileStorageService = fileStorageService;
     }
 
-
     @Override
     @GetMapping("/download/suppliers.xlsx")
     public ResponseEntity<InputStreamSource> downloadBase() throws IOException {
@@ -74,7 +73,12 @@ public class ExcelSupplierController implements ExcelController<Supplier> {
 
     @Override
     @PostMapping("/suppliers/save_all")
-    public ResponseEntity<List<Supplier>> saveAllEntities(List<Supplier> objList) {
-        return null;
+    public ResponseEntity<List<Supplier>> saveAllEntities(List<Supplier> supplierList) {
+        supplierList.forEach(x -> log.info("Supplier to be save: {}", x.toString()));
+        supplierService.save(supplierList.stream()
+                .filter(Supplier::getIsActive)
+                .collect(Collectors.toList())
+        );
+        return ResponseEntity.status(201).header("Message", "Only Active Suppliers were saved").body(supplierList);
     }
 }

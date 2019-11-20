@@ -59,7 +59,7 @@ public class SupplierService {
                 return "asc".equals(direction)
                         ? supplierRepository.findAllByOrderByPostCodeAsc()
                         : supplierRepository.findAllByOrderByPostCodeDesc();
-            case"":
+            case"street":
                 return "asc".equals(direction)
                         ? supplierRepository.findAllByOrderByStreetAsc()
                         : supplierRepository.findAllByOrderByStreetDesc();
@@ -73,6 +73,10 @@ public class SupplierService {
 
     public void save(Supplier supplier) {
         supplierRepository.save(supplier);
+    }
+
+    public void save(List<Supplier> supplierList) {
+        supplierRepository.saveAll(supplierList);
     }
 
     public Supplier updateSupplier(Supplier supplier) {

@@ -38,7 +38,7 @@ public class ReferenceController {
         return referenceService.getAllReferences();
     }
 
-    @GetMapping({"orderby/{orderBy}/{direction}", "orderby/{orderBy}"})
+    @GetMapping({"/orderby/{orderBy}/{direction}", "/orderby/{orderBy}"})
     public List<Reference> getAllReferences(@PathVariable String orderBy, @PathVariable String direction) {
         return referenceService.getAllReferences(orderBy, direction);
     }

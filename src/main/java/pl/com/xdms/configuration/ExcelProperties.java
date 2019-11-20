@@ -27,4 +27,8 @@ public class ExcelProperties {
     @Value("${supplier.base.template}")
     private String pathToSupplierTemplate;
     //private Resource pathToSupplierTemplate;
+
+    @Value("${customer.base.template}")
+    private String pathToCustomerTemplate;
+    //private Resource pathToSupplierTemplate;
 }

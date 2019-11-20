@@ -61,7 +61,7 @@ public class SupplierController {
         return supplierService.getSuppliersWhereIsActive(false);
     }
 
-    @GetMapping({"ordered_by/{orderBy}/{direction}", "ordered_by/{orderBy}"})
+    @GetMapping({"/ordered_by/{orderBy}/{direction}", "/ordered_by/{orderBy}"})
     public List<Supplier> getAllSuppliersOrderedBy(@PathVariable String orderBy, @PathVariable String direction){
         return supplierService.getAllSuppliersOrderedBy(orderBy, direction);
     }
@@ -86,6 +86,7 @@ public class SupplierController {
                 : ResponseEntity.notFound().build();
     }
 
+    @SuppressWarnings("Duplicates")
     @PostMapping
     public ResponseEntity<Supplier> createSupplier(@RequestBody @Valid Supplier supplier, BindingResult bindingResult){
         log.info("Try to create supplier with Name: {}, from: {}", supplier.getName(), supplier.getCountry());

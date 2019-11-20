@@ -9,18 +9,21 @@ VALUES
 insert into suppliers
   (supplierid, name, vendor_code, country,  city, email, post_code, street, is_active )
 VALUES
-  (1, 'BARTON', 111000, 'PL', 'London',    'londom@barton.pl',       '06-7177', 'Hilton- 55', true),
-  (2, 'NoName', 222000, 'FR', 'Amsterdam', 'Amsterdam@NoName.fr', '058-777',    'Kaszta- 555', true),
-  (3, 'ABCDEF', 666000, 'AR', 'Grojec',    'Grojec@NoName.fr',       '718-777', 'Brayton- 555', true),
-  (4, 'BCDEFG', 777777, 'GE', 'Berlin',    'Berlin@NoName.fr',       '222-777', 'Kinsey- 555', false),
-  (5, 'XYZDEO', 707070, 'UK', 'Moscow',    'Moscow@NoName.fr',       '301-777', 'Livs- 555', true),
-  (6, 'KLNMOP', 555000, 'PT', 'New York',  'Moscow@NoName.fr',     '101-777',   'Topolowa- 555', false);
+  (1, 'BARTON', 111000, 'PL', 'London', 'londom@barton.pl', '06-7177', 'Hilton- 55', true),
+  (2, 'NoName', 222000, 'FR', 'Amsterdam', 'Amsterdam@NoName.fr', '058-777', 'Kaszta- 555', true),
+  (3, 'ABCDEF', 666000, 'AR', 'Grojec', 'Grojec@NoName.fr', '718-777', 'Brayton- 555', true),
+  (4, 'BCDEFG', 777777, 'GE', 'Berlin', 'Berlin@NoName.fr', '222-777', 'Kinsey- 555', false),
+  (5, 'XYZDEO', 707070, 'UK', 'Moscow', 'Moscow@NoName.fr', '301-777', 'Livs- 555', true),
+  (6, 'KLNMOP', 555000, 'PT', 'New York', 'Moscow@NoName.fr', '101-777', 'Topolowa- 555', false);
 
 insert into customers
   (customerid, name, customer_code, country, city, email, is_active, post_code, street)
 values
-  (1, 'LugaName', 123123, 'RU', 'MOSCOW', 'luga@moscow.ru', true, '250501', 'Ptushkin'),
-  (2, 'KalugaName', 808080, 'EN', 'BUDAPEST', 'kaluga@budapest.hu', true, '303030', 'Kokossowec');
+  (1, 'LugaName', 123123, 'DE', 'MOSCOW', 'LugaName@moscow.ru', true, 250250, 'Ptushkin'),
+  (2, 'SAOName', 500500, 'EN', 'ARTEMOVCK', 'SAOName@budapest.hu', true, 303030, 'Kokossowec');
+  (3, 'BrasilName', 777222, 'IT', 'MILAN', 'BrasilName@budapest.hu', true, 745745, 'Koshmarkina');
+  (4, 'ArgentinaName', 194978, 'BE', 'ANTWERPEN', 'ArgentinaName@budapest.hu', false, 987987, 'Abcdefgth');
+  (5, 'NoName', 555555, 'AR', 'BUENOS', 'NoName@budapest.hu', false, 755755, 'Bdfres');
 
 insert into reference
   (referenceid, number, name, hs_code, pcs_perpu, pcs_perhu, weight, weight_of_packaging,

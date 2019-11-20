@@ -32,7 +32,7 @@ public class UserController {
         return userService.getUsers("default", "default");
     }
 
-    @GetMapping({"orderby/{orderBy}/{direction}", "ordered/{orderBy}"})
+    @GetMapping({"/orderby/{orderBy}/{direction}", "/ordered/{orderBy}"})
     public List<User> getAllUsers(@PathVariable String orderBy, @PathVariable String direction){
         return userService.getUsers(orderBy, direction);
     }
