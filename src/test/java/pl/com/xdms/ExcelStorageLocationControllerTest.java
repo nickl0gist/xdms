@@ -1,6 +1,8 @@
 package pl.com.xdms;
 
+import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
+import net.minidev.json.JSONArray;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,8 +28,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -84,17 +85,38 @@ public class ExcelStorageLocationControllerTest {
     @Test
     public void parsingUploadedFileWithStorageLocations() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
+
+        //file with Storage Locations to emulate file which will be sent by user.
         File file = new File(classLoader.getResource("excelTests/storageLocationsOk.xlsx").getFile());
         MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file.toPath()));
 
-        mockMvc.perform(multipart("/coordinator/excel/storage_locations/uploadFile").file(mockMultipartFile))
+        //uploading of the file and parsing objects from it.
+        MvcResult result = mockMvc.perform(multipart("/coordinator/excel/storage_locations/uploadFile").file(mockMultipartFile))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(8)))
+                .andExpect(jsonPath("$", hasSize(10)))
                 .andExpect(jsonPath("$[0].isActive").value(true))
                 .andExpect(jsonPath("$[1].isActive").value(true))
                 .andExpect(jsonPath("$[2].isActive").value(true))
                 .andExpect(jsonPath("$[3].isActive").value(false))
-                .andExpect(jsonPath("$[4].isActive").value(false));
+                .andExpect(jsonPath("$[4].isActive").value(false))
+                .andExpect(jsonPath("$[5].isActive").value(false))
+                .andExpect(jsonPath("$[6].isActive").value(false))
+                .andExpect(jsonPath("$[7].isActive").value(false))
+                .andExpect(jsonPath("$[8].isActive").value(true))
+                .andExpect(jsonPath("$[9].isActive").value(true))
+                .andReturn();
+
+        //JSON Array with objects received after parsing the file.
+        JSONArray jsonObjects = JsonPath.read(result.getResponse().getContentAsString(), "$");
+
+        //Save attempt of the received JSON objects to database.
+        mockMvc.perform(post("/coordinator/excel/storage_locations/save_all")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(jsonObjects.toJSONString()))
+                .andExpect(status().isCreated());
+
+        //Check if the objects were saved properly.
+        Assert.assertEquals(6, storageLocationService.getAllStorLocs().size());
     }
 }
