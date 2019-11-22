@@ -48,7 +48,7 @@ public class ExcelStorageLocationController implements ExcelController<StorageLo
     @GetMapping("/download/storage_locations.xlsx")
     public ResponseEntity<InputStreamSource> downloadBase() throws IOException {
         List<StorageLocation> storageLocations = storageLocationService.getAllStorLocs();
-        return getInputStreamSourceResponseEntity(storageLocations, excelStorageLocationService);
+        return getInputStreamSourceResponseEntity(storageLocations, excelStorageLocationService, "storage_locations");
     }
 
     @SuppressWarnings("Duplicates")

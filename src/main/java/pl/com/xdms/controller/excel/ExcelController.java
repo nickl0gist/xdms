@@ -24,10 +24,11 @@ import java.util.Set;
  * mykola.horkov@gmail.com
  */
 
-public interface ExcelController <T>{
+public interface ExcelController<T> {
 
     /**
      * The Endpoint is for downloading base records of <tt>T</tt> entity.
+     *
      * @return InputStreamSource of the file in .xlsx
      */
     ResponseEntity<InputStreamSource> downloadBase() throws IOException;
@@ -40,7 +41,7 @@ public interface ExcelController <T>{
     List<T> uploadFile(@RequestParam("file") MultipartFile file);
 
     /**
-     * @param key number of Row of the specific <tt>T</tt> entity in given excel file staring from 1
+     * @param key    number of Row of the specific <tt>T</tt> entity in given excel file staring from 1
      * @param entity mapped from Excel row to be validated
      * @return validated entity
      * Check if entity is Valid. If it isn`t isActive field will be set to false.
@@ -49,15 +50,16 @@ public interface ExcelController <T>{
 
     /**
      * Controller saves Entities with isActive = true
+     *
      * @param objList to be persisted in Database
      * @return status "Created" and list of Entities from request with both statuses.
      */
     ResponseEntity<List<T>> saveAllEntities(@RequestBody List<T> objList);
 
     /**
-     * @param key - index of Row in given Excel file
+     * @param key    - index of Row in given Excel file
      * @param entity - entity created from paticular row from Excel
-     * @param log - Logger given from controller
+     * @param log    - Logger given from controller
      * @return boolean result of validation, if Entity is not valid - false, if valid - true.
      */
     default boolean validation(Long key, T entity, Logger log) {
@@ -72,17 +74,18 @@ public interface ExcelController <T>{
     }
 
     /**
-     * @param entityList - List of entities to be recorded onto Excel file.
+     * @param entityList         - List of entities to be recorded onto Excel file.
      * @param excelEntityService - ExcelService implementation entity which will create the file with entities
+     * @param filename name of the attached file to response body.
      * @return - Response Entity with the file and created headers.
      * @throws IOException exception if it will appear.
      */
     default ResponseEntity<InputStreamSource> getInputStreamSourceResponseEntity(List<T> entityList,
-                                                                                 ExcelService excelEntityService) throws IOException {
+                                                                                 ExcelService excelEntityService, String filename) throws IOException {
         ByteArrayInputStream in = excelEntityService.instanceToExcelFromTemplate(entityList);
         in.close();
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "attachment; filename=storage_locations.xlsx");
+        headers.add("Content-Disposition", "attachment; filename=" + filename + ".xlsx");
         headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         return ResponseEntity
                 .ok()

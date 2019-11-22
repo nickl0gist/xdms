@@ -44,7 +44,7 @@ public class ExcelReferenceController implements ExcelController<Reference> {
     @GetMapping("/download/references.xlsx")
     public ResponseEntity<InputStreamSource> downloadBase() throws IOException {
         List<Reference> references = referenceService.getAllReferences();
-        return getInputStreamSourceResponseEntity(references, excelReferenceService);
+        return getInputStreamSourceResponseEntity(references, excelReferenceService, "references");
     }
 
     @SuppressWarnings("Duplicates")
