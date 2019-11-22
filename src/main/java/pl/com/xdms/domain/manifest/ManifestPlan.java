@@ -27,8 +27,14 @@ public class ManifestPlan {
     private int qty;
 
     @NotBlank
-    @Min(1)
+    @Min(0)
+    @Column(columnDefinition = "int default 0")
     private int palletQty;
+
+    @NotBlank
+    @Min(0)
+    @Column(columnDefinition = "int default 0")
+    private int boxQty;
 
     @NotBlank
     @Min(1)

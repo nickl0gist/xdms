@@ -34,6 +34,11 @@ public class ManifestReal {
 
     @NotBlank
     @Min(0)
+    @Column(columnDefinition = "int default 0")
+    private int boxQty;
+
+    @NotBlank
+    @Min(0)
     @Column(columnDefinition = "double default 0")
     double palletWeight;
 

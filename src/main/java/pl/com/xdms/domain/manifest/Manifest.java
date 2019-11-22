@@ -36,6 +36,11 @@ public class Manifest {
 
     @NotBlank
     @Min(0)
+    @Column(name = "box_qty_planned")
+    private int boxQtyPlanned;
+
+    @NotBlank
+    @Min(0)
     @Column(name = "total_weight_planned")
     private double totalWeightPlanned;
 
@@ -47,6 +52,10 @@ public class Manifest {
     @Min(0)
     @Column(name = "pallet_qty_real")
     private int palletQtyReal;
+
+    @Min(0)
+    @Column(name = "box_qty_real")
+    private int boxQtyReal;
 
     @Min(0)
     @Column(name = "total_weight_real")
