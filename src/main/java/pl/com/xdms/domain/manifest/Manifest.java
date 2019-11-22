@@ -30,16 +30,31 @@ public class Manifest {
     private String manifestCode;
 
     @NotBlank
-    @Min(1)
-    private int palletQty;
+    @Min(0)
+    @Column(name = "pallet_qty_planned")
+    private int palletQtyPlanned;
 
     @NotBlank
     @Min(0)
-    private double totalWeight;
+    @Column(name = "total_weight_planned")
+    private double totalWeightPlanned;
 
     @NotBlank
     @Min(0)
-    private double totalLDM;
+    @Column(name = "totalldm_planned")
+    private double totalLdmPlanned;
+
+    @Min(0)
+    @Column(name = "pallet_qty_real")
+    private int palletQtyReal;
+
+    @Min(0)
+    @Column(name = "total_weight_real")
+    private double totalWeightReal;
+
+    @Min(0)
+    @Column(name = "totalldm_real")
+    private double totalLdmReal;
 
     @ManyToOne
     @JoinColumn(name="customerID", nullable=false)
