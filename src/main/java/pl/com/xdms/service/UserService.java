@@ -67,7 +67,7 @@ public class UserService {
         } else {
             return null;
         }
-        return userRepository.findById(user.getId()).get();
+        return userRepository.findById(user.getId()).orElse(null);
     }
 
     public void save(User user) {
