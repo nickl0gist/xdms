@@ -4,4 +4,6 @@ delete from reference;
 delete from customers;
 delete from suppliers;
 delete from storage_location;
+delete from warehouses;
+delete from wh_type;
 

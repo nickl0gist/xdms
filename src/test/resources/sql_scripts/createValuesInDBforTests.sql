@@ -37,3 +37,18 @@ VALUES
   'designatione Anchor belt', 'designatione Якорь длинный, не короткий', 1100, 900, 1000,	20, 2, 2, '5500001111', 2, '4400022222', 2, false),
   (3, '11111YYY', 'Anchor belt-test',	'81111111', 1500, 200, 25, 2.3,
   'designatione Anchor belt', 'Testt Test Tessst тест ', 1100, 900, 1000,	20, 2, 2, '5500000000', 2, '440001111', 2, true);
+
+insert into wh_type
+  (wh_typeid, name)
+VALUES
+  (1, 'CC'),
+  (2, 'XD');
+
+insert into warehouses
+  (warehouseid, city, country, email, is_active, name, post_code, street, wh_typeid)
+VALUES
+  (1, 'Świebodzice', 'PL', 'pawel@wieczorek.pl', true, 'CC Świe', '04-200', 'Lotnicza - 1', 1),
+  (2, 'Grójec', 'PL', 'sławek@barscz.pl', true, 'XD Gró', '05-600', 'Spółdzielcza - 2', 2),
+  (3, 'Irun', 'ES', 'itziar@dominges.es', false, 'CC IRUN', '99-992', 'EPO - 20', 1),
+  (4, 'Stadthagen', 'GE', 'udo@muller.ge', true, 'XD STD', '20-212', 'Muller - 20', 2),
+  (5, 'Bambury', 'RO', 'roman@romamiks.ro', false, 'CC ROMANY', '20-212', 'Muller - 20', 1);

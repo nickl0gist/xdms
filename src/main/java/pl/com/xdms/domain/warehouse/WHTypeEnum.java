@@ -5,18 +5,19 @@ package pl.com.xdms.domain.warehouse;
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
+
 public enum WHTypeEnum {
 
-    CC("Consolidation Centre"),
-    XD("Cross Dock");
+    CC("CC"),
+    XD("XD");
 
-    private String code;
+    private String description;
 
-    WHTypeEnum(String code) {
-        this.code = code;
+    WHTypeEnum(String description) {
+        this.description = description;
     }
 
-    public String getCode() {
-        return code;
+    public String getDescription() {
+        return description;
     }
 }

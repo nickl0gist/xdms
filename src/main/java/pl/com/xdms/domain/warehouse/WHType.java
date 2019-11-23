@@ -5,9 +5,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "wh_type")
@@ -23,8 +21,8 @@ public class WHType {
     @Column(columnDefinition = "BIT default true")
     private Boolean isActive;
 
-    @NotBlank
-    @NotNull
-    @Size(min = 5, max = 200)
-    private String name;
+    @NotNull(message = "Please enter name")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "name", unique = true)
+    private WHTypeEnum type;
 }

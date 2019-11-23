@@ -97,7 +97,6 @@ public class SupplierController {
         supplierService.save(supplier);
         return ResponseEntity.status(201).build();
     }
-
 }
 
 

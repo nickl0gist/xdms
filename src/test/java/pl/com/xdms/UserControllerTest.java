@@ -2,6 +2,7 @@ package pl.com.xdms;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,23 +133,64 @@ public class UserControllerTest {
     @Test
     public void createUserTestStatusNOk() throws Exception {
         User user = new User();
-        Role role = roleService.getRoleById(1L);
         user.setLastName("KUKUKUKUKU");
         user.setPassword("trs");
+        user.setEmail("email@email.em");
+
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(user);
+        this.mockMvc.perform(post("/admin/users").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(422))
+                .andExpect(header().exists("user-username_NotNull"))
+                .andExpect(header().exists("user-username_NotBlank"))
+                .andExpect(header().exists("user-password_Size"))
+                .andExpect(header().exists("user-firstName_NotBlank"))
+                .andExpect(header().exists("user-role_NotNull"))
+                .andExpect(header().exists("user-firstName_NotNull"));
+    }
+
+    @Test
+    public void createUserWithEmptyRoleTestStatusCreated() throws Exception {
+        User user = new User();
+        Role role = new Role();
+
+        user.setUsername("USerName");
+        user.setFirstName("kokoko");
+        user.setLastName("KUKUKUKUKU");
+        user.setPassword("trewsdfgtr");
         user.setRole(role);
         user.setEmail("email@email.em");
 
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(user);
-        this.mockMvc.perform(put("/admin/users").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(post("/admin/users").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
-                .andExpect(status().is(422))
-                .andExpect(content().string(jsonClean(json)))
-                .andExpect(header().exists("user-username_NotNull"))
-                .andExpect(header().exists("user-username_NotBlank"))
-                .andExpect(header().exists("user-password_Size"))
-                .andExpect(header().exists("user-firstName_NotBlank"))
-                .andExpect(header().exists("user-firstName_NotNull"));
+                .andExpect(status().is(201));
+
+        Assert.assertEquals(3, userService.getUsers("default", "default").size());
+    }
+
+    @Test
+    public void createUserWithNotExistedRoleTestStatusCreated() throws Exception {
+        User user = new User();
+        Role role = new Role();
+        role.setId(15L);
+
+        user.setUsername("USerName");
+        user.setFirstName("kokoko");
+        user.setLastName("KUKUKUKUKU");
+        user.setPassword("trewsdfgtr");
+        user.setRole(role);
+        user.setEmail("email@email.em");
+
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(user);
+        this.mockMvc.perform(post("/admin/users").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(201));
+
+        Assert.assertEquals(3, userService.getUsers("default", "default").size());
     }
 
     @Test

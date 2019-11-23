@@ -1,7 +1,6 @@
 package pl.com.xdms.domain.warehouse;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import lombok.ToString;
 
 import javax.persistence.*;
@@ -12,8 +11,7 @@ import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "warehouses")
-@Setter
-@Getter
+@Data
 @ToString
 public class Warehouse {
 
@@ -55,7 +53,6 @@ public class Warehouse {
     @Column(columnDefinition = "BIT default true")
     private Boolean isActive;
 
-    @NotBlank
     @NotNull
     @ManyToOne
     @JoinColumn(name = "wh_typeid")

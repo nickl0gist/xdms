@@ -71,6 +71,9 @@ public class UserService {
     }
 
     public void save(User user) {
+        if(user.getRole().getId() == null ){
+            user.setRole(roleService.getDefaultUserRole());
+        }
         //Taking out the ID of role from request and find existing role
         user.setRole(roleService.getRoleById(user.getRole().getId()));
 

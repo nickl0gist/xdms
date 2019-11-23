@@ -31,14 +31,10 @@ public class RoleService {
 
     public Role getRoleById(Long id) {
         Optional<Role> roleOpt = roleRepository.findById(id);
-        if (roleOpt.isPresent()) {
-            return roleOpt.get();
-        } else {
-            return getDefaultUserRole();
-        }
+        return roleOpt.orElse(getDefaultUserRole());
     }
 
-    private Role getDefaultUserRole(){
+    Role getDefaultUserRole(){
         RoleEnum roleEnum = RoleEnum.valueOf(defaultUserRole);
         return roleRepository.findRoleByName(roleEnum);
     }
