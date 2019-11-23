@@ -6,6 +6,7 @@ package pl.com.xdms.domain.user;
  * mykola.horkov@gmail.com
  */
 public enum RoleEnum {
+
     ADMIN_ROLE ("ADMIN_ROLE"),
     USER_ROLE ("USER_ROLE"),
     GUEST_ROLE ("GUEST_ROLE"),

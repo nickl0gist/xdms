@@ -68,7 +68,7 @@ public class UserController {
             HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
             return ResponseEntity.status(422).headers(headers).body(user);
         }
-        log.info("Try to create reference {}",user);
+        log.info("Try to create user {}",user);
         userService.save(user);
         return ResponseEntity.status(201).build();
     }

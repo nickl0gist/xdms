@@ -63,7 +63,7 @@ public class UserService {
     public User updateUser(User user) {
         Optional<User> updatedUser = userRepository.findById(user.getId());
         if (updatedUser.isPresent()) {
-            userRepository.save(user);
+            save(user);
         } else {
             return null;
         }
