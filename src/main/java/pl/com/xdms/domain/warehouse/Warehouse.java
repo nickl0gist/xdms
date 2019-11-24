@@ -57,4 +57,10 @@ public class Warehouse {
     @ManyToOne
     @JoinColumn(name = "wh_typeid")
     private WHType whType;
+
+    @NotBlank
+    @NotNull
+    @Size(min=5, max = 8)
+    private String urlCode;
+
 }

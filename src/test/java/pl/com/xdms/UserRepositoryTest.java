@@ -46,7 +46,7 @@ public class UserRepositoryTest {
     @Test
     public void whenFindByName_thenReturnUser() {
         // given
-        User alex = new User(null,"AlexO", "passwordddd", "alex", "testAlex", "email@ert.tu", roleForTests);
+        User alex = new User(null,"AlexO", "passwordddd", "alex", "testAlex", "email@ert.tu", roleForTests, null);
         entityManager.persist(alex);
         entityManager.flush();
         // when
@@ -58,7 +58,7 @@ public class UserRepositoryTest {
     @Test
     public void whenFindById_thenReturnUser() {
         // given
-        User alex = new User(null,"AlexO", "passwordddd", "alex", "testAlex", "email@ert.tu", roleForTests);
+        User alex = new User(null,"AlexO", "passwordddd", "alex", "testAlex", "email@ert.tu", roleForTests,null);
         entityManager.persist(alex);
         entityManager.flush();
         // when

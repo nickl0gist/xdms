@@ -1,12 +1,15 @@
 package pl.com.xdms.domain.user;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
+import pl.com.xdms.domain.warehouse.Warehouse;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.Set;
 
 @Entity
 @Table(name = "USERS")
@@ -49,4 +52,12 @@ public class User {
     @ManyToOne
     @JoinColumn
     private Role role;
+
+    @OneToMany
+    @JoinTable(
+            name = "user_warehouse",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "warehouse_id"))
+    @JsonManagedReference
+    private Set<Warehouse> warehouses;
 }
