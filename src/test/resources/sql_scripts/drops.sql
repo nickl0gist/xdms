@@ -1,5 +1,6 @@
 delete from users;
 delete from roles;
+delete from warehouse_customer;
 delete from reference;
 delete from customers;
 delete from suppliers;

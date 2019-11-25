@@ -45,10 +45,24 @@ VALUES
   (2, 'XD');
 
 insert into warehouses
-  (warehouseid, city, country, email, is_active, name, post_code, street, wh_typeid)
+  (warehouseid, city, country, email, is_active, name, post_code, street, wh_typeid, url_code)
 VALUES
-  (1, 'Świebodzice', 'PL', 'pawel@wieczorek.pl', true, 'CC Świe', '04-200', 'Lotnicza - 1', 1),
-  (2, 'Grójec', 'PL', 'sławek@barscz.pl', true, 'XD Gró', '05-600', 'Spółdzielcza - 2', 2),
-  (3, 'Irun', 'ES', 'itziar@dominges.es', false, 'CC IRUN', '99-992', 'EPO - 20', 1),
-  (4, 'Stadthagen', 'GE', 'udo@muller.ge', true, 'XD STD', '20-212', 'Muller - 20', 2),
-  (5, 'Bambury', 'RO', 'roman@romamiks.ro', false, 'CC ROMANY', '20-212', 'Muller - 20', 1);
+  (1, 'Świebodzice', 'PL', 'pawel@wieczorek.pl', true, 'CC Świe', '04-200', 'Lotnicza - 1', 1, 'cc_swie'),
+  (2, 'Grójec', 'PL', 'sławek@barscz.pl', true, 'XD Gró', '05-600', 'Spółdzielcza - 2', 2, 'xd_gro'),
+  (3, 'Irun', 'ES', 'itziar@dominges.es', false, 'CC IRUN', '99-992', 'EPO - 20', 1, 'cc_irun'),
+  (4, 'Stadthagen', 'GE', 'udo@muller.ge', true, 'XD STD', '20-212', 'Muller - 20', 2, 'xd_std'),
+  (5, 'Bambury', 'RO', 'roman@romamiks.ro', false, 'CC ROMANY', '20-212', 'Muller - 20', 1, 'cc_arad');
+
+insert into warehouse_customer
+  (wh_customerid, customerid, warehouseid, is_active)
+VALUES
+  (1, 1, 1, true),
+  (2, 2, 1, true),
+  (3, 3, 1, false),
+  (4, 4, 1, true),
+  (5, 5, 1, true),
+  (6, 1, 2, true),
+  (7, 2, 2, true),
+  (8, 3, 2, false),
+  (9, 4, 2, true),
+  (10, 5, 2, true);

@@ -112,4 +112,10 @@ public class WarehouseService {
         WHTypeEnum whTypeEnum = WHTypeEnum.valueOf(defaultWHType);
         return whTypeRepository.findWHTypeByType(whTypeEnum);
     }
+
+    public Warehouse getWarehouseByUrl(String wh_url) {
+        Optional<Warehouse> warehouseOptional = warehouseRepository.findByUrlCode(wh_url);
+        return warehouseOptional.orElse(null);
+    }
+
 }

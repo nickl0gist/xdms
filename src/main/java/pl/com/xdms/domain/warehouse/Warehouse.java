@@ -61,6 +61,7 @@ public class Warehouse {
     @NotBlank
     @NotNull
     @Size(min=5, max = 8)
+    @Column(unique = true)
     private String urlCode;
 
 }

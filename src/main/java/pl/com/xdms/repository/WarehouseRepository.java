@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import pl.com.xdms.domain.warehouse.Warehouse;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created on 23.11.2019
@@ -36,4 +37,6 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
 
     List<Warehouse> findAllByOrderByCityAsc();
     List<Warehouse> findAllByOrderByCityDesc();
+
+    Optional<Warehouse> findByUrlCode(String url);
 }
