@@ -84,6 +84,5 @@ public class WhCustomerControllerTest {
                 .andExpect(jsonPath("$.isActive").value(false))
                 .andExpect(status().isOk());
     }
-
 }
 

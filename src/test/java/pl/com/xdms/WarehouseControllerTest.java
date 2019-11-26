@@ -24,6 +24,7 @@ import pl.com.xdms.domain.warehouse.WHType;
 import pl.com.xdms.domain.warehouse.WHTypeEnum;
 import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.service.WarehouseService;
+import pl.com.xdms.service.WhCustomerService;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -43,6 +44,8 @@ public class WarehouseControllerTest {
 
     @Autowired
     private WarehouseService warehouseService;
+    @Autowired
+    private WhCustomerService whCustomerService;
 
     private Warehouse newWarehouse;
 
@@ -61,6 +64,7 @@ public class WarehouseControllerTest {
         newWarehouse.setStreet("Renault, 12");
         newWarehouse.setEmail("email@cassier.fr");
         newWarehouse.setWhType(newWhType);
+        newWarehouse.setUrlCode("cc_cass");
     }
 
     @Test
@@ -172,6 +176,12 @@ public class WarehouseControllerTest {
                 .andExpect(status().is(404));
     }
 
+    /**
+     * @throws Exception
+     * Test for checking creation of new Warehouse. Uses WhCustomerService to check if the connection
+     * of new created warehouse with each customer in DB was proceeded. All the connections should have
+     * status <tt>isActive = false</tt>
+     */
     @Test
     public void createWarehouseTestStatusCreated() throws Exception {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
@@ -180,7 +190,9 @@ public class WarehouseControllerTest {
         this.mockMvc.perform(post("/admin/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(201));
+        Warehouse persistedWarehouse = warehouseService.getWarehouseByUrl(newWarehouse.getUrlCode());
         Assert.assertEquals(6, warehouseService.getAllWarehouses().size());
+        Assert.assertEquals(5, whCustomerService.getAllWhCustomersByWarehouseNotActive(persistedWarehouse).size());
     }
 
     @Test

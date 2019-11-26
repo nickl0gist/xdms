@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.warehouse.WHType;
 import pl.com.xdms.domain.warehouse.WHTypeEnum;
 import pl.com.xdms.domain.warehouse.Warehouse;
@@ -27,12 +28,18 @@ public class WarehouseService {
 
     private final WarehouseRepository warehouseRepository;
     private final WHTypeRepository whTypeRepository;
+    private final WhCustomerService whCustomerService;
+    private final CustomerService customerService;
 
     @Autowired
     public WarehouseService(WarehouseRepository warehouseRepository,
-                            WHTypeRepository whTypeRepository) {
+                            WHTypeRepository whTypeRepository,
+                            WhCustomerService whCustomerService,
+                            CustomerService customerService) {
         this.warehouseRepository = warehouseRepository;
         this.whTypeRepository = whTypeRepository;
+        this.whCustomerService = whCustomerService;
+        this.customerService = customerService;
     }
 
     public List<Warehouse> getAllWarehouses() {
@@ -100,7 +107,12 @@ public class WarehouseService {
                 + " / City: " + warehouse.getCity();
 
         log.info("Warehouse Creation: {}", warehouseInfo);
-        warehouseRepository.save(warehouse);
+        whCustomerConnectionsCreation(warehouseRepository.save(warehouse));
+    }
+
+    private void whCustomerConnectionsCreation(Warehouse warehouse) {
+        List<Customer> customerList = customerService.getAllCustomers();
+        customerList.forEach(x -> whCustomerService.createWhCustomer(warehouse, x));
     }
 
     private WHType getWHTypeByID(Long id){

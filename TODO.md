@@ -4,7 +4,7 @@
   
 1. Warehouse Controller:
   - ~~Create~~, Update end points. For each record or ~~for all of them at the same time~~?
-2. Create or not connections for every warehouse with each customer by default with status <tt>isActive = false</tt>?     
+2. Create ~~or not~~ connections for every warehouse with each customer by default with status <tt>isActive = false</tt>?     
 3. when new customer created all Warehouses get it to connection in table <tt>warehouse_customer</tt>
     
 
