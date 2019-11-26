@@ -29,7 +29,7 @@ public class Customer {
     @NotBlank
     @NotNull
     @Column(unique = true)
-    @Pattern(regexp = "^[0-9]+")
+    @Pattern(regexp = "^[0-9A-Za-z\\-_]+")
     private String customerCode;
 
     @NotBlank

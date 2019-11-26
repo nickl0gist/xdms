@@ -1,7 +1,8 @@
 package pl.com.xdms.domain.user;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import pl.com.xdms.domain.warehouse.Warehouse;
 
 import javax.persistence.*;
@@ -58,6 +59,6 @@ public class User {
             name = "user_warehouse",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "warehouse_id"))
-    @JsonManagedReference
+   //@JsonManagedReference
     private Set<Warehouse> warehouses;
 }

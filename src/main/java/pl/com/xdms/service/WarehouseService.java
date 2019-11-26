@@ -29,16 +29,19 @@ public class WarehouseService {
     private final WarehouseRepository warehouseRepository;
     private final WHTypeRepository whTypeRepository;
     private final WhCustomerService whCustomerService;
-    private final CustomerService customerService;
+    private CustomerService customerService;
 
     @Autowired
     public WarehouseService(WarehouseRepository warehouseRepository,
                             WHTypeRepository whTypeRepository,
-                            WhCustomerService whCustomerService,
-                            CustomerService customerService) {
+                            WhCustomerService whCustomerService) {
         this.warehouseRepository = warehouseRepository;
         this.whTypeRepository = whTypeRepository;
         this.whCustomerService = whCustomerService;
+    }
+
+    @Autowired
+    public void setCustomerService(CustomerService customerService){
         this.customerService = customerService;
     }
 
@@ -111,6 +114,7 @@ public class WarehouseService {
     }
 
     private void whCustomerConnectionsCreation(Warehouse warehouse) {
+        log.info("Warehouse gets list of customers:{}", warehouse.getUrlCode());
         List<Customer> customerList = customerService.getAllCustomers();
         customerList.forEach(x -> whCustomerService.createWhCustomer(warehouse, x));
     }

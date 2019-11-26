@@ -2,19 +2,23 @@
 -
  
   
-1. Warehouse Controller:
+1+. Warehouse Controller:
   - ~~Create~~, Update end points. For each record or ~~for all of them at the same time~~?
-2. Create ~~or not~~ connections for every warehouse with each customer by default with status <tt>isActive = false</tt>?     
-3. when new customer created all Warehouses get it to connection in table <tt>warehouse_customer</tt>
-    
 
+2+. Create ~~or not~~ connections for every warehouse with each customer by default with status <tt>isActive = false</tt>?     
+
+not done
+-
+3. when new customer created all Warehouses get it to connection in 
+table <tt>warehouse_customer</tt> with status <tt>isActive = false</tt>?
+    
 4. When customer is set to inactive all warehouses connections with it have to be switched to inActive.
     Customer with picked up and not delivered manifests cannot be switched to inActive. 
 
 I. Create Excel template with manifests for all warehouses and customers to be uploaded to XDMS.
 
 II. How to make Warehouses to be clients for each other?
-Creating new customer - adding connection with each warehouse with <tt>isActive = false</tt>!
-Creating new Warehouse - creating at the same time new customer - reflection of created warehouse. (id, code ???)
+    Creating new customer - adding connection with each warehouse with <tt>isActive = false</tt>!
+    Creating new Warehouse - creating at the same time new customer - reflection of created warehouse. (id, code ???)
 
 - Transport Plan for each groupage.   

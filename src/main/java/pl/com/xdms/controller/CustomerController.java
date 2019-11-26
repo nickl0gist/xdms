@@ -2,6 +2,7 @@ package pl.com.xdms.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,25 +22,25 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("coordinator/customers")
+@RequestMapping("admin/customers")
 public class CustomerController {
 
     private final CustomerService customerService;
     private final RequestErrorService requestErrorService;
 
     @Autowired
-    public CustomerController(CustomerService customerService, RequestErrorService requestErrorService) {
+    public CustomerController(@Lazy CustomerService customerService, RequestErrorService requestErrorService) {
         this.customerService = customerService;
         this.requestErrorService = requestErrorService;
     }
 
     @GetMapping
-    public List<Customer> getAllSuppliers(){
+    public List<Customer> getAllCustomers(){
         return customerService.getAllCustomers();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Customer> getSupplierById(@PathVariable Long id){
+    public ResponseEntity<Customer> getCustomerById(@PathVariable Long id){
         Customer customer = customerService.getCustomerById(id);
         if (customer != null){
             log.info("Customer was found {}", customer);
@@ -56,24 +57,24 @@ public class CustomerController {
     }
 
     @GetMapping("/not_active")
-    public List<Customer> getNotActiveSuppliers(){
+    public List<Customer> getNotActiveCustomers(){
         return customerService.getCustomersWhereIsActive(false);
     }
 
     @GetMapping({"/ordered_by/{orderBy}/{direction}", "/ordered_by/{orderBy}"})
-    public List<Customer> getAllSuppliersOrderedBy(@PathVariable String orderBy, @PathVariable String direction){
+    public List<Customer> getAllCustomersOrderedBy(@PathVariable String orderBy, @PathVariable String direction){
         return customerService.getAllCustomersOrderedBy(orderBy, direction);
     }
 
     @GetMapping("/search/{searchString}")
     @ResponseStatus(HttpStatus.OK)
-    public List<Customer> searchSupplierByString(@PathVariable String searchString){
+    public List<Customer> searchCustomerByString(@PathVariable String searchString){
         return customerService.search(searchString);
     }
 
     @SuppressWarnings("Duplicates")
     @PutMapping
-    public ResponseEntity<Customer> updateSupplier(@RequestBody @Valid Customer customer, BindingResult bindingResult){
+    public ResponseEntity<Customer> updateCustomer(@RequestBody @Valid Customer customer, BindingResult bindingResult){
         log.info("Try to update customer with Id:{}", customer.getCustomerID());
         if (bindingResult.hasErrors()){
             HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
@@ -87,7 +88,7 @@ public class CustomerController {
 
     @SuppressWarnings("Duplicates")
     @PostMapping
-    public ResponseEntity<Customer> createSupplier(@RequestBody @Valid Customer customer, BindingResult bindingResult){
+    public ResponseEntity<Customer> createCustomer(@RequestBody @Valid Customer customer, BindingResult bindingResult){
         log.info("Try to create customer with Name: {}, from: {}", customer.getName(), customer.getCountry());
         if(bindingResult.hasErrors()){
             HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);

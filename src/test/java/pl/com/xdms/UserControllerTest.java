@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @SqlGroup({
-        @Sql(value = {"/sql_scripts/create_roles_before.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
+        @Sql(value = {"/sql_scripts/createValuesInDBforTests.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD),
         @Sql(value = {"/sql_scripts/drops.sql"}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 })
 public class UserControllerTest {
@@ -78,6 +78,10 @@ public class UserControllerTest {
         Long id = 1L;
         User user = userService.getUserById(id);
         user.setUsername("Booo");
+
+        //to avoid com.fasterxml.jackson.databind.JsonMappingException
+        user.setWarehouses(null);
+
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(user);
         this.mockMvc.perform(put("/admin/users").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
@@ -91,12 +95,15 @@ public class UserControllerTest {
         User user = userService.getUserById(id);
         user.setUsername(null);
         user.setPassword("Fooo");
+
+        //to avoid com.fasterxml.jackson.databind.JsonMappingException
+        user.setWarehouses(null);
+
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(user);
         this.mockMvc.perform(put("/admin/users").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
-                .andExpect(content().string(jsonClean(json)))
                 .andExpect(header().exists("user-username_NotNull"))
                 .andExpect(header().exists("user-username_NotBlank"))
                 .andExpect(header().exists("user-password_Size"));
