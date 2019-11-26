@@ -1,17 +1,21 @@
 package pl.com.xdms;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -21,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -63,4 +68,22 @@ public class WhCustomerControllerTest {
                 .andDo(print())
                 .andExpect(jsonPath("$", hasSize(1)));
     }
+
+    @Test
+    public void updateWhCustomerTestOkStatus() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(get("/coordinator/warehouse/cc_swie/customer/2"))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.isActive").value(true)).andReturn();
+
+        String jsonString = mvcResult.getResponse().getContentAsString();
+        jsonString = jsonString.replace("wie\"},\"isActive\":true}", "wie\"},\"isActive\":false}");
+
+        mockMvc.perform(put("/coordinator/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8).content(jsonString))
+                .andDo(print())
+                .andExpect(jsonPath("$.isActive").value(false))
+                .andExpect(status().isOk());
+    }
+
 }
+
