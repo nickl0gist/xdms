@@ -180,12 +180,15 @@ public class WarehouseControllerTest {
      * @throws Exception
      * Test for checking creation of new Warehouse. Uses WhCustomerService to check if the connection
      * of new created warehouse with each customer in DB was proceeded. All the connections should have
-     * status <tt>isActive = false</tt>
+     * status <tt>isActive = false</tt>. New warehouse will be persisted in Customer table with the same info.
+     * But it shouldn't have connection with itself in table WhCustomer. All warehouses, which are already existed
+     * will have this reflection of Warehouse like Customer, will have connection with Customer created from Warehouse.
      */
     @Test
     public void createWarehouseTestStatusCreated() throws Exception {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newWarehouse);
+        Warehouse firstWarehouse = warehouseService.getWarehouseById(1L);
 
         this.mockMvc.perform(post("/admin/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
@@ -193,6 +196,7 @@ public class WarehouseControllerTest {
         Warehouse persistedWarehouse = warehouseService.getWarehouseByUrl(newWarehouse.getUrlCode());
         Assert.assertEquals(6, warehouseService.getAllWarehouses().size());
         Assert.assertEquals(5, whCustomerService.getAllWhCustomersByWarehouseNotActive(persistedWarehouse).size());
+        Assert.assertEquals(2, whCustomerService.getAllWhCustomersByWarehouseNotActive(firstWarehouse).size());
     }
 
     @Test

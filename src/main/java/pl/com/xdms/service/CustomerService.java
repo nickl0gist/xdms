@@ -91,10 +91,18 @@ public class CustomerService {
         whCustomerConnectionsCreation(customerPersisted);
     }
 
+    /**
+     * Creates connections with all warehouses in DB
+     * @param customer - new persisted Customer Entity in DB. It will get new connections with all Warehouses
+     *                 except the Warehouses which have their <tt>url_code</tt>
+     *                 the same as <tt>customer_code</tt> od customer.
+     */
     private void whCustomerConnectionsCreation(Customer customer) {
         log.info("Customer {} will be connected with Warehouses:{}", customer.getName());
         List<Warehouse> warehouseList = warehouseService.getAllWarehouses();
-        warehouseList.forEach(x -> whCustomerService.createWhCustomer(x, customer));
+        warehouseList.stream()
+                .filter(w -> !w.getUrlCode().equals(customer.getCustomerCode()))
+                .forEach(x -> whCustomerService.createWhCustomer(x, customer));
     }
 
     public void save(List<Customer> customerList) {

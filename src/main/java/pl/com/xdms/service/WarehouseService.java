@@ -113,16 +113,40 @@ public class WarehouseService {
         whCustomerConnectionsCreation(warehouseRepository.save(warehouse));
     }
 
+    /**
+     * New warehouse will be persisted in Customer table with the same info.
+     * But it shouldn't have connection with itself in table WhCustomer. All warehouses, which are already existed
+     * will have this reflection of Warehouse like Customer, will have connection with Customer created from Warehouse.
+     * @param warehouse - new Entity which will get new connections.
+     */
     private void whCustomerConnectionsCreation(Warehouse warehouse) {
         log.info("Warehouse gets list of customers:{}", warehouse.getUrlCode());
         List<Customer> customerList = customerService.getAllCustomers();
         customerList.forEach(x -> whCustomerService.createWhCustomer(warehouse, x));
+        //warehouse
+        warehouseToCustomer(warehouse);
+    }
+
+    /**
+     * Converter Warehouse to Customer.
+     * @param warehouse - Warehouse Entity
+     */
+    private void warehouseToCustomer(Warehouse warehouse) {
+        Customer customerFromWarehouse = new Customer();
+        customerFromWarehouse.setCustomerCode(warehouse.getUrlCode());
+        customerFromWarehouse.setName(warehouse.getName());
+        customerFromWarehouse.setIsActive(true);
+        customerFromWarehouse.setCity(warehouse.getCity());
+        customerFromWarehouse.setCountry(warehouse.getCountry());
+        customerFromWarehouse.setEmail(warehouse.getEmail());
+        customerFromWarehouse.setPostCode(warehouse.getPostCode());
+        customerFromWarehouse.setStreet(warehouse.getStreet());
+        customerService.save(customerFromWarehouse);
     }
 
     private WHType getWHTypeByID(Long id){
         return whTypeRepository.findById(id).orElse(getDefaultWHType());
     }
-
 
     private WHType getDefaultWHType() {
         WHTypeEnum whTypeEnum = WHTypeEnum.valueOf(defaultWHType);
