@@ -14,10 +14,18 @@ table <tt>warehouse_customer</tt> with status <tt>isActive = false</tt>?
 
 not done
 -
+
+
+5. Add Transit time to tpa days settings days with hours. Implement it as duration for hours adn period for a days. 
     
 5. When customer is set to inactive all warehouses connections with it have to be switched to inActive.
     Customer with picked up and not delivered manifests cannot be switched to inActive. 
 
+
+
 I. Create Excel template with manifests for all warehouses and customers to be uploaded to XDMS.
 
+
 - Transport Plan for each groupage.   
+
+

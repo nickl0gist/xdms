@@ -38,16 +38,16 @@ public class ExcelProperties {
     @Value("${customers.sheet.name}")
     private String customersSheetName;
 
-    @Value("{$storage.location.sheet.name}")
+    @Value("${storage.location.sheet.name}")
     private String storageLocationsSheetName;
 
-    @Value("{$suppliers.sheet.name}")
+    @Value("${suppliers.sheet.name}")
     private String suppliersSheetName;
 
-    @Value("{$manifests.sheet.name}")
+    @Value("${manifests.sheet.name}")
     private String manifestsSheetName;
 
-    @Value("{$warehouses.sheet.name}")
+    @Value("${warehouses.sheet.name}")
     private String warehousesSheetName;
 
     @Value("${reference.forecast.sheet.name}")
