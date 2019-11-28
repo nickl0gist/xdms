@@ -86,7 +86,7 @@ public class ExcelStorageLocationService implements ExcelService<StorageLocation
                 new FileInputStream(excelProperties.getPathToStorageLocationTemplate()));
                 //new FileInputStream(excelProperties.getPathToStorageLocationTemplate().getFile()));
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            XSSFSheet sheet = workbook.getSheetAt(0);
+            XSSFSheet sheet = workbook.getSheet(excelProperties.getStorageLocationsSheetName());
             int rowIdx = 2;
             CellStyle style = getXssfCellStyle(workbook);
             for (StorageLocation stLoc : storageLocationList) {

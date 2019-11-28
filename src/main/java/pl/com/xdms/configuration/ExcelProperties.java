@@ -31,4 +31,27 @@ public class ExcelProperties {
     @Value("${customer.base.template}")
     private String pathToCustomerTemplate;
     //private Resource pathToSupplierTemplate;
+
+    @Value("${reference.sheet.name}")
+    private String referencesSheetName;
+
+    @Value("${customers.sheet.name}")
+    private String customersSheetName;
+
+    @Value("{$storage.location.sheet.name}")
+    private String storageLocationsSheetName;
+
+    @Value("{$suppliers.sheet.name}")
+    private String suppliersSheetName;
+
+    @Value("{$manifests.sheet.name}")
+    private String manifestsSheetName;
+
+    @Value("{$warehouses.sheet.name}")
+    private String warehousesSheetName;
+
+    @Value("${reference.forecast.sheet.name}")
+    private String referenceForecastSheetName;
+
+
 }

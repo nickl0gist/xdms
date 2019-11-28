@@ -46,7 +46,7 @@ public class ExcelCustomerService implements ExcelService<Customer>{
     @Override
     public Map<Long, Customer> readSheet(Sheet sheet) {
         Iterator<Row> rowIterator = sheet.rowIterator();
-        Map<Long, Customer> supplierHashMapnMap = new HashMap<>();
+        Map<Long, Customer> longCustomerHashMap = new HashMap<>();
         while (rowIterator.hasNext()) {
             Customer customer = new Customer();
             Row row = rowIterator.next();
@@ -87,20 +87,20 @@ public class ExcelCustomerService implements ExcelService<Customer>{
                         customer.setIsActive(getBooleanFromCell(cell));
                         break;
                 }
-                supplierHashMapnMap.put(row.getRowNum() + 1L, customer);
+                longCustomerHashMap.put(row.getRowNum() + 1L, customer);
             }
             log.info("Customer parsed from Excel file {}", customer);
         }
-        return supplierHashMapnMap;
+        return longCustomerHashMap;
     }
 
     @Override
-    public ByteArrayInputStream instanceToExcelFromTemplate(List<Customer> customerList) throws IOException {
+    public ByteArrayInputStream instanceToExcelFromTemplate(List<Customer> customerList){
         try (XSSFWorkbook workbook = (XSSFWorkbook) WorkbookFactory.create(
                 new FileInputStream(excelProperties.getPathToCustomerTemplate()));
              //new FileInputStream(referenceBaseProps.getPathToReferenceTemplate().getFile()));
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            XSSFSheet sheet = workbook.getSheetAt(0);
+            XSSFSheet sheet = workbook.getSheet(excelProperties.getCustomersSheetName());
             int rowIdx = 2;
             CellStyle style = getXssfCellStyle(workbook);
             for (Customer customer : customerList) {

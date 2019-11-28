@@ -161,7 +161,7 @@ public class ExcelReferenceService implements ExcelService<Reference> {
                 new FileInputStream(referenceBaseProps.getPathToReferenceTemplate()));
              //new FileInputStream(referenceBaseProps.getPathToReferenceTemplate().getFile()));
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            XSSFSheet sheet = workbook.getSheetAt(0);
+            XSSFSheet sheet = workbook.getSheet(referenceBaseProps.getReferencesSheetName());
             int rowIdx = 2;
             CellStyle style = getXssfCellStyle(workbook);
             for (Reference reference : referenceList) {

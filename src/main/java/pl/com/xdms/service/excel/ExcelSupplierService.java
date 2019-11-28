@@ -100,7 +100,7 @@ public class ExcelSupplierService implements ExcelService<Supplier>{
                 new FileInputStream(excelProperties.getPathToSupplierTemplate()));
              //new FileInputStream(referenceBaseProps.getPathToReferenceTemplate().getFile()));
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            XSSFSheet sheet = workbook.getSheetAt(0);
+            XSSFSheet sheet = workbook.getSheet(excelProperties.getSuppliersSheetName());
             int rowIdx = 2;
             CellStyle style = getXssfCellStyle(workbook);
             for (Supplier supplier : supplierList) {
