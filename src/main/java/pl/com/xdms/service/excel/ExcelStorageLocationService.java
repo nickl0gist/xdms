@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.configuration.ExcelProperties;
 import pl.com.xdms.domain.storloc.StorageLocation;
+import pl.com.xdms.service.StorageLocationService;
 
 import java.io.*;
 import java.util.HashMap;
@@ -27,10 +28,13 @@ import java.util.Map;
 public class ExcelStorageLocationService implements ExcelService<StorageLocation> {
 
     public ExcelProperties excelProperties;
+    public final StorageLocationService storageLocationService;
 
     @Autowired
-    public ExcelStorageLocationService(ExcelProperties excelProperties) {
+    public ExcelStorageLocationService(ExcelProperties excelProperties,
+                                       StorageLocationService storageLocationService) {
         this.excelProperties = excelProperties;
+        this.storageLocationService = storageLocationService;
     }
 
     @Override
@@ -80,7 +84,9 @@ public class ExcelStorageLocationService implements ExcelService<StorageLocation
     }
 
     @Override
-    public ByteArrayInputStream instanceToExcelFromTemplate(List<StorageLocation> storageLocationList){
+    public ByteArrayInputStream instanceToExcelFromTemplate(){
+
+        List<StorageLocation> storageLocationList = storageLocationService.getAllStorLocs();
 
         try (XSSFWorkbook workbook = (XSSFWorkbook) WorkbookFactory.create(
                 new FileInputStream(excelProperties.getPathToStorageLocationTemplate()));

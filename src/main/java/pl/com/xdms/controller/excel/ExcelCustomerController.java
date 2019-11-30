@@ -47,8 +47,7 @@ public class ExcelCustomerController implements ExcelController<Customer> {
     @Override
     @GetMapping("/download/customers.xlsx")
     public ResponseEntity<InputStreamSource> downloadBase() throws IOException {
-        List<Customer> suppliers = customerService.getAllCustomers();
-        return getInputStreamSourceResponseEntity(suppliers, excelCustomerService, "customers");
+        return getInputStreamSourceResponseEntity(excelCustomerService, "customers");
     }
 
     @SuppressWarnings("Duplicates")

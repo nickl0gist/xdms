@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.configuration.ExcelProperties;
 import pl.com.xdms.domain.supplier.Supplier;
+import pl.com.xdms.service.SupplierService;
 
 import java.io.*;
 import java.util.HashMap;
@@ -18,19 +19,23 @@ import java.util.Map;
 
 /**
  * Created on 18.11.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
 @Service
 @Data
 @Slf4j
-public class ExcelSupplierService implements ExcelService<Supplier>{
+public class ExcelSupplierService implements ExcelService<Supplier> {
 
     public ExcelProperties excelProperties;
+    public final SupplierService supplierService;
 
     @Autowired
-    public ExcelSupplierService(ExcelProperties excelProperties) {
+    public ExcelSupplierService(ExcelProperties excelProperties,
+                                SupplierService supplierService) {
         this.excelProperties = excelProperties;
+        this.supplierService = supplierService;
     }
 
     @Override
@@ -95,7 +100,10 @@ public class ExcelSupplierService implements ExcelService<Supplier>{
     }
 
     @Override
-    public ByteArrayInputStream instanceToExcelFromTemplate(List<Supplier> supplierList) throws IOException {
+    public ByteArrayInputStream instanceToExcelFromTemplate() {
+
+        List<Supplier> supplierList = supplierService.getAllSuppliers();
+
         try (XSSFWorkbook workbook = (XSSFWorkbook) WorkbookFactory.create(
                 new FileInputStream(excelProperties.getPathToSupplierTemplate()));
              //new FileInputStream(referenceBaseProps.getPathToReferenceTemplate().getFile()));
@@ -132,16 +140,16 @@ public class ExcelSupplierService implements ExcelService<Supplier>{
         Cell postCodeCell = row.createCell(4);
         postCodeCell.setCellValue(supplier.getPostCode());
 
-        Cell cityCell = row.createCell( 5);
+        Cell cityCell = row.createCell(5);
         cityCell.setCellValue(supplier.getCity());
 
         Cell streetCell = row.createCell(6);
         streetCell.setCellValue(supplier.getStreet());
 
-        Cell emailCell = row.createCell( 7);
+        Cell emailCell = row.createCell(7);
         emailCell.setCellValue(supplier.getEmail());
 
-        Cell isActiveCell = row.createCell( 8);
+        Cell isActiveCell = row.createCell(8);
         isActiveCell.setCellValue(supplier.getIsActive());
 
         Iterator<Cell> cellIterator = row.cellIterator();

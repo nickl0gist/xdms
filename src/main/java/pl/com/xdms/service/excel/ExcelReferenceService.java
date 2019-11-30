@@ -25,7 +25,6 @@ import java.util.Map;
 
 /**
  * Created on 26.10.2019
- *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -155,7 +154,9 @@ public class ExcelReferenceService implements ExcelService<Reference> {
     }
 
     @Override
-    public ByteArrayInputStream instanceToExcelFromTemplate(List<Reference> referenceList) {
+    public ByteArrayInputStream instanceToExcelFromTemplate() {
+
+        List<Reference> referenceList = referenceService.getAllReferences();
 
         try (XSSFWorkbook workbook = (XSSFWorkbook) WorkbookFactory.create(
                 new FileInputStream(referenceBaseProps.getPathToReferenceTemplate()));

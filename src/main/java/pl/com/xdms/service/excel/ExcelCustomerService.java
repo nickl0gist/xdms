@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.configuration.ExcelProperties;
 import pl.com.xdms.domain.customer.Customer;
+import pl.com.xdms.service.CustomerService;
 
 import java.io.*;
 import java.util.HashMap;
@@ -18,19 +19,23 @@ import java.util.Map;
 
 /**
  * Created on 20.11.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
 @Service
 @Data
 @Slf4j
-public class ExcelCustomerService implements ExcelService<Customer>{
+public class ExcelCustomerService implements ExcelService<Customer> {
 
-    public ExcelProperties excelProperties;
+    private ExcelProperties excelProperties;
+    private final CustomerService customerService;
 
     @Autowired
-    public ExcelCustomerService(ExcelProperties excelProperties) {
+    public ExcelCustomerService(ExcelProperties excelProperties,
+                                CustomerService customerService) {
         this.excelProperties = excelProperties;
+        this.customerService = customerService;
     }
 
     @Override
@@ -95,17 +100,22 @@ public class ExcelCustomerService implements ExcelService<Customer>{
     }
 
     @Override
-    public ByteArrayInputStream instanceToExcelFromTemplate(List<Customer> customerList){
+    public ByteArrayInputStream instanceToExcelFromTemplate() {
+
+        List<Customer> customerList = customerService.getAllCustomers();
+
         try (XSSFWorkbook workbook = (XSSFWorkbook) WorkbookFactory.create(
                 new FileInputStream(excelProperties.getPathToCustomerTemplate()));
              //new FileInputStream(referenceBaseProps.getPathToReferenceTemplate().getFile()));
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
             XSSFSheet sheet = workbook.getSheet(excelProperties.getCustomersSheetName());
             int rowIdx = 2;
             CellStyle style = getXssfCellStyle(workbook);
             for (Customer customer : customerList) {
                 Row row = sheet.createRow(rowIdx++);
                 fillRowWithData(customer, row, style);
+
             }
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
@@ -124,8 +134,8 @@ public class ExcelCustomerService implements ExcelService<Customer>{
         Cell nameCell = row.createCell(1);
         nameCell.setCellValue(customer.getName());
 
-        Cell vendorCodeCell = row.createCell(2);
-        vendorCodeCell.setCellValue(customer.getCustomerCode());
+        Cell customerCodeCell = row.createCell(2);
+        customerCodeCell.setCellValue(customer.getCustomerCode());
 
         Cell countryCell = row.createCell(3);
         countryCell.setCellValue(customer.getCountry());
@@ -133,16 +143,16 @@ public class ExcelCustomerService implements ExcelService<Customer>{
         Cell postCodeCell = row.createCell(4);
         postCodeCell.setCellValue(customer.getPostCode());
 
-        Cell cityCell = row.createCell( 5);
+        Cell cityCell = row.createCell(5);
         cityCell.setCellValue(customer.getCity());
 
         Cell streetCell = row.createCell(6);
         streetCell.setCellValue(customer.getStreet());
 
-        Cell emailCell = row.createCell( 7);
+        Cell emailCell = row.createCell(7);
         emailCell.setCellValue(customer.getEmail());
 
-        Cell isActiveCell = row.createCell( 8);
+        Cell isActiveCell = row.createCell(8);
         isActiveCell.setCellValue(customer.getIsActive());
 
         Iterator<Cell> cellIterator = row.cellIterator();

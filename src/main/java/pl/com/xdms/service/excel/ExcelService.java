@@ -8,7 +8,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.apache.poi.ss.usermodel.BorderStyle.THIN;
@@ -35,11 +34,10 @@ public interface ExcelService<T> {
 
     /**
      * Method is used to make user be able to download T Objects base in .xlsx file.
-     * @param objList list of T objects from controller.
      * @return ByteArrayInputStream with template filled by the information from DB.
      * The file will be filled starting from index pointed in *rowIdx*
      */
-    ByteArrayInputStream instanceToExcelFromTemplate(List<T> objList) throws IOException;
+    ByteArrayInputStream instanceToExcelFromTemplate() throws IOException;
 
     /**
      * @param object - values of properties T object will be parsed into cell values of the row

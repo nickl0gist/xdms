@@ -22,15 +22,15 @@ public class ExcelProperties {
 
     @Value("${storage.location.template}")
     private String pathToStorageLocationTemplate;
-    //private Resource pathToStorageLocationTemplate;
 
     @Value("${supplier.base.template}")
     private String pathToSupplierTemplate;
-    //private Resource pathToSupplierTemplate;
 
     @Value("${customer.base.template}")
     private String pathToCustomerTemplate;
-    //private Resource pathToSupplierTemplate;
+
+    @Value("${manifest.upload.template}")
+    private String pathToManifestUploadTemplate;
 
     @Value("${reference.sheet.name}")
     private String referencesSheetName;

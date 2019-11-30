@@ -28,7 +28,6 @@ public interface ExcelController<T> {
 
     /**
      * The Endpoint is for downloading base records of <tt>T</tt> entity.
-     *
      * @return InputStreamSource of the file in .xlsx
      */
     ResponseEntity<InputStreamSource> downloadBase() throws IOException;
@@ -50,7 +49,6 @@ public interface ExcelController<T> {
 
     /**
      * Controller saves Entities with isActive = true
-     *
      * @param objList to be persisted in Database
      * @return status "Created" and list of Entities from request with both statuses.
      */
@@ -74,15 +72,13 @@ public interface ExcelController<T> {
     }
 
     /**
-     * @param entityList         - List of entities to be recorded onto Excel file.
      * @param excelEntityService - ExcelService implementation entity which will create the file with entities
      * @param filename name of the attached file to response body.
      * @return - Response Entity with the file and created headers.
      * @throws IOException exception if it will appear.
      */
-    default ResponseEntity<InputStreamSource> getInputStreamSourceResponseEntity(List<T> entityList,
-                                                                                 ExcelService excelEntityService, String filename) throws IOException {
-        ByteArrayInputStream in = excelEntityService.instanceToExcelFromTemplate(entityList);
+    default ResponseEntity<InputStreamSource> getInputStreamSourceResponseEntity(ExcelService excelEntityService, String filename) throws IOException {
+        ByteArrayInputStream in = excelEntityService.instanceToExcelFromTemplate();
         in.close();
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "attachment; filename=" + filename + ".xlsx");
