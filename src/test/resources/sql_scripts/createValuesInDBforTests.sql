@@ -51,7 +51,8 @@ insert into wh_type
   (wh_typeid, name)
 VALUES
   (1, 'CC'),
-  (2, 'XD');
+  (2, 'XD'),
+  (3, 'TXD');
 
 insert into warehouses
   (warehouseid, city, country, email, is_active, name, post_code, street, wh_typeid, url_code)

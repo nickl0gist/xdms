@@ -9,7 +9,8 @@ package pl.com.xdms.domain.warehouse;
 public enum WHTypeEnum {
 
     CC("CC"),
-    XD("XD");
+    XD("XD"),
+    TXD("TXD");
 
     private String description;
 

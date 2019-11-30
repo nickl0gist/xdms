@@ -62,6 +62,9 @@ public class ManifestReal {
     @Column(columnDefinition = "double default 0")
     private double netWeight;
 
+    @Column(name = "pallet_id")
+    private String palletId;
+
     @ManyToOne
     @NotNull
     @JoinColumn(name="manifestPlanID", nullable=false)
