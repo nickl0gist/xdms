@@ -94,10 +94,10 @@ public interface ExcelService<T> {
      * @param file to be parsed to Workbook
      * @return map with entities of file is ok, empty map if any Exception was occurred.
      */
-    default Map<Long, T> readFile(File file){
+    default Map<Long, T> readFile(File file, String sheetName){
         try(Workbook workbook = WorkbookFactory.create(file)) {
             //get excel workbook
-            Sheet sheet = workbook.getSheetAt(0);
+            Sheet sheet = workbook.getSheet(sheetName);
             return readSheet(sheet);
         } catch (IOException e) {
             return new HashMap<Long, T>();

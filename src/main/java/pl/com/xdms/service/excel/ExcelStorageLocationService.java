@@ -40,7 +40,7 @@ public class ExcelStorageLocationService implements ExcelService<StorageLocation
     @Override
     public Map<Long, StorageLocation> readExcel(File file) {
         log.info("File with SLs received {}", file.getPath());
-        Map<Long, StorageLocation> map = readFile(file);
+        Map<Long, StorageLocation> map = readFile(file, excelProperties.getStorageLocationsSheetName());
         if (map.isEmpty()) {
             log.error("Error occurred while reading the file with Storage Locations");
         }

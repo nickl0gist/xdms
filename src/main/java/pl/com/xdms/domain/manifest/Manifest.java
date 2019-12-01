@@ -75,7 +75,7 @@ public class Manifest {
 
     @OneToMany(mappedBy = "manifest")
     @JsonManagedReference
-    private Set<ManifestPlan> manifestsPlan;
+    private Set<ManifestReference> manifestsPlan;
 
     @ManyToOne
     @JoinTable(
@@ -85,4 +85,6 @@ public class Manifest {
     @JsonBackReference
     private TruckTimeTable truckTimeTables;
 
+    @Transient
+    Boolean isActive;
 }

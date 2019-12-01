@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import pl.com.xdms.domain.manifest.ManifestReal;
+import pl.com.xdms.domain.manifest.ManifestReference;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -50,9 +50,9 @@ public class TPA {
 
     @OneToMany
     @JoinTable(
-            name = "tpa_manifest_real",
+            name = "tpa_manifest_reference",
             joinColumns = @JoinColumn(name = "tpaID"),
-            inverseJoinColumns = @JoinColumn(name = "manifestRealID"))
+            inverseJoinColumns = @JoinColumn(name = "manifest_reference_id"))
     @JsonManagedReference
-    private Set<ManifestReal> manifestReals;
+    private Set<ManifestReference> manifestReferenceSet;
 }

@@ -151,5 +151,5 @@ public class Reference {
 
 /*    @OneToMany(mappedBy = "reference")
     @JsonIgnore
-    private Set<ManifestPlan> manifestsPlan;*/
+    private Set<ManifestReference> manifestsPlan;*/
 

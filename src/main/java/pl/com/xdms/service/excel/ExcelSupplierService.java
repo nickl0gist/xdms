@@ -41,7 +41,7 @@ public class ExcelSupplierService implements ExcelService<Supplier> {
     @Override
     public Map<Long, Supplier> readExcel(File file) {
         log.info("File with Suppliers received {}", file.getPath());
-        Map<Long, Supplier> map = readFile(file);
+        Map<Long, Supplier> map = readFile(file, excelProperties.getSuppliersSheetName());
         if (map.isEmpty()) {
             log.warn("Error occurred while reading the file with Suppliers");
         }

@@ -38,25 +38,28 @@ public class ExcelReferenceService implements ExcelService<Reference> {
     private final StorageLocationService storageLocationService;
     private final CustomerService customerService;
     private final SupplierService supplierService;
+    private final ExcelProperties excelProperties;
 
     @Autowired
     public ExcelReferenceService(ExcelProperties referenceBaseProps,
                                  ReferenceService referenceService,
                                  StorageLocationService storageLocationService,
                                  CustomerService customerService,
-                                 SupplierService supplierService) {
+                                 SupplierService supplierService,
+                                 ExcelProperties excelProperties) {
 
         this.referenceBaseProps = referenceBaseProps;
         this.referenceService = referenceService;
         this.storageLocationService = storageLocationService;
         this.customerService = customerService;
         this.supplierService = supplierService;
+        this.excelProperties = excelProperties;
     }
 
     @Override
     public Map<Long, Reference> readExcel(File file) {
         log.info("File with References received {}", file.getPath());
-        Map<Long, Reference> map = readFile(file);
+        Map<Long, Reference> map = readFile(file, excelProperties.getReferencesSheetName());
         if (map.isEmpty()) {
             log.warn("Error occurred while reading the file with References");
         }

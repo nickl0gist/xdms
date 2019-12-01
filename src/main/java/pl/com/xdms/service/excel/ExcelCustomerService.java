@@ -41,7 +41,7 @@ public class ExcelCustomerService implements ExcelService<Customer> {
     @Override
     public Map<Long, Customer> readExcel(File file) {
         log.info("File with Customers received {}", file.getPath());
-        Map<Long, Customer> map = readFile(file);
+        Map<Long, Customer> map = readFile(file, excelProperties.getCustomersSheetName());
         if (map.isEmpty()) {
             log.warn("Error occurred while reading the file with Customers");
         }

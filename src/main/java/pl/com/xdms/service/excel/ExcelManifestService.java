@@ -17,6 +17,7 @@ import pl.com.xdms.service.SupplierService;
 import pl.com.xdms.service.WarehouseService;
 
 import java.io.*;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -132,11 +133,34 @@ public class ExcelManifestService implements ExcelService<Manifest> {
 
     @Override
     public Map<Long, Manifest> readExcel(File file) {
-        return null;
+        log.info("File with Manifest received {}", file.getPath());
+        Map<Long, Manifest> map = readFile(file, excelProperties.getManifestsSheetName());
+        if (map.isEmpty()) {
+            log.warn("Error occurred while reading the file with Manifest");
+        }
+        return map;
     }
 
     @Override
     public Map<Long, Manifest> readSheet(Sheet sheet) {
+        Iterator<Row> rowIterator = sheet.rowIterator();
+        Map<Long, Manifest> manifestHashMap = new HashMap<>();
+        while (rowIterator.hasNext()) {
+            Manifest manifest = new Manifest();
+            Row row = rowIterator.next();
+            //skip header row
+            if (row.getRowNum() == 0 || row.getRowNum() == 1) continue;
+            Iterator<Cell> cellIterator = row.cellIterator();
+            //Iterate each cell in row
+            while (cellIterator.hasNext()) {
+                Cell cell = cellIterator.next();
+                int cellIndex = cell.getColumnIndex();
+                switch (cellIndex) {
+
+
+                }
+            }
+        }
         return null;
     }
 
