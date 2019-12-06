@@ -113,7 +113,7 @@ public class ExcelReferenceService implements ExcelService<Reference> {
                         reference.setPcsPerPU(getDoubleFromCell(cell).intValue());
                         break;
                     case 10:
-                        reference.setPcsPerHU(getDoubleFromCell(cell).intValue());
+                        reference.setPuPerHU(getDoubleFromCell(cell).intValue());
                         break;
                     case 11:
                         reference.setPalletWeight(getDoubleFromCell(cell).intValue());
@@ -213,7 +213,7 @@ public class ExcelReferenceService implements ExcelService<Reference> {
         pcsPerPuCell.setCellValue(reference.getPcsPerPU());
 
         Cell pcsPerHuCell = row.createCell(10);
-        pcsPerHuCell.setCellValue(reference.getPcsPerHU());
+        pcsPerHuCell.setCellValue(reference.getPuPerHU());
 
         Cell palletWeightCell = row.createCell(11);
         palletWeightCell.setCellValue(reference.getPalletWeight());

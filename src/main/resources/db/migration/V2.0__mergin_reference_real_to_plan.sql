@@ -19,7 +19,7 @@ RENAME TO manifest_reference ;
 
 ALTER TABLE tpa_manifest_real 
 DROP FOREIGN KEY FK_tpa_manifest_real_has_real_manifest,
-RENAME TO ;
+RENAME TO tpa_manifest_reference;
 
 ALTER TABLE tpa_manifest_reference
 CHANGE COLUMN manifest_realid manifest_reference_id BIGINT(20) NOT NULL ;

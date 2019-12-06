@@ -62,7 +62,9 @@ public interface ExcelController<T> {
      */
     default boolean validation(Long key, T entity, Logger log) {
         Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        log.info(entity.toString());
+        if(entity != null){
+            log.info(entity.toString());
+        }
         Set<ConstraintViolation<T>> constraintValidator = validator.validate(entity);
         if (!constraintValidator.isEmpty()) {
             log.info("Row {} would not be persisted: {}", key, constraintValidator);

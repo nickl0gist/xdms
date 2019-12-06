@@ -22,5 +22,5 @@ public class TpaStatus {
     @NotNull
     @NotBlank
     @Column(unique = true)
-    private String statusName;
+    private TPAEnum statusName;
 }

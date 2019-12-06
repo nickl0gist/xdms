@@ -1,6 +1,7 @@
 package pl.com.xdms.domain.trucktimetable;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -18,6 +19,7 @@ import java.util.Set;
 @Setter
 @Getter
 @ToString
+@EqualsAndHashCode
 public class TruckTimeTable {
 
     @Id

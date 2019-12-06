@@ -5,7 +5,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @Entity
@@ -19,7 +18,7 @@ public class TTTStatus {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long tttStatusID;
 
-    @NotBlank
     @NotNull
-    private String tttStatusName;
+    @Enumerated(EnumType.STRING)
+    private TTTEnum tttStatusName;
 }

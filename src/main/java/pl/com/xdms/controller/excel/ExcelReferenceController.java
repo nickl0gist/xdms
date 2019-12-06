@@ -49,7 +49,7 @@ public class ExcelReferenceController implements ExcelController<Reference> {
     @SuppressWarnings("Duplicates")
     @Override
     @PostMapping("/references/uploadFile")
-    public List<Reference> uploadFile(@RequestParam("file") MultipartFile file) {
+    public List<Reference> uploadFile(MultipartFile file) {
         Path filePath = fileStorageService.storeFile(file);
         Map<Long, Reference> referenceMap = excelReferenceService.readExcel(filePath.toFile());
 

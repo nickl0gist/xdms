@@ -65,6 +65,7 @@ public class Customer {
     @OneToMany(mappedBy = "customer")
     //@JsonManagedReference(value="reference-customer")
     @JsonIgnore
+    @ToString.Exclude
     private Set<Reference> referenceSet;
 
 /*    @NotNull

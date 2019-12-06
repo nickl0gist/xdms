@@ -100,7 +100,7 @@ public interface ExcelService<T> {
             Sheet sheet = workbook.getSheet(sheetName);
             return readSheet(sheet);
         } catch (IOException e) {
-            return new HashMap<Long, T>();
+            return new HashMap<>();
         }
     }
 

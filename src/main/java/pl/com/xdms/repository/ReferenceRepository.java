@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import pl.com.xdms.domain.reference.Reference;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created on 19.10.2019
@@ -34,6 +35,8 @@ public interface ReferenceRepository extends JpaRepository<Reference, Long> {
 
     List<Reference> findAllByOrderBySupplierAsc();
     List<Reference> findAllByOrderBySupplierDesc();
+
+    Optional<Reference> findReferenceBySupplierAgreement(String agrrement);
 
 
 }

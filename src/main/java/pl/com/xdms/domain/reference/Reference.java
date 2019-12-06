@@ -57,7 +57,7 @@ public class Reference {
 
     @NotNull (message = "{validation.notnull.message}")
     @Min(value = 1, message = "{validation.reference.min.pcsPerHu}")
-    private int pcsPerHU;
+    private int puPerHU;
 
     @NotNull (message = "{validation.notnull.message}")
     @Min(value = 1, message = "{validation.reference.min.palletWeight}")
@@ -106,14 +106,12 @@ public class Reference {
     @NotNull (message = "{validation.notnull.message}")
     @ManyToOne
     @JoinColumn
-    //@JsonBackReference(value="reference-customer")
     @ToString.Exclude
     private Customer customer;
 
     @NotNull (message = "{validation.notnull.message}")
     @ManyToOne
     @JoinColumn
-    //@JsonBackReference(value="reference-supplier")
     @ToString.Exclude
     private Supplier supplier;
 
@@ -122,34 +120,3 @@ public class Reference {
     @JoinColumn(name = "storage_locationid")
     private StorageLocation storageLocation;
 }
-
-
-    /*@OneToMany
-    @JoinTable(
-            name = "reference_supplier_agreement",
-            joinColumns = @JoinColumn(name = "referenceID"),
-            inverseJoinColumns = @JoinColumn(name = "supplierAgreementID"))
-    @JsonManagedReference
-    private Set<SupplierAgreement> supplierAgreements;
-
-    @OneToMany
-    @JoinTable(
-            name = "reference_customer_agreement",
-            joinColumns = @JoinColumn(name = "referenceID"),
-            inverseJoinColumns = @JoinColumn(name = "customerAgreementID"))
-    @JsonManagedReference
-    //@JsonIgnoreProperties({"customer"})
-    private Set<CustomerAgreement> customerAgreements;*/
-
-/*    @OneToMany
-    @JoinTable(
-            name = "reference_storage_location",
-            joinColumns = @JoinColumn(name = "referenceID"),
-            inverseJoinColumns = @JoinColumn(name = "storageLocationID"))
-    @JsonManagedReference
-    private Set<StorageLocation> storageLocations;*/
-
-/*    @OneToMany(mappedBy = "reference")
-    @JsonIgnore
-    private Set<ManifestReference> manifestsPlan;*/
-

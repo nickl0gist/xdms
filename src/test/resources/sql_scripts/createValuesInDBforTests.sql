@@ -35,7 +35,7 @@ values
   (5, 'NoName', 555555, 'AR', 'BUENOS', 'NoName@budapest.hu', false, 755755, 'Bdfres');
 
 insert into reference
-  (referenceid, number, name, hs_code, pcs_perpu, pcs_perhu, weight, weight_of_packaging,
+  (referenceid, number, name, hs_code, pcs_perpu, pu_perhu, weight, weight_of_packaging,
   designationen, designationru, pallet_height, pallet_length, pallet_width,
   pallet_weight, stackability, customer_customerid, customer_agreement,
   supplier_supplierid, supplier_agreement, storage_locationid, is_active)

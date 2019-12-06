@@ -31,11 +31,7 @@ public class ReferenceService {
 
     public Reference getRefById(Long id) {
         Optional<Reference> refOpt = referenceRepository.findById(id);
-        if (refOpt.isPresent()) {
-            return refOpt.get();
-        } else {
-            return null;
-        }
+        return refOpt.orElse(null);
     }
 
     public Reference updateReference(Reference reference) {
@@ -89,5 +85,10 @@ public class ReferenceService {
 
     public List<Reference> getReferenceWhereIsActive(Boolean isActive) {
         return referenceRepository.findAllByIsActiveEquals(isActive);
+    }
+
+    public Reference getRefByAgreement(String agreement) {
+        Optional<Reference> refOpt = referenceRepository.findReferenceBySupplierAgreement(agreement);
+        return refOpt.orElse(null);
     }
 }

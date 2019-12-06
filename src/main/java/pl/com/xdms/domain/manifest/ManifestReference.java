@@ -5,10 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import pl.com.xdms.domain.reference.Reference;
+import pl.com.xdms.domain.tpa.TPA;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
 
 @Entity
 @Table(name ="manifest_reference")
@@ -21,79 +21,73 @@ public class ManifestReference {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long manifestReferenceId;
 
-    @NotBlank
     @Min(1)
-    private int qtyPlanned;
+    private double qtyPlanned;
 
-    @NotBlank
     @Min(0)
     @Column(columnDefinition = "int default 0")
-    private int qtyReal;
+    private double qtyReal;
 
-    @NotBlank
     @Min(0)
     @Column(columnDefinition = "int default 0")
     private int palletQtyPlanned;
 
-    @NotBlank
     @Min(0)
     @Column(columnDefinition = "int default 0")
     private int palletQtyReal;
 
-    @NotBlank
     @Min(0)
     @Column(columnDefinition = "int default 0")
     private int boxQtyPlanned;
 
-    @NotBlank
     @Min(0)
     @Column(columnDefinition = "int default 0")
     private int boxQtyReal;
 
-    @NotBlank
     @Min(0)
     private double grossWeightPlanned;
 
-    @NotBlank
     @Min(0)
     @Column(columnDefinition = "int default 0")
     private double grossWeightReal;
 
-    @NotBlank
     @Min(0)
     double palletHeight;
 
-    @NotBlank
     @Min(0)
     double palletLength;
 
-    @NotBlank
     @Min(0)
     double palletWidth;
 
-    @NotBlank
     @Min(0)
     double palletWeight;
 
-    @NotBlank
     @Min(0)
     @Column(columnDefinition = "double default 0", name = "net_weight_real")
     private double netWeight;
 
     private String palletId;
 
-    @NotBlank
     @Min(1)
     @Column(columnDefinition = "int default 1")
     private int stackability;
 
     @ManyToOne
     @JoinColumn(name="manifestID", nullable=false)
+    @JsonBackReference
+    @ToString.Exclude
     private Manifest manifest;
 
     @ManyToOne
     @JoinColumn(name="referenceID", nullable=false)
-    @JsonBackReference
     private Reference reference;
+
+    @ManyToOne
+    @JoinTable(
+            name = "tpa_manifest_reference",
+            joinColumns = @JoinColumn(name = "manifest_reference_id"),
+            inverseJoinColumns = @JoinColumn(name = "tpaID"))
+    private TPA tpa;
 
 }

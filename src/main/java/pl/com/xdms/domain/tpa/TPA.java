@@ -1,9 +1,11 @@
 package pl.com.xdms.domain.tpa;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.manifest.ManifestReference;
 
 import javax.persistence.*;
@@ -18,6 +20,7 @@ import java.util.Set;
 @Setter
 @Getter
 @ToString
+@EqualsAndHashCode
 public class TPA {
 
     @Id
@@ -55,4 +58,12 @@ public class TPA {
             inverseJoinColumns = @JoinColumn(name = "manifest_reference_id"))
     @JsonManagedReference
     private Set<ManifestReference> manifestReferenceSet;
+
+    @OneToMany
+    @JoinTable(
+            name = "tpa_manifest",
+            joinColumns = @JoinColumn(name = "tpaID"),
+            inverseJoinColumns = @JoinColumn(name = "manifest_id"))
+    @JsonManagedReference
+    private Set<Manifest> manifestSet;
 }

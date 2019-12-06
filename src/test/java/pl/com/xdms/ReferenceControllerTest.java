@@ -69,7 +69,7 @@ public class ReferenceControllerTest {
         newRef.setWeight(50.50);
         newRef.setWeightOfPackaging(10);
         newRef.setStackability(2);
-        newRef.setPcsPerHU(100);
+        newRef.setPuPerHU(100);
         newRef.setPcsPerPU(1000);
         newRef.setIsActive(true);
         newRef.setPalletWidth(1000);
