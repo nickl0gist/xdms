@@ -64,15 +64,18 @@ public class Manifest {
     @ManyToOne
     @JoinColumn(name="customerID", nullable=false)
     @ToString.Exclude
+    @NotNull
     private Customer customer;
 
     @ManyToOne
     @JoinColumn(name="supplierID", nullable=false)
     @ToString.Exclude
+    @NotNull
     private Supplier supplier;
 
     @OneToMany(mappedBy = "manifest")
     @JsonManagedReference
+    @ToString.Exclude
     private Set<ManifestReference> manifestsReferenceSet;
 
     @OneToMany
@@ -89,7 +92,7 @@ public class Manifest {
             joinColumns = @JoinColumn(name = "manifest_id"),
             inverseJoinColumns = @JoinColumn(name = "tpaID"))
     @JsonBackReference
-    private List<TPA> tpa;
+    private List<TPA> tpaList;
 
     @Transient
     Boolean isActive;

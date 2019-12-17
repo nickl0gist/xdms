@@ -1,6 +1,7 @@
 package pl.com.xdms.domain.manifest;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -75,12 +76,18 @@ public class ManifestReference {
 
     @ManyToOne
     @JoinColumn(name="manifestID", nullable=false)
-    @JsonBackReference
-    @ToString.Exclude
+    @JsonIdentityInfo(
+            generator = ObjectIdGenerators.PropertyGenerator.class,
+            property = "manifestCode"
+    )
     private Manifest manifest;
 
     @ManyToOne
     @JoinColumn(name="referenceID", nullable=false)
+    @JsonIdentityInfo(
+            generator = ObjectIdGenerators.PropertyGenerator.class,
+            property = "supplierAgreement"
+    )
     private Reference reference;
 
     @ManyToOne
@@ -88,6 +95,10 @@ public class ManifestReference {
             name = "tpa_manifest_reference",
             joinColumns = @JoinColumn(name = "manifest_reference_id"),
             inverseJoinColumns = @JoinColumn(name = "tpaID"))
+    @JsonIdentityInfo(
+            generator = ObjectIdGenerators.PropertyGenerator.class,
+            property = "name"
+    )
     private TPA tpa;
 
 }

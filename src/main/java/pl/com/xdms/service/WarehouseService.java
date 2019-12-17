@@ -141,6 +141,7 @@ public class WarehouseService {
         customerFromWarehouse.setEmail(warehouse.getEmail());
         customerFromWarehouse.setPostCode(warehouse.getPostCode());
         customerFromWarehouse.setStreet(warehouse.getStreet());
+        customerFromWarehouse.setTimeZone(warehouse.getTimeZone());
         customerService.save(customerFromWarehouse);
     }
 
@@ -156,6 +157,11 @@ public class WarehouseService {
     public Warehouse getWarehouseByUrl(String wh_url) {
         Optional<Warehouse> warehouseOptional = warehouseRepository.findByUrlCode(wh_url);
         return warehouseOptional.orElse(null);
+    }
+
+    public Warehouse getWarehouseByName(String name){
+        Optional<Warehouse> warehouse = warehouseRepository.findByName(name);
+        return warehouse.orElse(null);
     }
 
 }

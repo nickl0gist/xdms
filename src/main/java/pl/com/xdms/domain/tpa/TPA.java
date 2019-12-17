@@ -1,6 +1,8 @@
 package pl.com.xdms.domain.tpa;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +15,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
@@ -32,20 +35,16 @@ public class TPA {
     @Size(min = 3)
     private String name;
 
-    @NotBlank
     @NotNull
     private LocalDateTime departurePlan;
 
-
     private LocalDateTime departureReal;
 
-    @NotBlank
     @NotNull
     @ManyToOne
     @JoinColumn
     private TpaStatus status;
 
-    @NotBlank
     @NotNull
     @ManyToOne
     @JoinColumn
@@ -56,8 +55,12 @@ public class TPA {
             name = "tpa_manifest_reference",
             joinColumns = @JoinColumn(name = "tpaID"),
             inverseJoinColumns = @JoinColumn(name = "manifest_reference_id"))
-    @JsonManagedReference
-    private Set<ManifestReference> manifestReferenceSet;
+    @JsonIdentityInfo(
+            generator = ObjectIdGenerators.PropertyGenerator.class,
+            property = "manifestReferenceId"
+    )
+    @ToString.Exclude
+    private Set<ManifestReference> manifestReferenceSet = new LinkedHashSet<>();
 
     @OneToMany
     @JoinTable(
@@ -65,5 +68,6 @@ public class TPA {
             joinColumns = @JoinColumn(name = "tpaID"),
             inverseJoinColumns = @JoinColumn(name = "manifest_id"))
     @JsonManagedReference
-    private Set<Manifest> manifestSet;
+    @ToString.Exclude
+    private Set<Manifest> manifestSet ;
 }

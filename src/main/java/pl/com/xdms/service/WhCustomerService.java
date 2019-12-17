@@ -7,6 +7,8 @@ import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.domain.warehouse.WhCustomer;
 import pl.com.xdms.repository.WhCustomerRepository;
+import pl.com.xdms.service.truck.TpaDaysSettingsService;
+import pl.com.xdms.service.truck.WorkingDayService;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,10 +23,16 @@ import java.util.Optional;
 public class WhCustomerService {
 
     private final WhCustomerRepository whCustomerRepository;
+    private final TpaDaysSettingsService tpaDaysSettingsService;
+    private final WorkingDayService workingDayService;
 
     @Autowired
-    public WhCustomerService(WhCustomerRepository whCustomerRepository) {
+    public WhCustomerService(WhCustomerRepository whCustomerRepository,
+                             TpaDaysSettingsService tpaDaysSettingsService,
+                             WorkingDayService workingDayService) {
         this.whCustomerRepository = whCustomerRepository;
+        this.tpaDaysSettingsService = tpaDaysSettingsService;
+        this.workingDayService = workingDayService;
     }
 
     public List<WhCustomer> getAllWhCustomerByWarehouse(Warehouse warehouse){
@@ -72,11 +80,32 @@ public class WhCustomerService {
         return whCustomerOptional.orElse(null);
     }
 
-    public void createWhCustomer(Warehouse warehouse, Customer customer){
+
+    void createWhCustomer(Warehouse warehouse, Customer customer){
         WhCustomer whCustomer = new WhCustomer();
         whCustomer.setCustomer(customer);
         whCustomer.setWarehouse(warehouse);
         whCustomer.setIsActive(false);
-        whCustomerRepository.save(whCustomer);
+
+        WhCustomer whCustomerPersisted = whCustomerRepository.save(whCustomer);
+
+        //Add new TpaDaysSetting to database connection of WarehouseCustomer and Each working day
+        workingDayService.getAllWorkingDays().forEach(x -> tpaDaysSettingsService.addNewSetting(whCustomerPersisted, x));
+
+    }
+
+    public WhCustomer findByWarehouseAndCustomer(Warehouse warehouse, Customer customer){
+        Optional<WhCustomer> whCustomerOptional = whCustomerRepository.findByWarehouseAndCustomer(warehouse, customer);
+        return whCustomerOptional.orElse(null);
+    }
+
+    public Long getTTminutes(WhCustomer whCustomer){
+        String stamp = whCustomer.getTransitTime();
+        long minutes = Long.parseLong(stamp.substring(stamp.indexOf('H')+1, stamp.indexOf('M')));
+        long hours = Long.parseLong(stamp.substring(stamp.indexOf('T')+1, stamp.indexOf('H')));
+        long days = Long.parseLong(stamp.substring(stamp.indexOf('P')+1, stamp.indexOf('D')));
+        minutes += hours * 60 + days * 1440;
+
+        return minutes;
     }
 }

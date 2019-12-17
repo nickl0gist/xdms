@@ -7,6 +7,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -121,6 +125,12 @@ public interface ExcelService<T> {
                 : cell.getStringCellValue() + "";
     }
 
+    default LocalDate getDateFromCell(Cell cell){
+        return (DateUtil.isCellDateFormatted(cell))
+                ? cell.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+                : LocalDate.now();
+    }
+
     default Double getDoubleFromCell(Cell cell) {
         return (cell.getCellType() == CellType.NUMERIC)
                 ? (Double) getValueFromCell(cell)
@@ -137,6 +147,32 @@ public interface ExcelService<T> {
         return (((Double) getValueFromCell(cell)).longValue() == 0)
                 ? null
                 : ((Double) getValueFromCell(cell)).longValue();
+    }
+
+    default LocalDate getLocalDateCell (Cell cell){
+        LocalDate date = null;
+        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+            date = cell.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        }
+        return date;
+    }
+
+    default LocalTime getLocalTimeCell (Cell cell){
+        LocalTime time = null;
+        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+            time = cell.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
+        }
+        return time;
+    }
+
+    default LocalDateTime getLocalDateTime (Cell date, Cell time){
+        LocalDate dateETA = getLocalDateCell(date);
+        LocalTime timeETA = getLocalTimeCell(time);
+        LocalDateTime dateTimeETA = LocalDateTime.of(1900,1,1,0,0);
+        if(dateETA != null && timeETA != null){
+            dateTimeETA = LocalDateTime.of(dateETA, timeETA);
+        }
+        return dateTimeETA;
     }
 
 }

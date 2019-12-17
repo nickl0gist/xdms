@@ -80,6 +80,12 @@ public class WhCustomerController {
                 : ResponseEntity.notFound().build();
     }
 
+    /**
+     * Could change only @code isActive parameter of existing WhCustomer connection.
+     * @param whCustomer - existing connection warehouse with customer to be updated.
+     * @param bindingResult - BindingResult
+     * @return ResponseEntity<WhCustomer>
+     */
     @SuppressWarnings("Duplicates")
     @PutMapping("")
     public ResponseEntity<WhCustomer> updateWarehouseCustomerIsActive(@RequestBody @Valid WhCustomer whCustomer, BindingResult bindingResult){

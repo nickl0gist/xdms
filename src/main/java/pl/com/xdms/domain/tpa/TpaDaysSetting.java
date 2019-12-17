@@ -6,8 +6,7 @@ import lombok.ToString;
 import pl.com.xdms.domain.warehouse.WhCustomer;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 import java.time.LocalTime;
 
 @Entity
@@ -24,7 +23,7 @@ public class TpaDaysSetting {
     @NotBlank
     @ManyToOne
     @JoinColumn(name="workingDaysID", nullable=false)
-    private WorkingDays workingDays;
+    private WorkingDay workingDay;
 
     @NotBlank
     @ManyToOne
@@ -33,4 +32,11 @@ public class TpaDaysSetting {
 
     @NotNull
     private LocalTime localTime;
+
+    @NotNull
+    @NotEmpty
+    @Pattern(regexp = "^P(?!$)(\\d+W)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?)?$")
+    @Size(min = 8, max = 15)
+    @Column(name = "transit_time")
+    private String transitTime = "P0DT1H0M";
 }

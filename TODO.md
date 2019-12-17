@@ -30,20 +30,32 @@ to download template for uploading
 9+. Review interface ExcelController<T>
 done
 
+10+. Add Transit time to tpa days settings days with hours. Implemented as part of ISO 8601 for Durations 'P0DT0H0M' 
+ ~~Implement it as duration for hours adn period for a days~~. 
+ link: https://en.wikipedia.org/wiki/ISO_8601#Durations
+
 
 
 not done
 -
 
+-. TimeZone issue. Additional Column in Warehouse to define timezone? 
 
+-. Check default TPA settings in XDMS, add it as default in new system without "magic" strings. 
 
--. Add Transit time to tpa days settings days with hours. Implement it as duration for hours adn period for a days. 
+-. Create default tpa settings when new connection warehouse_customer created.
     
+-. Add condition to Excel to keep manifest codes in Manifest sheet as unique values.
+
 -. When customer is set to inactive all warehouses connections with it have to be switched to inActive.
     Customer with picked up and not delivered manifests cannot be switched to inActive. 
 
 -. Manifest View same as real manifest template and add to it weights gross and nett, dn, sap reception number
 
 -. Transport Plan for each groupage.   
+
+-. IS and CO tables and instances
+
+-. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
 
 

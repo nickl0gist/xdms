@@ -9,7 +9,8 @@ public enum TTTEnum {
 
     PENDING ("PENDING"),
     DELAYED ("DELAYED"),
-    ARRIVED ("ARRIVED");
+    ARRIVED ("ARRIVED"),
+    ERROR("ERROR");
 
     private String code;
 

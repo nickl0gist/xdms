@@ -82,3 +82,9 @@ insert into users
 VALUES
   (1,'Admin', 'Adm Name', 'Adm Last Name', 'admin@bla.pl', 'admin_pass', 1),
   (2,'User', 'User Name', 'User Last Name', 'user@bla.pl', 'user_pass', 2);
+  
+insert into tpa_status (status_name)
+values ('CLOSED'),('DELAYED'),('IN_PROGRESS'),('BUFFER');
+
+insert into ttt_status (ttt_status_name)
+values ('PENDING'), ('DELAYED'), ('ARRIVED');

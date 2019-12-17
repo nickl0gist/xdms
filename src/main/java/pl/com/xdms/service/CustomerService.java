@@ -95,7 +95,7 @@ public class CustomerService {
      * Creates connections with all warehouses in DB
      * @param customer - new persisted Customer Entity in DB. It will get new connections with all Warehouses
      *                 except the Warehouses which have their <tt>url_code</tt>
-     *                 the same as <tt>customer_code</tt> od customer.
+     *                 the same as <tt>customer_code</tt> or customer.
      */
     private void whCustomerConnectionsCreation(Customer customer) {
         log.info("Customer {} will be connected with Warehouses:{}", customer.getName());

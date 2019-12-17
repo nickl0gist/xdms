@@ -4,10 +4,7 @@ import lombok.Data;
 import lombok.ToString;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 
 @Entity
 @Table(name = "warehouses")
@@ -63,5 +60,11 @@ public class Warehouse {
     @Size(min=5, max = 8)
     @Column(unique = true)
     private String urlCode;
+
+    @NotNull
+    @NotBlank
+    @Size(min = 6, max = 6)
+    @Pattern(regexp = "GMT[+-][0-9]{2}")
+    private String timeZone;
 
 }

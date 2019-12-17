@@ -39,4 +39,6 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
     List<Warehouse> findAllByOrderByCityDesc();
 
     Optional<Warehouse> findByUrlCode(String url);
+
+    Optional<Warehouse> findByName(String name);
 }

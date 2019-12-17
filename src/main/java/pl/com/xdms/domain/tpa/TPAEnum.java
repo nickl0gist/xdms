@@ -10,7 +10,8 @@ public enum TPAEnum {
     CLOSED ("CLOSED"),
     DELAYED ("DELAYED"),
     IN_PROGRESS ("IN_PROGRESS"),
-    BUFFER ("BUFFER");
+    BUFFER ("BUFFER"),
+    ERROR("ERROR");
 
     private String code;
 

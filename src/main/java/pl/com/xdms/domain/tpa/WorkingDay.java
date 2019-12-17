@@ -13,7 +13,7 @@ import java.time.DayOfWeek;
 @Setter
 @Getter
 @ToString
-public class WorkingDays {
+public class WorkingDay {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

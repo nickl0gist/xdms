@@ -63,13 +63,13 @@ public class Customer {
     private Boolean isActive;
 
     @OneToMany(mappedBy = "customer")
-    //@JsonManagedReference(value="reference-customer")
     @JsonIgnore
     @ToString.Exclude
     private Set<Reference> referenceSet;
 
-/*    @NotNull
-    @OneToMany(mappedBy = "customer")
-    private Set<Manifest> manifests;*/
-
+    @NotNull
+    @NotBlank
+    @Size(min = 6, max = 6)
+    @Pattern(regexp = "GMT[+-][0-9]{2}")
+    private String timeZone;
 }

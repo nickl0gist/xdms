@@ -40,29 +40,3 @@ values
    1200, 1000, 800, 15, 1, 1, 5500000001, 2, 440000000, 1, true),
   (2, "2000XXX-CO", "Anchor belt", "89090909", 1500, 200, 25, 2.3, "designatione Anchor belt", "designatione Якорь длинный, не короткий",
    1100, 900, 1000, 20, 2, 2, 5500001111, 3, 4400022222, 2, true);
-
--- insert into customer_agreement
---   (customer_agreementid, customer_customerid)
--- VALUES
---   (5500000001, 1),
---   (5500000010, 2),
---   (5500000100, 3);
-
--- insert into suplier_agreement
---   (supplier_agreementid, supplier_supplierid, storage_locationid)
--- VALUES
---   (4400000001, 1, 1),
---   (4400000010, 2, 2),
---   (4400000100, 3, 3);
-
--- insert into reference_supplier_agreement
---   (referenceid, supplier_agreementid)
--- values
---   (1, 4400000001),
---   (2, 4400000010);
--- 
--- insert into reference_customer_agreement
---   (referenceid, customer_agreementid)
--- VALUES
---   (1, 5500000001),
---   (2, 5500000010);
