@@ -284,6 +284,8 @@ public class ExcelManifestService implements ExcelService<Manifest> {
     }
 
     /**
+     * Calculates appropriate TPA according existed TpaDaysSettings for current pair Warehouse Customer. If the planned dates
+     * of arriving to TXD, Departure from it and arriving to Customer are in he Past the TPA will be returned with status Error.
      * @param manifestRow - current Row instance in iteration from @code readSheets() given through @code getListOfReferences().
      * @return TPA instance fetched from given Row. This TPA will be used for Trade Cross Dock departure plan.
      */
