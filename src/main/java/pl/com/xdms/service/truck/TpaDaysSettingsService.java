@@ -9,7 +9,6 @@ import pl.com.xdms.domain.tpa.WorkingDay;
 import pl.com.xdms.domain.warehouse.WhCustomer;
 import pl.com.xdms.repository.TpaDaysSettingsRepository;
 
-import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -43,7 +42,7 @@ public class TpaDaysSettingsService {
      */
     public void addNewSetting(WhCustomer whCustomer, WorkingDay workingDay) {
         TpaDaysSetting tpaDaysSetting = new TpaDaysSetting();
-        tpaDaysSetting.setLocalTime(LocalTime.parse(defaultTpaTime));
+        tpaDaysSetting.setLocalTime(defaultTpaTime);
         tpaDaysSetting.setWhCustomer(whCustomer);
         tpaDaysSetting.setWorkingDay(workingDay);
         save(tpaDaysSetting);

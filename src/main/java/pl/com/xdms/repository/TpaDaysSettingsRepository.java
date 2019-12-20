@@ -15,4 +15,5 @@ import java.util.List;
 public interface TpaDaysSettingsRepository extends JpaRepository<TpaDaysSetting, Long> {
 
     List<TpaDaysSetting> findAllByWhCustomerAndWorkingDay(WhCustomer whCustomer, WorkingDay workingDay);
+
 }

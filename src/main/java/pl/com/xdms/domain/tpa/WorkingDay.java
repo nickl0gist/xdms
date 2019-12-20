@@ -20,6 +20,7 @@ public class WorkingDay {
     private Long id;
 
     @NotNull
+    @Enumerated(EnumType.STRING)
     private DayOfWeek dayName;
 
     @Column(columnDefinition = "BIT default true")

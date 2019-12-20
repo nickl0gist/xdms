@@ -7,7 +7,6 @@ import pl.com.xdms.domain.warehouse.WhCustomer;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
-import java.time.LocalTime;
 
 @Entity
 @Table(name = "tpa_days_settings")
@@ -31,7 +30,10 @@ public class TpaDaysSetting {
     private WhCustomer whCustomer;
 
     @NotNull
-    private LocalTime localTime;
+    @Pattern(regexp = "^([0-1]?\\d|2[0-3])(?::([0-5]?\\d))?(?::([0-5]?\\d))?$")
+    @NotEmpty
+    @Size(min = 5, max =5)
+    private String localTime;
 
     @NotNull
     @NotEmpty

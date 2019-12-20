@@ -22,5 +22,6 @@ public class TpaStatus {
     @NotNull
     @NotBlank
     @Column(unique = true)
+    @Enumerated(EnumType.STRING)
     private TPAEnum statusName;
 }

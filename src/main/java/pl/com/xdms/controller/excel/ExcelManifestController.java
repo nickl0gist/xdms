@@ -66,15 +66,17 @@ public class ExcelManifestController implements ExcelController<Manifest> {
         if (manifest != null) {
             log.info(manifest.toString());
             Set<ConstraintViolation<Manifest>> manifestValidator = validator.validate(manifest);
-            Set<ConstraintViolation<ManifestReference>> referenceValidator = manifest.getManifestsReferenceSet()
-                    .stream()
-                    .map(x -> validator.validate(x))
-                    .flatMap(Set::stream)
-                    .collect(Collectors.toSet());
-            if (!manifestValidator.isEmpty() || !referenceValidator.isEmpty()) {
-                log.info("Row {} would not be persisted: {}", key, manifestValidator);
-                referenceValidator.forEach(x -> log.info("Reference has errors {}", x));
-                return false;
+            if(manifest.getManifestsReferenceSet() != null) {
+                Set<ConstraintViolation<ManifestReference>> referenceValidator = manifest.getManifestsReferenceSet()
+                        .stream()
+                        .map(x -> validator.validate(x))
+                        .flatMap(Set::stream)
+                        .collect(Collectors.toSet());
+                if (!manifestValidator.isEmpty() || !referenceValidator.isEmpty()) {
+                    log.info("Row {} would not be persisted: {}", key, manifestValidator);
+                    referenceValidator.forEach(x -> log.info("Reference has errors {}", x));
+                    return false;
+                }
             }
             return true;
         }
