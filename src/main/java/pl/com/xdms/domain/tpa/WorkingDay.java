@@ -1,5 +1,6 @@
 package pl.com.xdms.domain.tpa;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -13,6 +14,7 @@ import java.time.DayOfWeek;
 @Setter
 @Getter
 @ToString
+@EqualsAndHashCode
 public class WorkingDay {
 
     @Id

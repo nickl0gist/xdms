@@ -1,7 +1,9 @@
 package pl.com.xdms.domain.manifest;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -14,7 +16,8 @@ import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -84,16 +87,32 @@ public class Manifest {
             joinColumns = @JoinColumn(name = "manifestID"),
             inverseJoinColumns = @JoinColumn(name = "tttID"))
     @JsonBackReference
-    private List<TruckTimeTable> truckTimeTables;
+    private Set<TruckTimeTable> truckTimeTableSet = new LinkedHashSet<>();
 
     @OneToMany
     @JoinTable(
             name = "tpa_manifest",
             joinColumns = @JoinColumn(name = "manifest_id"),
             inverseJoinColumns = @JoinColumn(name = "tpaID"))
-    @JsonBackReference
-    private List<TPA> tpaList;
+    @JsonIdentityInfo(
+            generator = ObjectIdGenerators.PropertyGenerator.class,
+            property = "name"
+    )
+    private Set<TPA> tpaSet = new LinkedHashSet<>();
 
     @Transient
     Boolean isActive;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Manifest)) return false;
+        Manifest manifest = (Manifest) o;
+        return manifestCode.equals(manifest.manifestCode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(manifestCode);
+    }
 }

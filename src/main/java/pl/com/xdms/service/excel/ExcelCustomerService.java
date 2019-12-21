@@ -19,7 +19,6 @@ import java.util.Map;
 
 /**
  * Created on 20.11.2019
- *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -152,7 +151,10 @@ public class ExcelCustomerService implements ExcelService<Customer> {
         Cell emailCell = row.createCell(7);
         emailCell.setCellValue(customer.getEmail());
 
-        Cell isActiveCell = row.createCell(8);
+        Cell timeZone = row.createCell(8);
+        timeZone.setCellValue(customer.getTimeZone());
+
+        Cell isActiveCell = row.createCell(9);
         isActiveCell.setCellValue(customer.getIsActive());
 
         Iterator<Cell> cellIterator = row.cellIterator();

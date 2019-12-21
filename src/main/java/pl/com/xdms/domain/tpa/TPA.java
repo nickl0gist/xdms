@@ -1,9 +1,7 @@
 package pl.com.xdms.domain.tpa;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -16,14 +14,14 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
 @Table(name = "tpa")
 @Setter
 @Getter
-@ToString
-@EqualsAndHashCode
+//@EqualsAndHashCode
 public class TPA {
 
     @Id
@@ -67,7 +65,42 @@ public class TPA {
             name = "tpa_manifest",
             joinColumns = @JoinColumn(name = "tpaID"),
             inverseJoinColumns = @JoinColumn(name = "manifest_id"))
-    @JsonManagedReference
+    @JsonIdentityInfo(
+            generator = ObjectIdGenerators.PropertyGenerator.class,
+            property = "manifestCode"
+    )
     @ToString.Exclude
-    private Set<Manifest> manifestSet ;
+    private Set<Manifest> manifestSet = new LinkedHashSet<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TPA)) return false;
+        TPA tpa = (TPA) o;
+        return Objects.equals(name, tpa.name) &&
+                Objects.equals(departurePlan, tpa.departurePlan) &&
+                Objects.equals(status, tpa.status) &&
+                Objects.equals(tpaDaysSetting, tpa.tpaDaysSetting);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, departurePlan, departureReal, status, tpaDaysSetting);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder manifestSetString = new StringBuilder();
+        manifestSet.forEach(x -> manifestSetString.append(x.getManifestCode()).append( ", "));
+        return "TPA{" +
+                "tpaID=" + tpaID +
+                ", name='" + name + '\'' +
+                ", departurePlan=" + departurePlan +
+                ", departureReal=" + departureReal +
+                ", status=" + status +
+                ", tpaDaysSetting=" + tpaDaysSetting +
+                ", manifestReferenceSet=" + manifestReferenceSet +
+                ", manifestSet=[" + manifestSetString + "\b\b"
+                +"]}";
+    }
 }

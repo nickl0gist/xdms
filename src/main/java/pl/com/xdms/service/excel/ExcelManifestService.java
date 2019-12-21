@@ -27,10 +27,10 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created on 30.11.2019
- *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -144,6 +144,9 @@ public class ExcelManifestService implements ExcelService<Manifest> {
         Cell whTypeCell = row.createCell(5);
         whTypeCell.setCellValue(warehouse.getWhType().getType().toString());
 
+        Cell timeZone = row.createCell(6);
+        timeZone.setCellValue(warehouse.getTimeZone());
+
         Iterator<Cell> cellIterator = row.cellIterator();
         while (cellIterator.hasNext()) {
             cellIterator.next().setCellStyle(style);
@@ -181,6 +184,7 @@ public class ExcelManifestService implements ExcelService<Manifest> {
 
         Iterator<Row> rowIterator = manifestSheet.rowIterator();
         Map<Long, Manifest> resultMap = new HashMap<>();
+        Set<TPA> tpaSet = new LinkedHashSet<>();
 
         while (rowIterator.hasNext()) {
             Manifest manifest = new Manifest();
@@ -215,17 +219,36 @@ public class ExcelManifestService implements ExcelService<Manifest> {
             }
 
             //fetching TTT forecast for manifest from Manifest sheet
-            manifest.setTruckTimeTables(getListOfTTT(manifest, manifestSheet));
+            //TODO
+            //manifest.setTruckTimeTableSet(getListOfTTT(manifest, manifestSheet));
 
             //fetching TPA forecast for Manifest from Manifest sheet
-            manifest.setTpaList(getListOfTPA(manifest, manifestSheet));
-
+            manifest.setTpaSet(getListOfTPA(manifest, row));
             manifest.setIsActive(true);
+            updateTpaSet(tpaSet, manifest);
 
             resultMap.put(row.getRowNum() + 1L, manifest);
         }
-
         return resultMap;
+    }
+
+    private void updateTpaSet(Set<TPA> tpaSet, Manifest manifest) {
+        if(tpaSet.isEmpty()){
+            tpaSet.addAll(manifest.getTpaSet());
+        }
+        Set<TPA> collector = new LinkedHashSet<>();
+        for (TPA tpa: tpaSet) {
+            for (TPA manifestTpa : manifest.getTpaSet()) {
+                if(tpaSet.contains(manifestTpa)){
+                    if(tpa.getName().equals(manifestTpa.getName())){
+                        tpa.getManifestSet().add(manifest);
+                    }
+                } else {
+                    collector.add(manifestTpa);
+                }
+            }
+        }
+        tpaSet.addAll(collector);
     }
 
     /**
@@ -242,7 +265,7 @@ public class ExcelManifestService implements ExcelService<Manifest> {
 
         //fetching TXD departure TPA from Manifest Sheet row "manifestRow" and set it as TPA
         // for each manifestReference in current manifest.
-        TPA tpa = getTXDTpaForManifestReference(manifestRow);
+        TPA tpa = collectTPA(manifestRow, 11,15);
 
         while (rowIterator.hasNext()) {
             ManifestReference manifestReference = new ManifestReference();
@@ -283,43 +306,93 @@ public class ExcelManifestService implements ExcelService<Manifest> {
         return manifestReferenceSet;
     }
 
+    //TODO
+    /**
+     * Calculates Set of TPAs for the Manifest. Set could contain maximum 2 elements: TPA from CC and TPA from XD
+     * Also it could contain no TPA for XD and CC when manifest going directly to TXD from supplier or when it is MilkRun
+     * which collects goods from suppliers and drive them to TXD.
+     * @param manifest - Manifest entity collected from Excel
+     * @param row      - Sheet Row where information about TPAs will be collected.
+     * @return List of TPA
+     */
+    private Set<TPA> getListOfTPA(Manifest manifest, Row row) {
+        TPA ccTPA = collectingTpaFromCC(manifest, row);
+        TPA xdTPA = collectingTpaFromXD(manifest, row);
+        Set<TPA> tpaList = new LinkedHashSet<>();
+        tpaList.add(ccTPA);
+        tpaList.add(xdTPA);
+        return tpaList.stream().filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+
+    private TPA collectingTpaFromCC(Manifest manifest, Row row) {
+        TPA ccTPA = null;
+        if (getStringFromCell(row.getCell(3)) != null) {
+            if(getStringFromCell(row.getCell(7)) != null){
+                ccTPA = collectTPA(row, 3,7);
+                ccTPA.getManifestSet().add(manifest);
+            } else if (getStringFromCell(row.getCell(11)) != null){
+                ccTPA = collectTPA(row, 3,11);
+                ccTPA.getManifestSet().add(manifest);
+            }
+        }
+        return ccTPA;
+    }
+
+    private TPA collectingTpaFromXD(Manifest manifest, Row row) {
+        TPA xdTPA = null;
+        if (getStringFromCell(row.getCell(7)) != null) {
+            if(getStringFromCell(row.getCell(11)) != null){
+                xdTPA = collectTPA(row, 7,11);
+                xdTPA.getManifestSet().add(manifest);
+            } else if (getStringFromCell(row.getCell(15)) != null){
+                xdTPA = collectTPA(row, 7,15);
+                xdTPA.getManifestSet().add(manifest);
+            }
+        }
+        return xdTPA;
+    }
+
     /**
      * Calculates appropriate TPA according existed TpaDaysSettings for current pair Warehouse Customer. If the planned dates
      * of arriving to TXD, Departure from it and arriving to Customer are in he Past the TPA will be returned with status Error.
-     * @param manifestRow - current Row instance in iteration from @code readSheets() given through @code getListOfReferences().
+     * @param warehouseNameColumn - index of Column where will try to find Warehouse name
+     * @param customerNameColumn - index of Column where will try to find Customer name
+     * @param row - current Row instance in iteration from @code readSheets() given through @code getListOfReferences().
      * @return TPA instance fetched from given Row. This TPA will be used for Trade Cross Dock departure plan.
      */
-    private TPA getTXDTpaForManifestReference(Row manifestRow) {
-
+    private TPA collectTPA(Row row, int warehouseNameColumn, int customerNameColumn) {
         TPA tpa = new TPA();
-        tpa.setName(getStringFromCell(manifestRow.getCell(14)));
+        tpa.setName(getStringFromCell(row.getCell(warehouseNameColumn + 3)));
         log.info("Collecting new TPA with name [{}]", tpa.getName());
 
-        Warehouse warehouse = warehouseService.getWarehouseByName(getStringFromCell(manifestRow.getCell(11)));
+        Warehouse warehouse = warehouseService.getWarehouseByName(getStringFromCell(row.getCell(warehouseNameColumn)));
 
-        Customer customer = customerService.getCustomerByName(getStringFromCell(manifestRow.getCell(15)));
+        Customer customer = customerService.getCustomerByName(getStringFromCell(row.getCell(customerNameColumn)));
         WhCustomer whCustomer = whCustomerService.findByWarehouseAndCustomer(warehouse, customer);
 
         // Creation ZoneDateTime of the moment when Manifest Should arrive to customer
         // based on LocalTime and ZoneId of Customer
-        ZonedDateTime dateTimeETA = ZonedDateTime.of(getLocalDateTime(manifestRow.getCell(16),
-                manifestRow.getCell(17)), ZoneId.of(customer.getTimeZone()));
+        log.info("dateTimeETA = Date {}, Time {}",getLocalDateCell(row.getCell(customerNameColumn + 1)), getLocalTimeCell(row.getCell(customerNameColumn + 2)));
+        ZonedDateTime dateTimeETA = ZonedDateTime.of(getLocalDateTime(row.getCell(customerNameColumn + 1),
+                row.getCell(customerNameColumn + 2)), ZoneId.of(customer.getTimeZone()));
 
         // Creation ZoneDateTime of the moment when Manifest Should arrive to warehouse
         // based on LocalTime and ZoneId of Warehouse
-        ZonedDateTime dateTimeTxdEta = ZonedDateTime.of(getLocalDateTime(manifestRow.getCell(12),
-                manifestRow.getCell(13)), ZoneId.of(warehouse.getTimeZone()));
+        log.info("dateTimeTxdEta = Date {}, Time {}",getLocalDateCell(row.getCell(warehouseNameColumn + 1)), getLocalTimeCell(row.getCell(warehouseNameColumn + 2)));
+        ZonedDateTime dateTimeTxdEta = ZonedDateTime.of(getLocalDateTime(row.getCell(warehouseNameColumn + 1),
+                row.getCell(warehouseNameColumn + 2)), ZoneId.of(warehouse.getTimeZone()));
 
         // Creation ZoneDateTime of the moment when Manifest Should be released from Warehouse
         // based on Warehouse_Customer TransitTime and dateTimeETA and timeZone of Warehouse
         ZonedDateTime dateTimeETD = dateTimeETA.minusMinutes(whCustomerService.getTTminutes(whCustomer)).withZoneSameInstant(ZoneId.of(warehouse.getTimeZone()));
 
         // IF all above calculated dates are in the past return tpa with status Error.
-        if(dateTimeETA.isBefore(ZonedDateTime.now())
+        if (dateTimeETA.isBefore(ZonedDateTime.now())
                 || dateTimeTxdEta.isBefore(ZonedDateTime.now())
-                || dateTimeETD.isBefore(ZonedDateTime.now())
-        ){
+                || dateTimeETD.isBefore(ZonedDateTime.now())) {
+
             tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
+            log.info("Line 375 Error occurred here");
             return tpa;
         }
 
@@ -328,6 +401,7 @@ public class ExcelManifestService implements ExcelService<Manifest> {
         if (ChronoUnit.DAYS.between(dateTimeETD, ZonedDateTime.now()) > 180) {
             tpa.setDeparturePlan(dateTimeETD.toLocalDateTime());
             tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
+            log.info("Line 384 Error occurred here");
             return tpa;
         }
 
@@ -338,8 +412,9 @@ public class ExcelManifestService implements ExcelService<Manifest> {
 
         //if calculated ETD is before ETA of manifest arriving to warehouse set TPA status Error
         if (calculatedDateTimeETD.isBefore(dateTimeTxdEta)) {
-            tpa.setDeparturePlan(calculatedDateTimeETD.withZoneSameInstant(ZoneId.of("GMT")).toLocalDateTime());
+            tpa.setDeparturePlan(calculatedDateTimeETD.toLocalDateTime());
             tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
+            log.info("Line 397 Error occurred here");
             return tpa;
         }
 
@@ -349,14 +424,10 @@ public class ExcelManifestService implements ExcelService<Manifest> {
         return tpa;
     }
 
-    //TODO
-    private List<TPA> getListOfTPA(Manifest manifest, Sheet manifestSheet) {
-        return null;
-    }
 
     //TODO
-    private List<TruckTimeTable> getListOfTTT(Manifest manifest, Sheet manifestSheet) {
-        List<TruckTimeTable> tttList = new ArrayList<>();
+    private Set<TruckTimeTable> getListOfTTT(Manifest manifest, Sheet manifestSheet) {
+        Set<TruckTimeTable> tttList = new HashSet<>();
         Iterator<Row> rowIterator = manifestSheet.rowIterator();
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
@@ -410,11 +481,12 @@ public class ExcelManifestService implements ExcelService<Manifest> {
         return manifestReference;
     }
 
+    //Empty method
     @Override
     public Map<Long, Manifest> readSheet(Sheet sheet) {
         return null;
     }
-
+    //Empty method
     @Override
     public void fillRowWithData(Manifest object, Row row, CellStyle style) {
 

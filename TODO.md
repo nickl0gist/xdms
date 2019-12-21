@@ -34,12 +34,17 @@ done
  ~~Implement it as duration for hours adn period for a days~~. 
  link: https://en.wikipedia.org/wiki/ISO_8601#Durations
 
+11+. TimeZone issue. Additional Column created in Warehouse and in Customer to define timezone. 
 
 
 not done
 -
 
--. TimeZone issue. Additional Column in Warehouse to define timezone? 
+-. Created DTO which will contain TPAset ManifestSet TTTset and ManifestReferenceSet to collect information from Loaded 
+file and give it back to validation.
+
+-. add column in Excel to croup suppliers in one truck to represent milkrun truck. 
+This column should represent TTT in certain warehouse
 
 -. Check default TPA settings in XDMS, add it as default in new system without "magic" strings. 
 
@@ -57,5 +62,7 @@ not done
 -. IS and CO tables and instances
 
 -. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
+
+-. add super conditions in the template of excel for manifest loading
 
 
