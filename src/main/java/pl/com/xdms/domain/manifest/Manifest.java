@@ -1,9 +1,8 @@
 package pl.com.xdms.domain.manifest;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -11,11 +10,14 @@ import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.supplier.Supplier;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
+import pl.com.xdms.serializers.ManifestTpaSerializer;
+import pl.com.xdms.serializers.ManifestTttSerializer;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -34,6 +36,7 @@ public class Manifest {
     @NotBlank
     @NotNull
     @Column(unique = true)
+    @Pattern(regexp = "^[0-9A-Za-z\\-_]+")
     private String manifestCode;
 
     @Min(0)
@@ -86,7 +89,7 @@ public class Manifest {
             name = "ttt_manifest",
             joinColumns = @JoinColumn(name = "manifestID"),
             inverseJoinColumns = @JoinColumn(name = "tttID"))
-    @JsonBackReference
+    @JsonSerialize(using = ManifestTttSerializer.class)
     private Set<TruckTimeTable> truckTimeTableSet = new LinkedHashSet<>();
 
     @OneToMany
@@ -94,11 +97,17 @@ public class Manifest {
             name = "tpa_manifest",
             joinColumns = @JoinColumn(name = "manifest_id"),
             inverseJoinColumns = @JoinColumn(name = "tpaID"))
-    @JsonIdentityInfo(
-            generator = ObjectIdGenerators.PropertyGenerator.class,
-            property = "name"
-    )
+    //@JsonBackReference
+    @JsonSerialize(using = ManifestTpaSerializer.class)
     private Set<TPA> tpaSet = new LinkedHashSet<>();
+
+    @Transient
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String tpaCcName;
+
+    @Transient
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String tpaXdName;
 
     @Transient
     Boolean isActive;

@@ -1,7 +1,7 @@
 package pl.com.xdms.domain.tpa;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -11,6 +11,7 @@ import pl.com.xdms.domain.manifest.ManifestReference;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
@@ -21,7 +22,7 @@ import java.util.Set;
 @Table(name = "tpa")
 @Setter
 @Getter
-//@EqualsAndHashCode
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TPA {
 
     @Id
@@ -31,6 +32,7 @@ public class TPA {
     @NotBlank
     @NotNull
     @Size(min = 3)
+    @Pattern(regexp = "^[0-9A-Za-z\\-_]+")
     private String name;
 
     @NotNull
@@ -53,11 +55,9 @@ public class TPA {
             name = "tpa_manifest_reference",
             joinColumns = @JoinColumn(name = "tpaID"),
             inverseJoinColumns = @JoinColumn(name = "manifest_reference_id"))
-    @JsonIdentityInfo(
-            generator = ObjectIdGenerators.PropertyGenerator.class,
-            property = "manifestReferenceId"
-    )
+    @JsonManagedReference
     @ToString.Exclude
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<ManifestReference> manifestReferenceSet = new LinkedHashSet<>();
 
     @OneToMany
@@ -65,11 +65,9 @@ public class TPA {
             name = "tpa_manifest",
             joinColumns = @JoinColumn(name = "tpaID"),
             inverseJoinColumns = @JoinColumn(name = "manifest_id"))
-    @JsonIdentityInfo(
-            generator = ObjectIdGenerators.PropertyGenerator.class,
-            property = "manifestCode"
-    )
+    @JsonManagedReference
     @ToString.Exclude
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<Manifest> manifestSet = new LinkedHashSet<>();
 
     @Override
@@ -91,7 +89,12 @@ public class TPA {
     @Override
     public String toString() {
         StringBuilder manifestSetString = new StringBuilder();
-        manifestSet.forEach(x -> manifestSetString.append(x.getManifestCode()).append( ", "));
+        manifestSet.forEach(x -> manifestSetString.append(x.getManifestCode()).append(", "));
+        StringBuilder manifestReferenceSetString = new StringBuilder();
+        manifestReferenceSet.forEach(x -> manifestReferenceSetString.append(x.getManifest().getManifestCode())
+                .append(" - ")
+                .append(x.getReference().getNumber())
+                .append(", "));
         return "TPA{" +
                 "tpaID=" + tpaID +
                 ", name='" + name + '\'' +
@@ -99,8 +102,9 @@ public class TPA {
                 ", departureReal=" + departureReal +
                 ", status=" + status +
                 ", tpaDaysSetting=" + tpaDaysSetting +
-                ", manifestReferenceSet=" + manifestReferenceSet +
+                ", manifestReferenceSet=[" + manifestReferenceSetString + "\b\b]" +
                 ", manifestSet=[" + manifestSetString + "\b\b"
-                +"]}";
+                + "]}";
     }
+
 }

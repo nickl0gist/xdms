@@ -36,22 +36,23 @@ done
 
 11+. TimeZone issue. Additional Column created in Warehouse and in Customer to define timezone. 
 
+12+. extract CustomSerializator into sepparate file and rename it
+
+13+. add column in Excel to ~~group~~ indicate truck name from suppliers. If it is one truck to represent milkrun truck. 
+This column should represent TTT in certain warehouse
+
+14+. Check default TPA settings in XDMS, add it as default in new system without "magic" strings. 
+
+15+. Create default tpa settings when new connection warehouse_customer created.
+
++16. Add condition to Excel to keep manifest codes in Manifest sheet as unique values.
 
 not done
 -
-
+ 
 -. Created DTO which will contain TPAset ManifestSet TTTset and ManifestReferenceSet to collect information from Loaded 
 file and give it back to validation.
-
--. add column in Excel to croup suppliers in one truck to represent milkrun truck. 
-This column should represent TTT in certain warehouse
-
--. Check default TPA settings in XDMS, add it as default in new system without "magic" strings. 
-
--. Create default tpa settings when new connection warehouse_customer created.
-    
--. Add condition to Excel to keep manifest codes in Manifest sheet as unique values.
-
+   
 -. When customer is set to inactive all warehouses connections with it have to be switched to inActive.
     Customer with picked up and not delivered manifests cannot be switched to inActive. 
 
@@ -63,6 +64,8 @@ This column should represent TTT in certain warehouse
 
 -. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
 
--. add super conditions in the template of excel for manifest loading
+-. add super conditions in the template of excel for manifest loading: ???? 
+
+-. manually added or by Excel XDmatrix 
 
 

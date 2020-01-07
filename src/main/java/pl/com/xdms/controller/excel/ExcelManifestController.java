@@ -5,9 +5,12 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import pl.com.xdms.domain.manifest.Manifest;
+import pl.com.xdms.domain.dto.ManifestTpaTttDTO;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.service.FileStorageService;
 import pl.com.xdms.service.excel.ExcelManifestService;
@@ -30,7 +33,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("coordinator/excel")
-public class ExcelManifestController implements ExcelController<Manifest> {
+public class ExcelManifestController implements ExcelController<ManifestTpaTttDTO> {
 
     private final FileStorageService fileStorageService;
     private final ExcelManifestService excelManifestService;
@@ -50,24 +53,31 @@ public class ExcelManifestController implements ExcelController<Manifest> {
     @SuppressWarnings("Duplicates")
     @Override
     @PostMapping("/manifests/uploadFile")
-    public List<Manifest> uploadFile(MultipartFile file) {
+    public List<ManifestTpaTttDTO> uploadFile(MultipartFile file) {
         Path filePath = fileStorageService.storeFile(file);
-        Map<Long, Manifest> resultList = excelManifestService.readExcel(filePath.toFile());
+        Map<Long, ManifestTpaTttDTO> resultList = excelManifestService.readExcel(filePath.toFile());
 
         return resultList.entrySet()
                 .stream()
-                .map(x -> entityValidation(x.getKey(), x.getValue()))
+                //.map(x -> entityValidation(x.getKey(), x.getValue()))
+                .map(x -> x.getValue())
                 .collect(Collectors.toList());
     }
 
     @Override
-    public boolean validation(Long key, Manifest manifest, Logger log) {
+    public ManifestTpaTttDTO entityValidation(Long key, ManifestTpaTttDTO manifestTpaTttDTO) {
+        validation(key, manifestTpaTttDTO, log);
+        return null;
+    }
+
+    public boolean validation(Long key, ManifestTpaTttDTO manifestTpaTttDTO, Logger log) {
         Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        if (manifest != null) {
-            log.info(manifest.toString());
-            Set<ConstraintViolation<Manifest>> manifestValidator = validator.validate(manifest);
-            if(manifest.getManifestsReferenceSet() != null) {
-                Set<ConstraintViolation<ManifestReference>> referenceValidator = manifest.getManifestsReferenceSet()
+
+        if (manifestTpaTttDTO != null) {
+            log.info(manifestTpaTttDTO.toString());
+            Set<ConstraintViolation<ManifestTpaTttDTO>> manifestValidator = validator.validate(manifestTpaTttDTO);
+            if(manifestTpaTttDTO.getManifestReferenceSetDTO() != null) {
+                Set<ConstraintViolation<ManifestReference>> referenceValidator = manifestTpaTttDTO.getManifestReferenceSetDTO()
                         .stream()
                         .map(x -> validator.validate(x))
                         .flatMap(Set::stream)
@@ -84,13 +94,7 @@ public class ExcelManifestController implements ExcelController<Manifest> {
     }
 
     @Override
-    public Manifest entityValidation(Long key, Manifest manifest) {
-        manifest.setIsActive(validation(key, manifest, log));
-        return manifest;
-    }
-
-    @Override
-    public ResponseEntity<List<Manifest>> saveAllEntities(List<Manifest> objList) {
+    public ResponseEntity<List<ManifestTpaTttDTO>> saveAllEntities(List<ManifestTpaTttDTO> objList) {
         return null;
     }
 

@@ -1,7 +1,6 @@
 package pl.com.xdms.domain.manifest;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -12,7 +11,7 @@ import javax.persistence.*;
 import javax.validation.constraints.Min;
 
 @Entity
-@Table(name ="manifest_reference")
+@Table(name = "manifest_reference")
 @Setter
 @Getter
 @ToString
@@ -75,19 +74,13 @@ public class ManifestReference {
     private int stackability;
 
     @ManyToOne
-    @JoinColumn(name="manifestID", nullable=false)
-    @JsonIdentityInfo(
-            generator = ObjectIdGenerators.PropertyGenerator.class,
-            property = "manifestCode"
-    )
+    @JoinColumn(name = "manifestID", nullable = false)
+    @JsonBackReference
     private Manifest manifest;
 
     @ManyToOne
-    @JoinColumn(name="referenceID", nullable=false)
-    @JsonIdentityInfo(
-            generator = ObjectIdGenerators.PropertyGenerator.class,
-            property = "supplierAgreement"
-    )
+    @JoinColumn(name = "referenceID", nullable = false)
+    @JsonManagedReference
     private Reference reference;
 
     @ManyToOne
@@ -101,4 +94,12 @@ public class ManifestReference {
     )
     private TPA tpa;
 
+    @Transient
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    String manifestCode;
+    //@JsonIdentityInfo
+
+    @Transient
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    String tpaCode;
 }
