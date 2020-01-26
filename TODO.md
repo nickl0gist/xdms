@@ -36,7 +36,7 @@ done
 
 11+. TimeZone issue. Additional Column created in Warehouse and in Customer to define timezone. 
 
-12+. extract CustomSerializator into sepparate file and rename it
+12+. extract CustomSerializator into separate file and rename it
 
 13+. add column in Excel to ~~group~~ indicate truck name from suppliers. If it is one truck to represent milkrun truck. 
 This column should represent TTT in certain warehouse
@@ -47,25 +47,47 @@ This column should represent TTT in certain warehouse
 
 +16. Add condition to Excel to keep manifest codes in Manifest sheet as unique values.
 
++17. create mechanism to check if the manifest already existing in DB: check by manifest code;
+tpa, ttt : check by name and by planned date and if they hasnt status error.
+ 
++18. Created DTO which will contain TPA-set ManifestSet TTT-set and ManifestReferenceSet to collect information from Loaded 
+file and give it back to validation.
+
 not done
 -
- 
--. Created DTO which will contain TPAset ManifestSet TTTset and ManifestReferenceSet to collect information from Loaded 
-file and give it back to validation.
+
+-. check all saveAllEntities methods in controllers which implement ExcelController class. The response entities 
+should have "isActive = false". Check again before saving?
+
+-. save received Manifest ManifestReference TTT TPA after validation.
    
 -. When customer is set to inactive all warehouses connections with it have to be switched to inActive.
     Customer with picked up and not delivered manifests cannot be switched to inActive. 
 
 -. Manifest View same as real manifest template and add to it weights gross and nett, dn, sap reception number
 
--. Transport Plan for each groupage.   
+-. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
+
+-. manually added or by Excel XD-matrix 
+
+
+2.1.0
+-
+
+-. add Comments to manifest and manifest Reference 
 
 -. IS and CO tables and instances
 
--. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
+-. Transport Plan for each groupage.   
+
+-. E-mail notifications. Define what kind of notifications has to be done.
+
+2.1.1
+-
+-. Reports
+
+Excel Matrix Template
+-
 
 -. add super conditions in the template of excel for manifest loading: ???? 
-
--. manually added or by Excel XDmatrix 
-
-
+   - arrival dates of Customer truck names

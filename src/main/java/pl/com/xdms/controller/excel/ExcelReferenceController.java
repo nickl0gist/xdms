@@ -59,7 +59,6 @@ public class ExcelReferenceController implements ExcelController<Reference> {
                 .collect(Collectors.toList());
     }
 
-
     @Override
     public Reference entityValidation(Long key, Reference reference) {
         if (!validation(key, reference, log)){

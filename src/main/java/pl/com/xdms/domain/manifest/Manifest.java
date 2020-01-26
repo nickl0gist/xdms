@@ -41,31 +41,31 @@ public class Manifest {
 
     @Min(0)
     @Column
-    private int palletQtyPlanned;
+    private Integer palletQtyPlanned;
 
     @Min(0)
     @Column
-    private int boxQtyPlanned;
+    private Integer boxQtyPlanned;
 
     @Min(0)
-    private double totalWeightPlanned;
+    private Double totalWeightPlanned;
 
     @Min(0)
     @Column(name = "totalldm_planned")
-    private double totalLdmPlanned;
+    private Double totalLdmPlanned;
 
     @Min(0)
-    private int palletQtyReal;
+    private Integer palletQtyReal;
 
     @Min(0)
-    private int boxQtyReal;
+    private Integer boxQtyReal;
 
     @Min(0)
-    private double totalWeightReal;
+    private Double totalWeightReal;
 
     @Min(0)
     @Column(name = "totalldm_real")
-    private double totalLdmReal;
+    private Double totalLdmReal;
 
     @ManyToOne
     @JoinColumn(name="customerID", nullable=false)
@@ -97,7 +97,6 @@ public class Manifest {
             name = "tpa_manifest",
             joinColumns = @JoinColumn(name = "manifest_id"),
             inverseJoinColumns = @JoinColumn(name = "tpaID"))
-    //@JsonBackReference
     @JsonSerialize(using = ManifestTpaSerializer.class)
     private Set<TPA> tpaSet = new LinkedHashSet<>();
 
@@ -110,7 +109,7 @@ public class Manifest {
     private String tpaXdName;
 
     @Transient
-    Boolean isActive;
+    private Boolean isActive;
 
     @Override
     public boolean equals(Object o) {

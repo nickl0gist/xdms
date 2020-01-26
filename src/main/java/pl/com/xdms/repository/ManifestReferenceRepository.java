@@ -9,4 +9,5 @@ import pl.com.xdms.domain.manifest.ManifestReference;
  * mykola.horkov@gmail.com
  */
 public interface ManifestReferenceRepository extends JpaRepository<ManifestReference, Long> {
+
 }

@@ -78,9 +78,12 @@ public class ManifestReference {
     @JsonBackReference
     private Manifest manifest;
 
+    @Transient
+    private Boolean isActive;
+
     @ManyToOne
     @JoinColumn(name = "referenceID", nullable = false)
-    @JsonManagedReference
+
     private Reference reference;
 
     @ManyToOne

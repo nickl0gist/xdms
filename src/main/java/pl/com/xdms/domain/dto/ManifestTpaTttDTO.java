@@ -26,4 +26,5 @@ public class ManifestTpaTttDTO {
     Set<TPA> tpaSetDTO = new LinkedHashSet<>();
     Set<TruckTimeTable> tttSetDTO = new LinkedHashSet<>();
     Set<ManifestReference> manifestReferenceSetDTO = new LinkedHashSet<>();
+
 }

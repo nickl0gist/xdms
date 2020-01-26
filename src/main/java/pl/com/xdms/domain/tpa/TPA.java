@@ -1,7 +1,6 @@
 package pl.com.xdms.domain.tpa;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -13,13 +12,12 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
 @Entity
-@Table(name = "tpa")
+@Table(name = "tpa", uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "departurePlan"})})
 @Setter
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -35,10 +33,14 @@ public class TPA {
     @Pattern(regexp = "^[0-9A-Za-z\\-_]+")
     private String name;
 
+    @NotBlank
     @NotNull
-    private LocalDateTime departurePlan;
+    @Size(min = 16, max = 19)
+    @Pattern(regexp = "^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9](:[0-5][0-9])?$")
+    private String departurePlan;
 
-    private LocalDateTime departureReal;
+    @Pattern(regexp = "^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9](:[0-5][0-9])?$")
+    private String departureReal;
 
     @NotNull
     @ManyToOne
@@ -50,12 +52,15 @@ public class TPA {
     @JoinColumn
     private TpaDaysSetting tpaDaysSetting;
 
+    @Transient
+    private Boolean isActive;
+
     @OneToMany
     @JoinTable(
             name = "tpa_manifest_reference",
             joinColumns = @JoinColumn(name = "tpaID"),
             inverseJoinColumns = @JoinColumn(name = "manifest_reference_id"))
-    @JsonManagedReference
+    //@JsonManagedReference
     @ToString.Exclude
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<ManifestReference> manifestReferenceSet = new LinkedHashSet<>();
@@ -65,7 +70,7 @@ public class TPA {
             name = "tpa_manifest",
             joinColumns = @JoinColumn(name = "tpaID"),
             inverseJoinColumns = @JoinColumn(name = "manifest_id"))
-    @JsonManagedReference
+    //@JsonManagedReference
     @ToString.Exclude
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<Manifest> manifestSet = new LinkedHashSet<>();

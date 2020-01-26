@@ -3,7 +3,10 @@ package pl.com.xdms.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.repository.ManifestReferenceRepository;
+
+import java.util.List;
 
 /**
  * Created on 01.12.2019
@@ -18,5 +21,9 @@ public class ManifestReferenceService {
     @Autowired
     public ManifestReferenceService(ManifestReferenceRepository manifestReferenceRepository) {
         this.manifestReferenceRepository = manifestReferenceRepository;
+    }
+
+    public List<ManifestReference> saveAll(List<ManifestReference> manifestReferenceSet) {
+        return manifestReferenceRepository.saveAll(manifestReferenceSet);
     }
 }

@@ -20,7 +20,6 @@ import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.domain.warehouse.WhCustomer;
-import pl.com.xdms.repository.ManifestReferenceRepository;
 import pl.com.xdms.service.*;
 import pl.com.xdms.service.truck.TruckService;
 
@@ -34,8 +33,7 @@ import java.util.stream.Collectors;
 
 /**
  * Created on 30.11.2019
- *
- * @author Mykola Horkov
+ * @author Mykola Horkove
  * mykola.horkov@gmail.com
  */
 @Service
@@ -49,7 +47,7 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
     private final CustomerService customerService;
     private final SupplierService supplierService;
     private final ManifestService manifestService;
-    private final ManifestReferenceRepository manifestReferenceRepository;
+    private final ManifestReferenceService manifestReferenceService;
     private final ReferenceService referenceService;
     private final TruckService truckService;
     private final WhCustomerService whCustomerService;
@@ -62,7 +60,7 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
                                 CustomerService customerService,
                                 SupplierService supplierService,
                                 ManifestService manifestService,
-                                ManifestReferenceRepository manifestReferenceRepository,
+                                ManifestReferenceService manifestReferenceService,
                                 ReferenceService referenceService,
                                 TruckService truckService,
                                 WhCustomerService whCustomerService) {
@@ -73,7 +71,7 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
         this.customerService = customerService;
         this.supplierService = supplierService;
         this.manifestService = manifestService;
-        this.manifestReferenceRepository = manifestReferenceRepository;
+        this.manifestReferenceService = manifestReferenceService;
         this.referenceService = referenceService;
         this.truckService = truckService;
         this.whCustomerService = whCustomerService;
@@ -382,7 +380,7 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
         // if amount of days between TPA ETD and ZoneDateTime.now() greater than 180 days, tpa status will
         // be assigned as Error
         if (ChronoUnit.DAYS.between(dateTimeETD, ZonedDateTime.now()) > 180) {
-            tpa.setDeparturePlan(dateTimeETD.toLocalDateTime());
+            tpa.setDeparturePlan(dateTimeETD.toLocalDateTime().toString());
             tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
             log.info("amount of days between TPA_ETD(departure) and ZoneDateTime.now() greater than 180 days");
             return tpa;
@@ -395,21 +393,19 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
 
         //if calculated ETD is before ETA of manifest arriving to warehouse set TPA status Error
         if (calculatedDateTimeETD.isBefore(dateTimeTxdEta)) {
-            tpa.setDeparturePlan(calculatedDateTimeETD.toLocalDateTime());
+            tpa.setDeparturePlan(calculatedDateTimeETD.toLocalDateTime().toString());
             tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
             log.info("calculated ETD is before ETA of manifest arriving to warehouse");
             return tpa;
         }
 
-        tpa.setDeparturePlan(calculatedDateTimeETD.toLocalDateTime());
+        tpa.setDeparturePlan(calculatedDateTimeETD.toLocalDateTime().toString());
         tpa.setTpaDaysSetting(appropriateTpa);
         tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.BUFFER));
         log.info("TPA with name [{}] COLLECTED ----------------------------", tpa.getName());
         return tpa;
     }
 
-
-    //TODO
     private Set<TruckTimeTable> getListOfTTT(Row row) {
         Set<TruckTimeTable> tttList = new HashSet<>();
         TruckTimeTable directTTT = getDirectTTT(row);
@@ -467,7 +463,7 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
             String truckName = getStringFromCell(row.getCell(truckNameColumn));
             ttt.setWarehouse(warehouse);
             ttt.setTruckName(truckName);
-            ttt.setTttArrivalDatePlan(etaDateTime);
+            ttt.setTttArrivalDatePlan(etaDateTime.toString());
             if (LocalDateTime.now().isAfter(etaDateTime)) {
                 ttt.setTttStatus(truckService.getTttService().getTttStatusByEnum(TTTEnum.DELAYED));
             } else {
