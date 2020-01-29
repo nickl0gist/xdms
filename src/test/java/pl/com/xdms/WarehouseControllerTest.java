@@ -65,6 +65,7 @@ public class WarehouseControllerTest {
         newWarehouse.setEmail("email@cassier.fr");
         newWarehouse.setWhType(newWhType);
         newWarehouse.setUrlCode("cc_cass");
+        newWarehouse.setTimeZone("GMT+02");
     }
 
     @Test

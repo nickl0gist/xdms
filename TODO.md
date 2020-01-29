@@ -53,13 +53,20 @@ tpa, ttt : check by name and by planned date and if they hasnt status error.
 +18. Created DTO which will contain TPA-set ManifestSet TTT-set and ManifestReferenceSet to collect information from Loaded 
 file and give it back to validation.
 
++19. save received Manifest, ManifestReference, TTT, TPA after validation.
+
++20. Adjust existing tests to new DB constraints. Make all tests to run
+
 not done
 -
 
 -. check all saveAllEntities methods in controllers which implement ExcelController class. The response entities 
-should have "isActive = false". Check again before saving?
+should have "isActive = false". Check again before saving? TO implement or not?
 
--. save received Manifest ManifestReference TTT TPA after validation.
+
+
+
+-. new tests to test ExcelManifestController actions
    
 -. When customer is set to inactive all warehouses connections with it have to be switched to inActive.
     Customer with picked up and not delivered manifests cannot be switched to inActive. 

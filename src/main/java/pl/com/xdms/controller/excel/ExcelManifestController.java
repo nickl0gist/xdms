@@ -198,10 +198,11 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
 
         //Check again given object to avoid any cheating from user
         ManifestTpaTttDTO object = entityValidation(objList.iterator().next());
+
+        //Create deep copy of received object to send it back in response
         Gson gson = new Gson();
         ManifestTpaTttDTO deepCopy = gson.fromJson(gson.toJson(object), ManifestTpaTttDTO.class);
-        log.info("Are the objects equal: {}", object == deepCopy);
-        log.info("Are the internal objects equal: {}", object.getTpaSetDTO() == deepCopy.getTpaSetDTO());
+
         //Gets sets of objects
         Map<Long, Manifest> manifestMapDTO = object.getManifestMapDTO();
         Set<TPA> tpaSetDTO = object.getTpaSetDTO();

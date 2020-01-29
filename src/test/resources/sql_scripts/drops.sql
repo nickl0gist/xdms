@@ -7,4 +7,5 @@ delete from suppliers;
 delete from storage_location;
 delete from warehouses;
 delete from wh_type;
+delete from tpa_status;
 

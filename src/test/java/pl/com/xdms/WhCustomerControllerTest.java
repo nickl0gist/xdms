@@ -77,7 +77,7 @@ public class WhCustomerControllerTest {
                 .andExpect(jsonPath("$.isActive").value(true)).andReturn();
 
         String jsonString = mvcResult.getResponse().getContentAsString();
-        jsonString = jsonString.replace("wie\"},\"isActive\":true}", "wie\"},\"isActive\":false}");
+        jsonString = jsonString.replace("02\"},\"isActive\":true", "02\"},\"isActive\":false");
 
         mockMvc.perform(put("/coordinator/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8).content(jsonString))
                 .andDo(print())

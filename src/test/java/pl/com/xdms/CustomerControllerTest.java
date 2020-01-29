@@ -60,6 +60,7 @@ public class CustomerControllerTest {
         newCustomer.setEmail("some@email.bo");
         newCustomer.setPostCode("200188");
         newCustomer.setStreet("Korowkina 22");
+        newCustomer.setTimeZone("GMT+02");
     }
 
     @Test

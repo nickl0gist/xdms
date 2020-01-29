@@ -88,6 +88,9 @@ public class ExcelCustomerService implements ExcelService<Customer> {
                         customer.setEmail(getStringFromCell(cell));
                         break;
                     case 8:
+                        customer.setTimeZone(getStringFromCell(cell));
+                        break;
+                    case 9:
                         customer.setIsActive(getBooleanFromCell(cell));
                         break;
                 }
