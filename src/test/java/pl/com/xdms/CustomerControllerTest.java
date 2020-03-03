@@ -68,7 +68,7 @@ public class CustomerControllerTest {
         mockMvc.perform(get("/admin/customers"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)));
+                .andExpect(jsonPath("$", hasSize(8)));
     }
 
     @Test
@@ -93,7 +93,7 @@ public class CustomerControllerTest {
         mockMvc.perform(get("/admin/customers/active"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)));
+                .andExpect(jsonPath("$", hasSize(6)));
     }
 
     @Test
@@ -109,9 +109,9 @@ public class CustomerControllerTest {
         mockMvc.perform(get("/admin/customers/ordered_by/name/asc"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)))
+                .andExpect(jsonPath("$", hasSize(8)))
                 .andExpect(jsonPath("$[0].customerID").value(4))
-                .andExpect(jsonPath("$[4].customerID").value(2));
+                .andExpect(jsonPath("$[7].customerID").value(8));
     }
 
     @Test
@@ -119,9 +119,9 @@ public class CustomerControllerTest {
         mockMvc.perform(get("/admin/customers/ordered_by/customer_code/desc"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)))
-                .andExpect(jsonPath("$[0].customerID").value(3))
-                .andExpect(jsonPath("$[4].customerID").value(1));
+                .andExpect(jsonPath("$", hasSize(8)))
+                .andExpect(jsonPath("$[0].customerID").value(8))
+                .andExpect(jsonPath("$[7].customerID").value(1));
     }
 
     @Test
@@ -192,9 +192,9 @@ public class CustomerControllerTest {
         Assert.assertEquals(1, whCustomerService.getAllWhCustomersByWarehouseNotActive(warehouse1).size());
         Assert.assertEquals(1, whCustomerService.getAllWhCustomersByWarehouseNotActive(warehouse2).size());
         Assert.assertEquals(1, whCustomerService.getAllWhCustomersByWarehouseNotActive(warehouse3).size());
-        Assert.assertEquals(0, whCustomerService.getAllWhCustomersByWarehouseIsActive(warehouse1).size());
-        Assert.assertEquals(0, whCustomerService.getAllWhCustomersByWarehouseIsActive(warehouse2).size());
-        Assert.assertEquals(0, whCustomerService.getAllWhCustomersByWarehouseIsActive(warehouse3).size());
+        Assert.assertEquals(1, whCustomerService.getAllWhCustomersByWarehouseIsActive(warehouse1).size());
+        Assert.assertEquals(2, whCustomerService.getAllWhCustomersByWarehouseIsActive(warehouse2).size());
+        Assert.assertEquals(1, whCustomerService.getAllWhCustomersByWarehouseIsActive(warehouse3).size());
     }
 
     @Test

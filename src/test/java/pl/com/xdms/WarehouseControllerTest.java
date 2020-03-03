@@ -196,7 +196,7 @@ public class WarehouseControllerTest {
                 .andExpect(status().is(201));
         Warehouse persistedWarehouse = warehouseService.getWarehouseByUrl(newWarehouse.getUrlCode());
         Assert.assertEquals(6, warehouseService.getAllWarehouses().size());
-        Assert.assertEquals(5, whCustomerService.getAllWhCustomersByWarehouseNotActive(persistedWarehouse).size());
+        Assert.assertEquals(8, whCustomerService.getAllWhCustomersByWarehouseNotActive(persistedWarehouse).size());
         Assert.assertEquals(2, whCustomerService.getAllWhCustomersByWarehouseNotActive(firstWarehouse).size());
     }
 

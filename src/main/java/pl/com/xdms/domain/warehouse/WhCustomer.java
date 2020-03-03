@@ -6,7 +6,6 @@ import lombok.ToString;
 import pl.com.xdms.domain.customer.Customer;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -34,7 +33,6 @@ public class WhCustomer {
     private Boolean isActive;
 
     @NotNull
-    @NotEmpty
     @Pattern(regexp = "^P(?!$)(\\d+W)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?)?$")
     @Size(min = 8, max = 15)
     private String transitTime = "P0DT1H0M";

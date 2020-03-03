@@ -21,12 +21,10 @@ public class TpaDaysSetting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
     @ManyToOne
     @JoinColumn(name="workingDaysID", nullable=false)
     private WorkingDay workingDay;
 
-    @NotBlank
     @ManyToOne
     @JoinColumn(name="whCustomerID", nullable=false)
     private WhCustomer whCustomer;

@@ -72,7 +72,7 @@ should have "isActive = false". Check again before saving? TO implement or not?
             + ok test
             + nok test
             + partial ok/nok test
-    - SAVE(POST) parsed from Excel JSON /forecast/save
+    + SAVE(POST) parsed from Excel JSON /forecast/save
     
     Test Methods
         - manifestValidation

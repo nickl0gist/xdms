@@ -43,7 +43,7 @@ public class WhCustomerControllerTest {
         mockMvc.perform(get("/coordinator/warehouse/cc_swie/customers"))
                 .andExpect(status().isOk())
                 .andDo(print())
-                .andExpect(jsonPath("$", hasSize(5)));
+                .andExpect(jsonPath("$", hasSize(6)));
     }
 
     @Test
@@ -53,12 +53,16 @@ public class WhCustomerControllerTest {
                 .andDo(print());
     }
 
+    /**
+     * Get WhCustomer pairs by certain warehouse where the connection WarehouseCustomer isActive
+     * @throws Exception
+     */
     @Test
     public void getOnlyActiveWarehousesTest() throws Exception {
         mockMvc.perform(get("/coordinator/warehouse/cc_swie/customers/active"))
                 .andExpect(status().isOk())
                 .andDo(print())
-                .andExpect(jsonPath("$", hasSize(4)));
+                .andExpect(jsonPath("$", hasSize(5)));
     }
 
     @Test
