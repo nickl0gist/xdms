@@ -63,7 +63,7 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
     }
 
     @Override
-    @GetMapping("/manifest_upload_template.xlsx")
+    @GetMapping("/download/manifest_upload_template.xlsx")
     public ResponseEntity<InputStreamSource> downloadBase() throws IOException {
         return getInputStreamSourceResponseEntity(excelManifestService, "manifest_upload_template");
     }
@@ -79,17 +79,49 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
         return Collections.singletonList(manifestTpaTttDTO);
     }
 
+    @Override
+    @Transactional
+    @PostMapping("/forecast/save")
+    public ResponseEntity<List<ManifestTpaTttDTO>> saveAllEntities(List<ManifestTpaTttDTO> objList) {
+
+        //Check again given object to avoid any cheating from user
+        ManifestTpaTttDTO object = entityValidation(objList.iterator().next());
+
+        //Create deep copy of received object to send it back in response
+        Gson gson = new Gson();
+        ManifestTpaTttDTO deepCopy = gson.fromJson(gson.toJson(object), ManifestTpaTttDTO.class);
+
+        //Gets sets of objects
+        Map<Long, Manifest> manifestMapDTO = object.getManifestMapDTO();
+        Set<TPA> tpaSetDTO = object.getTpaSetDTO();
+        Set<TruckTimeTable> tttSetDTO = object.getTttSetDTO();
+        Set<ManifestReference> manifestReferenceSetDTO = object.getManifestReferenceSetDTO();
+
+        //Print received entities in logs
+        loggerPrintStrings(manifestMapDTO, tpaSetDTO, tttSetDTO, manifestReferenceSetDTO);
+
+        //Save elements to DB
+        saveElements(manifestMapDTO, tpaSetDTO, tttSetDTO, manifestReferenceSetDTO);
+
+        List<ManifestTpaTttDTO> resultList = new ArrayList<>();
+        //Check again given object to
+        resultList.add(entityValidation(deepCopy));
+        log.info("ManifestReferenceDTO after saving \n {}", resultList.get(0));
+
+        return ResponseEntity.status(201).header("Message", "dont know what tot say...").body(resultList);
+    }
+
     /**
      * @param manifestTpaTttDTO - DTO entity with sets of TPA TTT ManifestReference and Map of Manifests
      * @return manifestTpaTttDTO with validated entities.
      */
-    public ManifestTpaTttDTO entityValidation(ManifestTpaTttDTO manifestTpaTttDTO) {
+    private ManifestTpaTttDTO entityValidation(ManifestTpaTttDTO manifestTpaTttDTO) {
 
         Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-        Map<Long, Manifest> manifestMapDTO = manifestValidation(manifestTpaTttDTO.getManifestMapDTO(), validator);
         Set<TPA> tpaSetDTO = tpaSetValidation(manifestTpaTttDTO.getTpaSetDTO(), validator);
         Set<TruckTimeTable> tttSetDTO = tttSetValidation(manifestTpaTttDTO.getTttSetDTO(), validator);
+        Map<Long, Manifest> manifestMapDTO = manifestValidation(manifestTpaTttDTO.getManifestMapDTO(), tttSetDTO, tpaSetDTO, validator);
         Set<ManifestReference> manifestReferenceSetDTO = manifestReferenceSetValidator(manifestTpaTttDTO.getManifestReferenceSetDTO(), validator);
 
         manifestTpaTttDTO.setManifestMapDTO(manifestMapDTO);
@@ -107,16 +139,33 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
      * In such case it will be turned to false also.
      *
      * @param manifestMapDTO - map with Manifests to be validated
+     * @param tttSetDTO
+     * @param tpaSetDTO
      * @param validator      - Validator
      * @return same Map type with checked entities.
      */
-    private Map<Long, Manifest> manifestValidation(Map<Long, Manifest> manifestMapDTO, Validator validator) {
+    private Map<Long, Manifest> manifestValidation(Map<Long, Manifest> manifestMapDTO, Set<TruckTimeTable> tttSetDTO, Set<TPA> tpaSetDTO, Validator validator) {
         if (manifestMapDTO != null) {
             for (Map.Entry<Long, Manifest> longManifestEntry : manifestMapDTO.entrySet()) {
                 if (longManifestEntry.getValue() != null) {
                     Set<ConstraintViolation<Manifest>> constraintValidator = validator.validate(longManifestEntry.getValue());
-                    if (!constraintValidator.isEmpty()) {
-                        log.info("Manifest from Row {} would not be persisted: {}", longManifestEntry.getKey(), constraintValidator);
+                    Set<TruckTimeTable> checkingTTTset = tttSetDTO.stream()
+                            .flatMap(n -> longManifestEntry.getValue().getTruckTimeTableSet()
+                                    .stream()
+                                    .filter(ttt -> ttt.getTruckName() != null)
+                                    .filter(p -> p.getTttArrivalDatePlan().equals(n.getTttArrivalDatePlan()) && p.getTruckName().equals(n.getTruckName())))
+                            .filter(ttt -> ttt.getIsActive() != null && !ttt.getIsActive())
+                            .collect(Collectors.toSet());
+                    Set<TPA> checkingTPAset = tpaSetDTO.stream()
+                            .flatMap(n -> longManifestEntry.getValue().getTpaSet()
+                                    .stream()
+                                    .filter(tpa -> tpa.getName() != null)
+                                    .filter(p -> p.getName().equals(n.getName()) && p.getDeparturePlan().equals(n.getDeparturePlan())))
+                            .filter(tpa -> tpa.getIsActive() != null && !tpa.getIsActive())
+                            .collect(Collectors.toSet());
+                    if (!constraintValidator.isEmpty() || !checkingTTTset.isEmpty() || !checkingTPAset.isEmpty()) {
+                        log.info("Manifest from Row {} would not be persisted: {} \n TPA set has wrong forecast - {}!, \n TTT set has wrong forecast - {}!",
+                                longManifestEntry.getKey(), constraintValidator, !checkingTPAset.isEmpty(), !checkingTTTset.isEmpty());
                         longManifestEntry.getValue().setIsActive(false);
                     } else {
                         longManifestEntry.getValue().setIsActive(!manifestService.isManifestExisting(longManifestEntry.getValue()));
@@ -191,36 +240,30 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
         return new HashSet<>();
     }
 
-    @Override
-    @Transactional
-    @PostMapping("/forecast/save")
-    public ResponseEntity<List<ManifestTpaTttDTO>> saveAllEntities(List<ManifestTpaTttDTO> objList) {
-
-        //Check again given object to avoid any cheating from user
-        ManifestTpaTttDTO object = entityValidation(objList.iterator().next());
-
-        //Create deep copy of received object to send it back in response
-        Gson gson = new Gson();
-        ManifestTpaTttDTO deepCopy = gson.fromJson(gson.toJson(object), ManifestTpaTttDTO.class);
-
-        //Gets sets of objects
-        Map<Long, Manifest> manifestMapDTO = object.getManifestMapDTO();
-        Set<TPA> tpaSetDTO = object.getTpaSetDTO();
-        Set<TruckTimeTable> tttSetDTO = object.getTttSetDTO();
-        Set<ManifestReference> manifestReferenceSetDTO = object.getManifestReferenceSetDTO();
-
-        //Print received entities in logs
-        loggerPrintStrings(manifestMapDTO, tpaSetDTO, tttSetDTO, manifestReferenceSetDTO);
-
-        //Save elements to DB
-        saveElements(manifestMapDTO, tpaSetDTO, tttSetDTO, manifestReferenceSetDTO);
-
-        List<ManifestTpaTttDTO> resultList = new ArrayList<>();
-        //Check again given object to
-        resultList.add(entityValidation(deepCopy));
-        log.info("ManifestReferenceDTO after saving \n {}",resultList.get(0));
-
-        return ResponseEntity.status(201).header("Message", "dont know what tot say...").body(resultList);
+    /**
+     * Validates given entities against annotation conditions in ManifestReference class. Turns isActive to false if there is
+     * not compliant conditions.
+     *
+     * @param manifestReferenceSet - set with ManifestReferences elements to be checked.
+     * @param validator            - Validator
+     * @return - the same set with checked entities
+     */
+    private Set<ManifestReference> manifestReferenceSetValidator(Set<ManifestReference> manifestReferenceSet, Validator validator) {
+        if (manifestReferenceSet != null) {
+            for (ManifestReference manifestReference : manifestReferenceSet) {
+                if (manifestReference != null) {
+                    Set<ConstraintViolation<ManifestReference>> constraintValidator = validator.validate(manifestReference);
+                    if (!constraintValidator.isEmpty()) {
+                        log.info("Reference {} in Manifest {} would not be persisted: {}", manifestReference.getReference().getName(), manifestReference.getManifestCode(), constraintValidator);
+                        manifestReference.setIsActive(false);
+                    } else {
+                        manifestReference.setIsActive(true);
+                    }
+                }
+            }
+            return manifestReferenceSet.stream().filter(Objects::nonNull).collect(Collectors.toSet());
+        }
+        return new HashSet<>();
     }
 
     @Transactional
@@ -249,32 +292,6 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
                 .filter(manref -> manref.getIsActive() && manref.getManifest() != null)
                 .collect(Collectors.toList());
         manifestReferencesFromDB = manifestReferenceService.saveAll(manifestReferencesFromDB);
-    }
-
-    /**
-     * Validates given entities against annotation conditions in ManifestReference class. Turns isActive to false if there is
-     * not compliant conditions.
-     *
-     * @param manifestReferenceSet - set with ManifestReferences elements to be checked.
-     * @param validator            - Validator
-     * @return - the same set with checked entities
-     */
-    private Set<ManifestReference> manifestReferenceSetValidator(Set<ManifestReference> manifestReferenceSet, Validator validator) {
-        if (manifestReferenceSet != null) {
-            for (ManifestReference manifestReference : manifestReferenceSet) {
-                if (manifestReference != null) {
-                    Set<ConstraintViolation<ManifestReference>> constraintValidator = validator.validate(manifestReference);
-                    if (!constraintValidator.isEmpty()) {
-                        log.info("Reference {} in Manifest {} would not be persisted: {}", manifestReference.getReference().getName(), manifestReference.getManifestCode(), constraintValidator);
-                        manifestReference.setIsActive(false);
-                    } else {
-                        manifestReference.setIsActive(true);
-                    }
-                }
-            }
-            return manifestReferenceSet.stream().filter(Objects::nonNull).collect(Collectors.toSet());
-        }
-        return new HashSet<>();
     }
 
     private List<ManifestReference> connectManiRefToManifestAndTPA(List<ManifestReference> manifestReferences, List<Manifest> manifestsFromDB, List<TPA> tpaListFromDB) {

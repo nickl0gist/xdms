@@ -48,4 +48,8 @@ public class TTTService {
     public List<TruckTimeTable> saveAll(List<TruckTimeTable> truckTimeTableSet) {
         return tttRepository.saveAll(truckTimeTableSet);
     }
+
+    public List<TruckTimeTable> getAllTtt() {
+        return tttRepository.findAll();
+    }
 }

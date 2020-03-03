@@ -37,4 +37,8 @@ public class ManifestService {
     public List<Manifest> saveAll(List<Manifest> manifests) {
         return manifestRepository.saveAll(manifests);
     }
+
+    public List<Manifest> getAllManifests(){
+        return manifestRepository.findAll();
+    }
 }

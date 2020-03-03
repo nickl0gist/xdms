@@ -19,6 +19,7 @@ import java.util.Map;
 
 /**
  * Created on 20.11.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -93,6 +94,8 @@ public class ExcelCustomerService implements ExcelService<Customer> {
                     case 9:
                         customer.setIsActive(getBooleanFromCell(cell));
                         break;
+                    default:
+                        break;
                 }
                 longCustomerHashMap.put(row.getRowNum() + 1L, customer);
             }
@@ -134,28 +137,28 @@ public class ExcelCustomerService implements ExcelService<Customer> {
         idCell.setCellValue(customer.getCustomerID());
 
         Cell nameCell = row.createCell(1);
-        nameCell.setCellValue(customer.getName());
+        nameCell.setCellValue(customer.getName().trim());
 
         Cell customerCodeCell = row.createCell(2);
-        customerCodeCell.setCellValue(customer.getCustomerCode());
+        customerCodeCell.setCellValue(customer.getCustomerCode().trim());
 
         Cell countryCell = row.createCell(3);
-        countryCell.setCellValue(customer.getCountry());
+        countryCell.setCellValue(customer.getCountry().trim());
 
         Cell postCodeCell = row.createCell(4);
-        postCodeCell.setCellValue(customer.getPostCode());
+        postCodeCell.setCellValue(customer.getPostCode().trim());
 
         Cell cityCell = row.createCell(5);
-        cityCell.setCellValue(customer.getCity());
+        cityCell.setCellValue(customer.getCity().trim());
 
         Cell streetCell = row.createCell(6);
-        streetCell.setCellValue(customer.getStreet());
+        streetCell.setCellValue(customer.getStreet().trim());
 
         Cell emailCell = row.createCell(7);
-        emailCell.setCellValue(customer.getEmail());
+        emailCell.setCellValue(customer.getEmail().trim());
 
         Cell timeZone = row.createCell(8);
-        timeZone.setCellValue(customer.getTimeZone());
+        timeZone.setCellValue(customer.getTimeZone().trim());
 
         Cell isActiveCell = row.createCell(9);
         isActiveCell.setCellValue(customer.getIsActive());

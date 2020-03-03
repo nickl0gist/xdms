@@ -54,14 +54,14 @@ public class TruckTimeTable {
     @Transient
     private Boolean isActive;
 
-    @OneToMany
+    @ManyToMany
     @JoinTable(
             name = "ttt_manifest",
             joinColumns = @JoinColumn(name = "tttID"),
             inverseJoinColumns = @JoinColumn(name = "manifestID"))
     @ToString.Exclude
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private Set<Manifest> manifests;
+    private Set<Manifest> manifestSet;
 
     @Override
     public boolean equals(Object o) {

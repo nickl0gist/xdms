@@ -84,7 +84,7 @@ public class Manifest {
     @ToString.Exclude
     private Set<ManifestReference> manifestsReferenceSet;
 
-    @OneToMany
+    @ManyToMany
     @JoinTable(
             name = "ttt_manifest",
             joinColumns = @JoinColumn(name = "manifestID"),
@@ -92,7 +92,7 @@ public class Manifest {
     @JsonSerialize(using = ManifestTttSerializer.class)
     private Set<TruckTimeTable> truckTimeTableSet = new LinkedHashSet<>();
 
-    @OneToMany
+    @ManyToMany
     @JoinTable(
             name = "tpa_manifest",
             joinColumns = @JoinColumn(name = "manifest_id"),

@@ -80,7 +80,7 @@ public class WarehouseControllerTest {
         mockMvc.perform(get("/admin/warehouses/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.city").value("Świebodzice"));
+                .andExpect(jsonPath("$.city").value("Swiebodzice"));
     }
 
     @Test

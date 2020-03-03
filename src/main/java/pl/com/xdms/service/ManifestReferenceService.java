@@ -26,4 +26,8 @@ public class ManifestReferenceService {
     public List<ManifestReference> saveAll(List<ManifestReference> manifestReferenceSet) {
         return manifestReferenceRepository.saveAll(manifestReferenceSet);
     }
+
+    public List<ManifestReference> getAllManifestReferences(){
+        return manifestReferenceRepository.findAll();
+    }
 }

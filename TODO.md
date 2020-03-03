@@ -63,10 +63,56 @@ not done
 -. check all saveAllEntities methods in controllers which implement ExcelController class. The response entities 
 should have "isActive = false". Check again before saving? TO implement or not?
 
-
-
-
--. new tests to test ExcelManifestController actions
+-. new tests to test ExcelManifestController actions:
+    
+    Test endpoints: 
+    + GET template /manifest_upload_template.xlsx
+    - POST data with file /manifests/uploadFile
+        - test validation method different cases:
+            + ok test
+            + nok test
+            + partial ok/nok test
+    - SAVE(POST) parsed from Excel JSON /forecast/save
+    
+    Test Methods
+        - manifestValidation
+        - tttSetValidation
+        - tpaSetValidation
+        - manifestReferenceSetValidator
+        - connectManiRefToManifestAndTPA ?
+        - connectManifestWithTpaAndTtt ?
+    
+    OK Test for good DTO
+    
+    NOK Tests:
+    
+    Test Manifest
+        Two Manifests with the same number
+        + No TPA, No TTT
+        Not Existing Customer
+        Not Existing Supplier
+        What if Supplier is not Active
+        What if Customer is not Active
+        
+    Test ManifestReferences
+        Not Existing Reference
+        add ManRef to not eixting manifest
+        add ManRef without TPA 
+        What if reference is not active
+        
+    Test TTT
+        Not Existing CC, XD, TXD
+        Create TTT with the same parameters as existing one
+        Create 2 similar TTT for different WH
+        Create TTT with bad dates, too late dates, what if there no appropriate WH_CUST settings
+        
+    Test TPA
+        Not Existing CC, XD, TXD, Customer
+        Create TPA with the same parameters
+        Create 2 similar TPA for different WH
+        Create TPA with bad dates, too late dates, what if there no appropriate WH_CUST settings
+        
+    ExcelManifestService Test?
    
 -. When customer is set to inactive all warehouses connections with it have to be switched to inActive.
     Customer with picked up and not delivered manifests cannot be switched to inActive. 
@@ -75,7 +121,8 @@ should have "isActive = false". Check again before saving? TO implement or not?
 
 -. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
 
--. manually added or by Excel XD-matrix 
+-. manually added matrix. pick CC XD, if has references -> pick TXD, pick TTT TPA od create new according to warehouse 
+and date. Pick Customer and Supplier.
 
 
 2.1.0
@@ -98,3 +145,9 @@ Excel Matrix Template
 
 -. add super conditions in the template of excel for manifest loading: ???? 
    - arrival dates of Customer truck names
+   - manifest without TTT and TPA, without pick up from SUPPLIER and delivering to customer
+   - Truck id for CC XD TXD if is empty but WH name is provided. 
+   - if manifest is going only through XD it may not need to ave lines in sheet Reference_Forecast 
+   - check Reference Agreement if it is Properly assigned to appropriate manifest(supplier) 
+   
+   

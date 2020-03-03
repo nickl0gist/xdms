@@ -19,7 +19,6 @@ import java.util.Map;
 
 /**
  * Created on 18.11.2019
- *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -129,25 +128,25 @@ public class ExcelSupplierService implements ExcelService<Supplier> {
         idCell.setCellValue(supplier.getSupplierID());
 
         Cell nameCell = row.createCell(1);
-        nameCell.setCellValue(supplier.getName());
+        nameCell.setCellValue(supplier.getName().trim());
 
         Cell vendorCodeCell = row.createCell(2);
-        vendorCodeCell.setCellValue(supplier.getVendorCode());
+        vendorCodeCell.setCellValue(supplier.getVendorCode().trim());
 
         Cell countryCell = row.createCell(3);
-        countryCell.setCellValue(supplier.getCountry());
+        countryCell.setCellValue(supplier.getCountry().trim());
 
         Cell postCodeCell = row.createCell(4);
-        postCodeCell.setCellValue(supplier.getPostCode());
+        postCodeCell.setCellValue(supplier.getPostCode().trim());
 
         Cell cityCell = row.createCell(5);
-        cityCell.setCellValue(supplier.getCity());
+        cityCell.setCellValue(supplier.getCity().trim());
 
         Cell streetCell = row.createCell(6);
-        streetCell.setCellValue(supplier.getStreet());
+        streetCell.setCellValue(supplier.getStreet().trim());
 
         Cell emailCell = row.createCell(7);
-        emailCell.setCellValue(supplier.getEmail());
+        emailCell.setCellValue(supplier.getEmail().trim());
 
         Cell isActiveCell = row.createCell(8);
         isActiveCell.setCellValue(supplier.getIsActive());

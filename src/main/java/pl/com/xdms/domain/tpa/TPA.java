@@ -65,7 +65,7 @@ public class TPA {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<ManifestReference> manifestReferenceSet = new LinkedHashSet<>();
 
-    @OneToMany
+    @ManyToMany
     @JoinTable(
             name = "tpa_manifest",
             joinColumns = @JoinColumn(name = "tpaID"),

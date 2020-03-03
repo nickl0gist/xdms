@@ -36,7 +36,7 @@ public interface ReferenceRepository extends JpaRepository<Reference, Long> {
     List<Reference> findAllByOrderBySupplierAsc();
     List<Reference> findAllByOrderBySupplierDesc();
 
-    Optional<Reference> findReferenceBySupplierAgreement(String agrrement);
+    Optional<Reference> findReferenceBySupplierAgreement(String agreement);
 
 
 }

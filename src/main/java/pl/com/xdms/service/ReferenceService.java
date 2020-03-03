@@ -88,6 +88,7 @@ public class ReferenceService {
     }
 
     public Reference getRefByAgreement(String agreement) {
+        log.info("Searching for agreement {}", agreement);
         Optional<Reference> refOpt = referenceRepository.findReferenceBySupplierAgreement(agreement);
         return refOpt.orElse(null);
     }

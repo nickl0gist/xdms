@@ -53,9 +53,9 @@ public class TruckService {
 
         // if etdDayOfWeek is Saturday or Sunday move it to friday before
         if (dateTimeETD.getDayOfWeek().equals(DayOfWeek.of(6))) {
-            dateTimeETD = dateTimeETD.minusDays(1);
+            dateTimeETD = dateTimeETD.minusDays(1).withHour(23).withMinute(59);
         } else if (dateTimeETD.getDayOfWeek().equals(DayOfWeek.of(7))) {
-            dateTimeETD = dateTimeETD.minusDays(2);
+            dateTimeETD = dateTimeETD.minusDays(2).withHour(23).withMinute(59);
         }
 
         //Getting Working day from DB by dateTimeETD day Of Week
@@ -63,6 +63,8 @@ public class TruckService {
 
         //Getting list of TpaDaysSetting for current Wh_Customer and Working day
         List<TpaDaysSetting> listOfTpaSettingsForDepartureDay = tpaDaysSettingsService.getTpaDaySettingsByWarehouseAndWorkingDay(whCustomer, workingDay);
+
+        log.info("The list of TpaDaysSettings - {}", listOfTpaSettingsForDepartureDay);
 
         TpaDaysSetting chosenSetting = getTpaDaysSetting(dateTimeETD, listOfTpaSettingsForDepartureDay);
 
@@ -90,7 +92,7 @@ public class TruckService {
      *
      * @param dateTimeETD                      - ZonedDateTime of estimated departure from Warehouse
      * @param listOfTpaSettingsForDepartureDay - list of settings supposed TpaDaySettings.
-     * @return calculated TpaDaySAettings or null if there no suitable settings found.
+     * @return calculated TpaDaySettings or null if there no suitable settings found.
      */
     private TpaDaysSetting getTpaDaysSetting(ZonedDateTime dateTimeETD, List<TpaDaysSetting> listOfTpaSettingsForDepartureDay) {
         TpaDaysSetting chosenSetting = null;
@@ -101,11 +103,13 @@ public class TruckService {
         for (TpaDaysSetting daysSetting : listOfTpaSettingsForDepartureDay) {
             ZonedDateTime tpaDateTime = ZonedDateTime.of(dateTimeETD.toLocalDate(), getLocalTimeFromString(daysSetting.getLocalTime()), dateTimeETD.getZone());
             long checkSum = Duration.between(dateTimeETD, tpaDateTime).toMinutes();
+            log.info("dateTimeETD = {} -=- tpaDateTime = {}, -=- checkSum = {}", dateTimeETD, tpaDateTime, checkSum);
             if (checkSum <= 0 && checkSum > i) {
                 i = checkSum;
                 chosenSetting = daysSetting;
             }
         }
+        log.info("Calculated chosenSetting = {}", chosenSetting);
         return chosenSetting;
     }
 

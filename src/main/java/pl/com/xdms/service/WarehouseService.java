@@ -159,6 +159,7 @@ public class WarehouseService {
         return warehouseOptional.orElse(null);
     }
 
+    //TODO Change not found from null to empty entity?
     public Warehouse getWarehouseByName(String name){
         Optional<Warehouse> warehouse = warehouseRepository.findByName(name);
         return warehouse.orElse(null);
