@@ -193,7 +193,7 @@ public class CustomerControllerTest {
         Assert.assertEquals(1, whCustomerService.getAllWhCustomersByWarehouseNotActive(warehouse2).size());
         Assert.assertEquals(1, whCustomerService.getAllWhCustomersByWarehouseNotActive(warehouse3).size());
         Assert.assertEquals(1, whCustomerService.getAllWhCustomersByWarehouseIsActive(warehouse1).size());
-        Assert.assertEquals(2, whCustomerService.getAllWhCustomersByWarehouseIsActive(warehouse2).size());
+        Assert.assertEquals(3, whCustomerService.getAllWhCustomersByWarehouseIsActive(warehouse2).size());
         Assert.assertEquals(1, whCustomerService.getAllWhCustomersByWarehouseIsActive(warehouse3).size());
     }
 

@@ -126,7 +126,7 @@ public class ExcelManifestControllerTest {
     @Test
     public void uploadFilePostWithOneOkAndTwoNokTest() throws Exception {
 
-        updateManifestUploadTemplateTest2();
+        updateManifestUploadTemplateTest2("excelTests/manifestUploadTemplateTest2.xlsx");
 
         ClassLoader classLoader = getClass().getClassLoader();
         File file2 = new File(classLoader.getResource("excelTests/manifestUploadTemplateTest2.xlsx").getFile());
@@ -162,6 +162,10 @@ public class ExcelManifestControllerTest {
 
     }
 
+    /**
+     * SAVE(POST) parsed from Excel JSON "/forecast/save"
+     * @throws Exception
+     */
     @Test
     public void uploadFileWithProperInformationAndSaveItToDB() throws Exception{
         updateManifestForecastWithProperInfo();
@@ -188,7 +192,7 @@ public class ExcelManifestControllerTest {
                 .andExpect(status().isCreated());
 
         //Check if the manifests were saved properly
-        Assert.assertEquals(3, excelManifestService.getManifestService().getAllManifests().size());
+        Assert.assertEquals(4, excelManifestService.getManifestService().getAllManifests().size());
         Assert.assertEquals(3, excelManifestService.getManifestReferenceService().getAllManifestReferences().size());
         Assert.assertEquals(7, excelManifestService.getTruckService().getTpaService().getAllTpa().size());
         Assert.assertEquals(7, excelManifestService.getTruckService().getTttService().getAllTtt().size());
@@ -196,13 +200,172 @@ public class ExcelManifestControllerTest {
     }
 
     /**
+     * Test case when user tries to upload manifest with the same manifest code which already existing in DB
+     * @throws Exception
+     */
+    @Test
+    public void manifestValidationTestTheCodeAlreadyExistingInDB() throws Exception{
+        updateManifestUploadTemplateTest2("excelTests/manifestUploadTestAlreadyExistingManifestInDb.xlsx");
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file2 = new File(classLoader.getResource("excelTests/manifestUploadTestAlreadyExistingManifestInDb.xlsx").getFile());
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file2.toPath()));
+
+        mockMvc.perform(multipart("/coordinator/excel/manifests/uploadFile").file(mockMultipartFile))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['3'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['4'].isActive").value(true))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['5'].isActive").value(true));
+    }
+
+    /**
+     * Test cases when manifest has wrong constraints such as: No supplier, wrong supplier, No customer, wrong customer,
+     * manifest code consists with not allowed signs (+ = > , etc..)
+     * @throws Exception
+     */
+    @Test
+    public void manifestValidationTestWrongManifestConstraints() throws Exception{
+        updateManifestUploadTemplateTestWrongManifestConstraints();
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file2 = new File(classLoader.getResource("excelTests/manifestUploadTestWrongManifestConstraints.xlsx").getFile());
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file2.toPath()));
+
+        mockMvc.perform(multipart("/coordinator/excel/manifests/uploadFile").file(mockMultipartFile))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['3'].isActive").value(true))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['4'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['5'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['6'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['7'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['8'].isActive").value(false));
+    }
+
+    private void updateManifestUploadTemplateTestWrongManifestConstraints() {
+        ClassLoader classLoader = ExcelManifestControllerTest.class.getClassLoader();
+        //file with customers to emulate file which will be sent by user.
+        File file = new File(classLoader.getResource("excelTests/manifestUploadTestWrongManifestConstraints.xlsx").getFile());
+
+
+        try (FileInputStream inputStream = new FileInputStream(file);
+             Workbook workbook = WorkbookFactory.create(inputStream)) {
+            //get excel workbook
+            Sheet manifestSheet = workbook.getSheet(excelProperties.getManifestsSheetName());
+            Row rowMSheet3 = manifestSheet.getRow(2);
+            Row rowMSheet4 = manifestSheet.getRow(3);
+            Row rowMSheet5 = manifestSheet.getRow(4);
+            Row rowMSheet6 = manifestSheet.getRow(5);
+            Row rowMSheet7 = manifestSheet.getRow(6);
+            Row rowMSheet8 = manifestSheet.getRow(7);
+            LocalDate nowDate = LocalDate.now();
+            {
+                //The First manifest Supplier -> CC -> TXD -> Customer (Good manifest for tests)
+                //Supplier Date and Time
+                rowMSheet3.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(9)));
+                rowMSheet3.getCell(2).setCellValue(DateUtil.convertTime("10:30:00"));
+                //CC Date and Time
+                rowMSheet3.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                rowMSheet3.getCell(6).setCellValue(DateUtil.convertTime("15:30:00"));
+                //TXD Date and Time
+                rowMSheet3.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(12)));
+                rowMSheet3.getCell(14).setCellValue(DateUtil.convertTime("11:00:00"));
+                //Customer Date and Time
+                rowMSheet3.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(25)));
+                rowMSheet3.getCell(18).setCellValue(DateUtil.convertTime("10:00:00"));
+
+                //The Second Manifest Supplier -> CC -> XD -> TXD -> Customer (Wrong supplier)
+                //Supplier Date and Time
+                rowMSheet4.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(8)));
+                rowMSheet4.getCell(2).setCellValue(DateUtil.convertTime("11:30:00"));
+                //CC Date and Time
+                rowMSheet4.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(9)));
+                rowMSheet4.getCell(6).setCellValue(DateUtil.convertTime("16:30:00"));
+                //XD Date and Time
+                rowMSheet4.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                rowMSheet4.getCell(10).setCellValue(DateUtil.convertTime("16:40:00"));
+                //TXD Date and Time
+                rowMSheet4.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(13)));
+                rowMSheet4.getCell(14).setCellValue(DateUtil.convertTime("17:00:00"));
+                //Customer Date and Time
+                rowMSheet4.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(17)));
+                rowMSheet4.getCell(18).setCellValue(DateUtil.convertTime("12:00:00"));
+
+                //The Third Manifest Supplier -> CC -> XD -> Customer (Wrong Customer)
+                //Supplier Date and Time
+                rowMSheet5.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(4)));
+                rowMSheet5.getCell(2).setCellValue(DateUtil.convertTime("08:30:00"));
+                //CC Date and Time
+                rowMSheet5.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                rowMSheet5.getCell(6).setCellValue(DateUtil.convertTime("10:30:00"));
+                //XD Date and Time
+                rowMSheet5.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                rowMSheet5.getCell(10).setCellValue(DateUtil.convertTime("13:55:00"));
+                //Customer Date and Time
+                rowMSheet5.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                rowMSheet5.getCell(18).setCellValue(DateUtil.convertTime("17:00:00"));
+
+                //The Fourth Manifest Supplier -> CC -> XD -> Customer (No Supplier)
+                //Supplier Date and Time
+                rowMSheet6.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(4)));
+                rowMSheet6.getCell(2).setCellValue(DateUtil.convertTime("08:30:00"));
+                //CC Date and Time
+                rowMSheet6.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                rowMSheet6.getCell(6).setCellValue(DateUtil.convertTime("10:30:00"));
+                //XD Date and Time
+                rowMSheet6.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                rowMSheet6.getCell(10).setCellValue(DateUtil.convertTime("13:55:00"));
+                //Customer Date and Time
+                rowMSheet6.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                rowMSheet6.getCell(18).setCellValue(DateUtil.convertTime("17:00:00"));
+
+                //The Fifth Manifest Supplier -> CC -> XD -> Customer (No Customer)
+                //Supplier Date and Time
+                rowMSheet7.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(4)));
+                rowMSheet7.getCell(2).setCellValue(DateUtil.convertTime("08:30:00"));
+                //CC Date and Time
+                rowMSheet7.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                rowMSheet7.getCell(6).setCellValue(DateUtil.convertTime("10:30:00"));
+                //XD Date and Time
+                rowMSheet7.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                rowMSheet7.getCell(10).setCellValue(DateUtil.convertTime("13:55:00"));
+                //Customer Date and Time
+                rowMSheet7.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                rowMSheet7.getCell(18).setCellValue(DateUtil.convertTime("17:00:00"));
+
+                //The sixth Manifest Supplier -> CC -> XD -> Customer (Wrong Manifest Code)
+                //Supplier Date and Time
+                rowMSheet8.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(4)));
+                rowMSheet8.getCell(2).setCellValue(DateUtil.convertTime("10:40:00"));
+                //CC Date and Time
+                rowMSheet8.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                rowMSheet8.getCell(6).setCellValue(DateUtil.convertTime("11:30:00"));
+                ///TXD Date and Time
+                rowMSheet8.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(12)));
+                rowMSheet8.getCell(14).setCellValue(DateUtil.convertTime("11:05:00"));
+                //Customer Date and Time
+                rowMSheet8.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                rowMSheet8.getCell(18).setCellValue(DateUtil.convertTime("17:00:00"));
+            }
+            inputStream.close();
+            FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/excelTests/manifestUploadTestWrongManifestConstraints.xlsx");
+            workbook.write(outputStream);
+            workbook.close();
+            outputStream.close();
+        } catch (IOException e) {
+            log.warn("Error occurred while reading the file with Manifests: {}", e.getMessage());
+        }
+    }
+
+    /**
      * Method dedicated to fill data in the template with actual dates for anticipated manifest at line 3.
      * The manifest from line 3 should pass validation.
      */
-    private void updateManifestUploadTemplateTest2(){
+    private void updateManifestUploadTemplateTest2(String path){
         ClassLoader classLoader = ExcelManifestControllerTest.class.getClassLoader();
         //file with customers to emulate file which will be sent by user.
-        File file = new File(classLoader.getResource("excelTests/manifestUploadTemplateTest2.xlsx").getFile());
+        File file = new File(classLoader.getResource(path).getFile());
 
 
         try (FileInputStream inputStream = new FileInputStream(file);
@@ -222,7 +385,7 @@ public class ExcelManifestControllerTest {
                 rowMSheet3.getCell(18).setCellValue(DateUtil.convertTime("10:00:00"));
             }
             inputStream.close();
-            FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/excelTests/manifestUploadTemplateTest2.xlsx");
+            FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/" + path);
             workbook.write(outputStream);
             workbook.close();
             outputStream.close();
@@ -273,7 +436,7 @@ public class ExcelManifestControllerTest {
                 rowMSheet4.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(8)));
                 rowMSheet4.getCell(2).setCellValue(DateUtil.convertTime("11:30:00"));
                 //CC Date and Time
-                rowMSheet4.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(9)));
+                rowMSheet4.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(8)));
                 rowMSheet4.getCell(6).setCellValue(DateUtil.convertTime("16:30:00"));
                 //XD Date and Time
                 rowMSheet4.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(11)));

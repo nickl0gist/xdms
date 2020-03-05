@@ -354,6 +354,12 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
         Warehouse warehouse = warehouseService.getWarehouseByName(getStringFromCell(row.getCell(warehouseNameColumn)));
 
         Customer customer = customerService.getCustomerByName(getStringFromCell(row.getCell(customerNameColumn)));
+        if(customer == null){
+            log.info("The customer was not found, please check your Excel on row {}", row.getRowNum());
+            tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
+            tpa.setDeparturePlan(LocalDateTime.now().toString());
+            return tpa;
+        }
         WhCustomer whCustomer = whCustomerService.findByWarehouseAndCustomer(warehouse, customer);
 
         LocalDate dateOfArrivingToCustomer = getLocalDateTime(row.getCell(customerNameColumn + 1), row.getCell(customerNameColumn + 2)).toLocalDate();// getLocalDateCell(row.getCell(customerNameColumn + 1));

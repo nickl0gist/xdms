@@ -74,23 +74,26 @@ should have "isActive = false". Check again before saving? TO implement or not?
             + partial ok/nok test
     + SAVE(POST) parsed from Excel JSON /forecast/save
     
-    Test Methods
+    Test Methods +/-
         - manifestValidation
+            +1. manifest with same code already existing in DB
+            2. manifest with not compliant conditions
+            3. manifest with compliant conditions
         - tttSetValidation
         - tpaSetValidation
         - manifestReferenceSetValidator
         - connectManiRefToManifestAndTPA ?
         - connectManifestWithTpaAndTtt ?
     
-    OK Test for good DTO
+    +OK Test for good DTO
     
     NOK Tests:
     
     Test Manifest
-        Two Manifests with the same number
+        + Two Manifests with the same number
         + No TPA, No TTT
-        Not Existing Customer
-        Not Existing Supplier
+        + Not Existing Customer
+        + Not Existing Supplier
         What if Supplier is not Active
         What if Customer is not Active
         
@@ -147,7 +150,8 @@ Excel Matrix Template
    - arrival dates of Customer truck names
    - manifest without TTT and TPA, without pick up from SUPPLIER and delivering to customer
    - Truck id for CC XD TXD if is empty but WH name is provided. 
-   - if manifest is going only through XD it may not need to ave lines in sheet Reference_Forecast 
-   - check Reference Agreement if it is Properly assigned to appropriate manifest(supplier) 
+   - if manifest is going only through XD it may not need to have lines in sheet Reference_Forecast 
+   - check Reference Agreement if it is Properly assigned to appropriate manifest(supplier)
+   - if no customer or no supplier assigned to line with manifest  
    
    

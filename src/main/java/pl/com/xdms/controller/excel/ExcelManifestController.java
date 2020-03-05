@@ -108,7 +108,7 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
         resultList.add(entityValidation(deepCopy));
         log.info("ManifestReferenceDTO after saving \n {}", resultList.get(0));
 
-        return ResponseEntity.status(201).header("Message", "dont know what tot say...").body(resultList);
+        return ResponseEntity.status(201).header("Message", "dont know what to say...").body(resultList);
     }
 
     /**
@@ -139,25 +139,27 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
      * In such case it will be turned to false also.
      *
      * @param manifestMapDTO - map with Manifests to be validated
-     * @param tttSetDTO
-     * @param tpaSetDTO
+     * @param tttSetDTO      - set of TruckTimeTables from DTO entity received from user and already validated by the
+     *                       system
+     * @param tpaSetDTO      - set of TPA from DTO entity received from user and already validated by the system
      * @param validator      - Validator
      * @return same Map type with checked entities.
      */
-    private Map<Long, Manifest> manifestValidation(Map<Long, Manifest> manifestMapDTO, Set<TruckTimeTable> tttSetDTO, Set<TPA> tpaSetDTO, Validator validator) {
+    private Map<Long, Manifest> manifestValidation(Map<Long, Manifest> manifestMapDTO, Set<TruckTimeTable> tttSetDTO, Set<TPA> tpaSetDTO, Validator validator)  {
         if (manifestMapDTO != null) {
             for (Map.Entry<Long, Manifest> longManifestEntry : manifestMapDTO.entrySet()) {
-                if (longManifestEntry.getValue() != null) {
-                    Set<ConstraintViolation<Manifest>> constraintValidator = validator.validate(longManifestEntry.getValue());
+                Manifest manifest = longManifestEntry.getValue();
+                if (manifest != null) {
+                    Set<ConstraintViolation<Manifest>> constraintValidator = validator.validate(manifest);
                     Set<TruckTimeTable> checkingTTTset = tttSetDTO.stream()
-                            .flatMap(n -> longManifestEntry.getValue().getTruckTimeTableSet()
+                            .flatMap(n -> manifest.getTruckTimeTableSet()
                                     .stream()
                                     .filter(ttt -> ttt.getTruckName() != null)
                                     .filter(p -> p.getTttArrivalDatePlan().equals(n.getTttArrivalDatePlan()) && p.getTruckName().equals(n.getTruckName())))
                             .filter(ttt -> ttt.getIsActive() != null && !ttt.getIsActive())
                             .collect(Collectors.toSet());
                     Set<TPA> checkingTPAset = tpaSetDTO.stream()
-                            .flatMap(n -> longManifestEntry.getValue().getTpaSet()
+                            .flatMap(n -> manifest.getTpaSet()
                                     .stream()
                                     .filter(tpa -> tpa.getName() != null)
                                     .filter(p -> p.getName().equals(n.getName()) && p.getDeparturePlan().equals(n.getDeparturePlan())))
@@ -166,9 +168,12 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
                     if (!constraintValidator.isEmpty() || !checkingTTTset.isEmpty() || !checkingTPAset.isEmpty()) {
                         log.info("Manifest from Row {} would not be persisted: {} \n TPA set has wrong forecast - {}!, \n TTT set has wrong forecast - {}!",
                                 longManifestEntry.getKey(), constraintValidator, !checkingTPAset.isEmpty(), !checkingTTTset.isEmpty());
-                        longManifestEntry.getValue().setIsActive(false);
+                        manifest.setIsActive(false);
+                    } else if (manifestService.isManifestExisting(manifest)){
+                        log.info("Manifest {} already existing in DataBase and wouldn't be persisted in DB", manifest.getManifestCode());
+                        manifest.setIsActive(false);
                     } else {
-                        longManifestEntry.getValue().setIsActive(!manifestService.isManifestExisting(longManifestEntry.getValue()));
+                        manifest.setIsActive(true);
                     }
                 }
             }
