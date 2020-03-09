@@ -17,9 +17,7 @@ import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
-import pl.com.xdms.service.FileStorageService;
-import pl.com.xdms.service.ManifestReferenceService;
-import pl.com.xdms.service.ManifestService;
+import pl.com.xdms.service.*;
 import pl.com.xdms.service.excel.ExcelManifestService;
 import pl.com.xdms.service.truck.TruckService;
 
@@ -48,18 +46,24 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
     private final ManifestService manifestService;
     private final TruckService truckService;
     private final ManifestReferenceService manifestReferenceService;
+    private final CustomerService customerService;
+    private final SupplierService supplierService;
 
     @Autowired
     public ExcelManifestController(FileStorageService fileStorageService,
                                    ExcelManifestService excelManifestService,
                                    ManifestService manifestService,
                                    TruckService truckService,
-                                   ManifestReferenceService manifestReferenceService) {
+                                   ManifestReferenceService manifestReferenceService,
+                                   CustomerService customerService,
+                                   SupplierService supplierService) {
         this.fileStorageService = fileStorageService;
         this.excelManifestService = excelManifestService;
         this.manifestService = manifestService;
         this.truckService = truckService;
         this.manifestReferenceService = manifestReferenceService;
+        this.customerService = customerService;
+        this.supplierService = supplierService;
     }
 
     @Override
@@ -145,7 +149,7 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
      * @param validator      - Validator
      * @return same Map type with checked entities.
      */
-    private Map<Long, Manifest> manifestValidation(Map<Long, Manifest> manifestMapDTO, Set<TruckTimeTable> tttSetDTO, Set<TPA> tpaSetDTO, Validator validator)  {
+    private Map<Long, Manifest> manifestValidation(Map<Long, Manifest> manifestMapDTO, Set<TruckTimeTable> tttSetDTO, Set<TPA> tpaSetDTO, Validator validator) {
         if (manifestMapDTO != null) {
             for (Map.Entry<Long, Manifest> longManifestEntry : manifestMapDTO.entrySet()) {
                 Manifest manifest = longManifestEntry.getValue();
@@ -169,11 +173,18 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
                         log.info("Manifest from Row {} would not be persisted: {} \n TPA set has wrong forecast - {}!, \n TTT set has wrong forecast - {}!",
                                 longManifestEntry.getKey(), constraintValidator, !checkingTPAset.isEmpty(), !checkingTTTset.isEmpty());
                         manifest.setIsActive(false);
-                    } else if (manifestService.isManifestExisting(manifest)){
+                    } else if (manifestService.isManifestExisting(manifest)) {
                         log.info("Manifest {} already existing in DataBase and wouldn't be persisted in DB", manifest.getManifestCode());
                         manifest.setIsActive(false);
                     } else {
-                        manifest.setIsActive(true);
+                        boolean isActive = manifest.getCustomer().getIsActive() && manifest.getSupplier().getIsActive();
+                        if (!isActive) {
+                            manifest.setIsActive(false);
+                            log.info("Manifest {} has Customer: [{}] - isActive=[{}]", manifest.getManifestCode(), manifest.getCustomer().getName(), manifest.getCustomer().getIsActive());
+                            log.info("Manifest {} has Supplier: [{}] - isActive=[{}]", manifest.getManifestCode(), manifest.getSupplier().getName(), manifest.getSupplier().getIsActive());
+                        } else {
+                            manifest.setIsActive(true);
+                        }
                     }
                 }
             }

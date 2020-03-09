@@ -57,6 +57,17 @@ file and give it back to validation.
 
 +20. Adjust existing tests to new DB constraints. Make all tests to run
 
++21.      Test Manifest
+                 + Two Manifests with the same number
+                 + No TPA, No TTT
+                 + Not Existing Customer
+                 + Not Existing Supplier
+                 + Manifest with wrong Manifest Code
+                 + What if Supplier is not Active
+                 + What if Customer is not Active
+                 
+                 
+
 not done
 -
 
@@ -89,14 +100,6 @@ should have "isActive = false". Check again before saving? TO implement or not?
     
     NOK Tests:
     
-    Test Manifest
-        + Two Manifests with the same number
-        + No TPA, No TTT
-        + Not Existing Customer
-        + Not Existing Supplier
-        What if Supplier is not Active
-        What if Customer is not Active
-        
     Test ManifestReferences
         Not Existing Reference
         add ManRef to not eixting manifest
@@ -127,6 +130,8 @@ should have "isActive = false". Check again before saving? TO implement or not?
 -. manually added matrix. pick CC XD, if has references -> pick TXD, pick TTT TPA od create new according to warehouse 
 and date. Pick Customer and Supplier.
 
+-. Schedule Tasks to update TPA and TTT status from BUFFER to PENDING etc.
+
 
 2.1.0
 -
@@ -153,5 +158,6 @@ Excel Matrix Template
    - if manifest is going only through XD it may not need to have lines in sheet Reference_Forecast 
    - check Reference Agreement if it is Properly assigned to appropriate manifest(supplier)
    - if no customer or no supplier assigned to line with manifest  
-   
+   - if customer or supplier is not active
+   - the dates which are Sundays and Saturdays should be checked. Sundays to red, Saturdays to Orange 
    
