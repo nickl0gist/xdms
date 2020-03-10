@@ -249,7 +249,7 @@ public class ExcelManifestControllerTest {
      */
     @Test
     public void manifestValidationTestInActiveSupplierOrCustomer() throws Exception{
-        updateManifestUploadTemplateTestInActiveSupplierOrCustomer();
+        updateManifestUploadTemplateTestInActiveSupplierOrCustomer("excelTests/manifestUploadTestInactiveSupplierOrCustomer.xlsx");
 
         ClassLoader classLoader = getClass().getClassLoader();
         File file2 = new File(classLoader.getResource("excelTests/manifestUploadTestInactiveSupplierOrCustomer.xlsx").getFile());
@@ -263,13 +263,34 @@ public class ExcelManifestControllerTest {
     }
 
     /**
+     * Test the attempt to upload ManifestReference forecast with not existing Schedule Agreement between Platform and
+     * supplier
+     * @throws Exception
+     */
+    @Test
+    public void manifestReferenceWithNotExistingReference () throws Exception{
+        updateManifestUploadTemplateTestInActiveSupplierOrCustomer("excelTests/manifestUploadTestNotExistingScheduleAgreement.xlsx");
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file2 = new File(classLoader.getResource("excelTests/manifestUploadTestNotExistingScheduleAgreement.xlsx").getFile());
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file2.toPath()));
+
+        mockMvc.perform(multipart("/coordinator/excel/manifests/uploadFile").file(mockMultipartFile))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['3'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['4'].isActive").value(false));
+
+    }
+
+    /**
      * Fills actual date values in the file manifestUploadTestInactiveSupplierOrCustomer.xlsx to test cases
      * when Supplier or Customer have status isActive = false
+     * Updates dates in for test manifestReferenceWithNotExistingReference()
      */
-    private void updateManifestUploadTemplateTestInActiveSupplierOrCustomer() {
+    private void updateManifestUploadTemplateTestInActiveSupplierOrCustomer(String path) {
         ClassLoader classLoader = ExcelManifestControllerTest.class.getClassLoader();
         //file with customers to emulate file which will be sent by user.
-        File file = new File(classLoader.getResource("excelTests/manifestUploadTestInactiveSupplierOrCustomer.xlsx").getFile());
+        File file = new File(classLoader.getResource(path).getFile());
 
         try (FileInputStream inputStream = new FileInputStream(file);
              Workbook workbook = WorkbookFactory.create(inputStream)) {
@@ -313,7 +334,7 @@ public class ExcelManifestControllerTest {
                 rowMSheet4.getCell(18).setCellValue(DateUtil.convertTime("12:00:00"));
             }
             inputStream.close();
-            FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/excelTests/manifestUploadTestInactiveSupplierOrCustomer.xlsx");
+            FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/" + path);
             workbook.write(outputStream);
             workbook.close();
             outputStream.close();

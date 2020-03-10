@@ -46,24 +46,18 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
     private final ManifestService manifestService;
     private final TruckService truckService;
     private final ManifestReferenceService manifestReferenceService;
-    private final CustomerService customerService;
-    private final SupplierService supplierService;
 
     @Autowired
     public ExcelManifestController(FileStorageService fileStorageService,
                                    ExcelManifestService excelManifestService,
                                    ManifestService manifestService,
                                    TruckService truckService,
-                                   ManifestReferenceService manifestReferenceService,
-                                   CustomerService customerService,
-                                   SupplierService supplierService) {
+                                   ManifestReferenceService manifestReferenceService) {
         this.fileStorageService = fileStorageService;
         this.excelManifestService = excelManifestService;
         this.manifestService = manifestService;
         this.truckService = truckService;
         this.manifestReferenceService = manifestReferenceService;
-        this.customerService = customerService;
-        this.supplierService = supplierService;
     }
 
     @Override
@@ -125,8 +119,8 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
 
         Set<TPA> tpaSetDTO = tpaSetValidation(manifestTpaTttDTO.getTpaSetDTO(), validator);
         Set<TruckTimeTable> tttSetDTO = tttSetValidation(manifestTpaTttDTO.getTttSetDTO(), validator);
-        Map<Long, Manifest> manifestMapDTO = manifestValidation(manifestTpaTttDTO.getManifestMapDTO(), tttSetDTO, tpaSetDTO, validator);
         Set<ManifestReference> manifestReferenceSetDTO = manifestReferenceSetValidator(manifestTpaTttDTO.getManifestReferenceSetDTO(), validator);
+        Map<Long, Manifest> manifestMapDTO = manifestValidation(manifestTpaTttDTO.getManifestMapDTO(), tttSetDTO, tpaSetDTO, manifestReferenceSetDTO, validator);
 
         manifestTpaTttDTO.setManifestMapDTO(manifestMapDTO);
         manifestTpaTttDTO.setTpaSetDTO(tpaSetDTO);
@@ -142,54 +136,107 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
      * not compliant conditions. Also checks if there is already existing manifest in DB with given Manifest Code.
      * In such case it will be turned to false also.
      *
-     * @param manifestMapDTO - map with Manifests to be validated
-     * @param tttSetDTO      - set of TruckTimeTables from DTO entity received from user and already validated by the
-     *                       system
-     * @param tpaSetDTO      - set of TPA from DTO entity received from user and already validated by the system
-     * @param validator      - Validator
+     * @param manifestMapDTO          - map with Manifests to be validated
+     * @param tttSetDTO               - set of TruckTimeTables from DTO entity received from user and already validated by the
+     *                                system
+     * @param tpaSetDTO               - set of TPA from DTO entity received from user and already validated by the system
+     * @param manifestReferenceSetDTO - set of manifestReference to be validated
+     * @param validator               - Validator
      * @return same Map type with checked entities.
      */
-    private Map<Long, Manifest> manifestValidation(Map<Long, Manifest> manifestMapDTO, Set<TruckTimeTable> tttSetDTO, Set<TPA> tpaSetDTO, Validator validator) {
+    private Map<Long, Manifest> manifestValidation(Map<Long, Manifest> manifestMapDTO, Set<TruckTimeTable> tttSetDTO, Set<TPA> tpaSetDTO, Set<ManifestReference> manifestReferenceSetDTO, Validator validator) {
         if (manifestMapDTO != null) {
             for (Map.Entry<Long, Manifest> longManifestEntry : manifestMapDTO.entrySet()) {
                 Manifest manifest = longManifestEntry.getValue();
                 if (manifest != null) {
                     Set<ConstraintViolation<Manifest>> constraintValidator = validator.validate(manifest);
-                    Set<TruckTimeTable> checkingTTTset = tttSetDTO.stream()
-                            .flatMap(n -> manifest.getTruckTimeTableSet()
-                                    .stream()
-                                    .filter(ttt -> ttt.getTruckName() != null)
-                                    .filter(p -> p.getTttArrivalDatePlan().equals(n.getTttArrivalDatePlan()) && p.getTruckName().equals(n.getTruckName())))
-                            .filter(ttt -> ttt.getIsActive() != null && !ttt.getIsActive())
-                            .collect(Collectors.toSet());
-                    Set<TPA> checkingTPAset = tpaSetDTO.stream()
-                            .flatMap(n -> manifest.getTpaSet()
-                                    .stream()
-                                    .filter(tpa -> tpa.getName() != null)
-                                    .filter(p -> p.getName().equals(n.getName()) && p.getDeparturePlan().equals(n.getDeparturePlan())))
-                            .filter(tpa -> tpa.getIsActive() != null && !tpa.getIsActive())
-                            .collect(Collectors.toSet());
-                    if (!constraintValidator.isEmpty() || !checkingTTTset.isEmpty() || !checkingTPAset.isEmpty()) {
-                        log.info("Manifest from Row {} would not be persisted: {} \n TPA set has wrong forecast - {}!, \n TTT set has wrong forecast - {}!",
-                                longManifestEntry.getKey(), constraintValidator, !checkingTPAset.isEmpty(), !checkingTTTset.isEmpty());
+                    Set<TruckTimeTable> checkingTTTset = getInActiveTttFromSet(tttSetDTO, manifest);
+                    Set<TPA> checkingTPAset = getInActiveTpaFromSet(tpaSetDTO, manifest);
+                    Set<ManifestReference> manifestReferenceSet = getInactiveManifestReferenceSetFromGivenSet(manifestReferenceSetDTO, manifest);
+                    log.info("ManRef : {}", manifestReferenceSet);
+
+                    if (!constraintValidator.isEmpty() || !checkingTTTset.isEmpty() || !checkingTPAset.isEmpty() || !manifestReferenceSet.isEmpty()) {
+                        log.info("Manifest {} from Row {} would not be persisted: {} " +
+                                        "\n TPA set has wrong forecast - {}!, " +
+                                        "\n TTT set has wrong forecast - {}!" +
+                                        "\n ManifestReferences have Errors - {}!",
+                                manifest.getManifestCode(), longManifestEntry.getKey(), constraintValidator,
+                                !checkingTPAset.isEmpty(), !checkingTTTset.isEmpty(), !manifestReferenceSet.isEmpty());
+
                         manifest.setIsActive(false);
                     } else if (manifestService.isManifestExisting(manifest)) {
                         log.info("Manifest {} already existing in DataBase and wouldn't be persisted in DB", manifest.getManifestCode());
                         manifest.setIsActive(false);
                     } else {
-                        boolean isActive = manifest.getCustomer().getIsActive() && manifest.getSupplier().getIsActive();
-                        if (!isActive) {
-                            manifest.setIsActive(false);
-                            log.info("Manifest {} has Customer: [{}] - isActive=[{}]", manifest.getManifestCode(), manifest.getCustomer().getName(), manifest.getCustomer().getIsActive());
-                            log.info("Manifest {} has Supplier: [{}] - isActive=[{}]", manifest.getManifestCode(), manifest.getSupplier().getName(), manifest.getSupplier().getIsActive());
-                        } else {
-                            manifest.setIsActive(true);
-                        }
+                        manifest.setIsActive(isCustomerAndSupplierActive(manifest));
                     }
                 }
             }
         }
         return manifestMapDTO;
+    }
+
+    /**
+     * Extracts entities which have status isActive=false from given manifestReferenceSetDTO set by given manifest Code.
+     * @param manifestReferenceSetDTO Source set where entities would be found.
+     * @param manifest - Manifest entity for comparison
+     * @return filtered Set of ManifestReferences according to conditions
+     */
+    private Set<ManifestReference> getInactiveManifestReferenceSetFromGivenSet(Set<ManifestReference> manifestReferenceSetDTO, Manifest manifest) {
+        return manifestReferenceSetDTO.stream()
+                .filter(n -> manifest.getManifestCode().equals(n.getManifestCode()))
+                .filter(manRef -> manRef.getIsActive() != null && !manRef.getIsActive())
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Check if the Supplier and Customer in given Manifest are Active isActive=True
+     * @param manifest - manifest to check
+     * @return boolean
+     */
+    private boolean isCustomerAndSupplierActive(Manifest manifest) {
+        boolean isActive = manifest.getCustomer().getIsActive() && manifest.getSupplier().getIsActive();
+        if (!isActive) {
+            log.info("Manifest {} has Customer: [{}] - isActive=[{}]", manifest.getManifestCode(), manifest.getCustomer().getName(), manifest.getCustomer().getIsActive());
+            log.info("Manifest {} has Supplier: [{}] - isActive=[{}]", manifest.getManifestCode(), manifest.getSupplier().getName(), manifest.getSupplier().getIsActive());
+        }
+        return isActive;
+    }
+
+    /**
+     * Extracts Set of TruckTimeTable from given Set tttSetDTO where each TruckTimeTable has isActive=false with
+     * filtering by curtain manifest
+     *
+     * @param tttSetDTO - Given Set of TruckTimeTable to be filtered
+     * @param manifest  - current manifest to check
+     * @return set of filtered TruckTimeTable
+     */
+    private Set<TruckTimeTable> getInActiveTttFromSet(Set<TruckTimeTable> tttSetDTO, Manifest manifest) {
+        return tttSetDTO.stream()
+                .flatMap(n -> manifest.getTruckTimeTableSet()
+                        .stream()
+                        .filter(ttt -> ttt.getTruckName() != null)
+                        .filter(p -> p.getTttArrivalDatePlan().equals(n.getTttArrivalDatePlan()) && p.getTruckName().equals(n.getTruckName())))
+                .filter(ttt -> ttt.getIsActive() != null && !ttt.getIsActive())
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Extracts Set of Tpa from given Set tpaSetDTO where each Tpa has isActive=false with filtering by curtain manifest
+     *
+     * @param tpaSetDTO - Given  Set of Tpa to be filtered
+     * @param manifest  - current manifest to check
+     * @return set of filtered Tpa
+     */
+    private Set<TPA> getInActiveTpaFromSet(Set<TPA> tpaSetDTO, Manifest manifest) {
+        return tpaSetDTO.stream()
+                .flatMap(n -> manifest.getTpaSet()
+                        .stream()
+                        .filter(tpa -> tpa.getName() != null)
+                        //.filter(p -> p.getName().equals(n.getName()) && p.getDeparturePlan().equals(n.getDeparturePlan())))
+                        .filter(p -> p.getName().equals(n.getName()) && n.getDeparturePlan().equals(p.getDeparturePlan())))
+                .filter(tpa -> tpa.getIsActive() != null && !tpa.getIsActive())
+                .collect(Collectors.toSet());
     }
 
     /**

@@ -274,10 +274,12 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
             // if reference wasn't found by Agreement create empty Reference
             // and set message into Agreement and skip iteration.
             if (reference == null) {
+                log.info("Agreement {} wasn't found", getStringFromCell(row.getCell(1)));
                 reference = new Reference();
                 reference.setSupplierAgreement("Unknown Agreement!");
                 manifestReference.setReference(reference);
                 manifestReferenceSet.add(manifestReference);
+                manifestReference.setManifestCode(manifest.getManifestCode());
                 continue;
             }
 

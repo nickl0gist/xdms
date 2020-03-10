@@ -88,13 +88,13 @@ should have "isActive = false". Check again before saving? TO implement or not?
     Test Methods +/-
         - manifestValidation
             +1. manifest with same code already existing in DB
-            2. manifest with not compliant conditions
-            3. manifest with compliant conditions
-        - tttSetValidation
-        - tpaSetValidation
-        - manifestReferenceSetValidator
-        - connectManiRefToManifestAndTPA ?
-        - connectManifestWithTpaAndTtt ?
+            +2. manifest with not compliant conditions
+            +3. manifest with compliant conditions
+        ~ - tttSetValidation
+        ~ - tpaSetValidation
+        ~ - manifestReferenceSetValidator
+        ~ - connectManiRefToManifestAndTPA ?
+        ~ - connectManifestWithTpaAndTtt ?
     
     +OK Test for good DTO
     
@@ -159,5 +159,6 @@ Excel Matrix Template
    - check Reference Agreement if it is Properly assigned to appropriate manifest(supplier)
    - if no customer or no supplier assigned to line with manifest  
    - if customer or supplier is not active
-   - the dates which are Sundays and Saturdays should be checked. Sundays to red, Saturdays to Orange 
+   - the dates which are Sundays and Saturdays should be checked. Sundays to red, Saturdays to Orange
+   - REFERENCE_FORECAST sheet. combination of manifest and agreement is repeated. 
    

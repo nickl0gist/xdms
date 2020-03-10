@@ -79,7 +79,7 @@ public class TruckService {
             workingDay = workingDayService.getWorkingDayByNumber((long) dateTimeETD.getDayOfWeek().getValue());
             chosenSetting = getTpaDaysSetting(dateTimeETD, tpaDaysSettingsService.getTpaDaySettingsByWarehouseAndWorkingDay(whCustomer, workingDay));
         }
-
+        chosenSetting = chosenSetting == null ? new TpaDaysSetting() : chosenSetting;
         dateTimeETD = ZonedDateTime.of(dateTimeETD.toLocalDate(), getLocalTimeFromString(chosenSetting.getLocalTime()), dateTimeETD.getZone());
         Map<ZonedDateTime, TpaDaysSetting> result = new HashMap<>();
         result.put(dateTimeETD, chosenSetting);

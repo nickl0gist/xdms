@@ -9,6 +9,7 @@ import pl.com.xdms.domain.tpa.TPA;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "manifest_reference")
@@ -84,6 +85,7 @@ public class ManifestReference {
     @ManyToOne
     @JoinColumn(name = "referenceID", nullable = false)
 
+    @NotNull
     private Reference reference;
 
     @ManyToOne
