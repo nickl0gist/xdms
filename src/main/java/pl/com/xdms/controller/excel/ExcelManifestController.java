@@ -178,6 +178,8 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
 
     /**
      * Extracts entities which have status isActive=false from given manifestReferenceSetDTO set by given manifest Code.
+     * If Reference in the ManReference entity has status isActive=False the current ManReference status will set to
+     * isActive=False
      * @param manifestReferenceSetDTO Source set where entities would be found.
      * @param manifest - Manifest entity for comparison
      * @return filtered Set of ManifestReferences according to conditions
@@ -185,7 +187,7 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
     private Set<ManifestReference> getInactiveManifestReferenceSetFromGivenSet(Set<ManifestReference> manifestReferenceSetDTO, Manifest manifest) {
         return manifestReferenceSetDTO.stream()
                 .filter(n -> manifest.getManifestCode().equals(n.getManifestCode()))
-                .filter(manRef -> manRef.getIsActive() != null && !manRef.getIsActive())
+                .filter(manRef -> manRef.getIsActive() != null && !manRef.getIsActive() || manRef.getTpaCode()==null )
                 .collect(Collectors.toSet());
     }
 
@@ -229,12 +231,13 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
      * @return set of filtered Tpa
      */
     private Set<TPA> getInActiveTpaFromSet(Set<TPA> tpaSetDTO, Manifest manifest) {
+        log.info("tpaSetDTO {}", tpaSetDTO);
         return tpaSetDTO.stream()
                 .flatMap(n -> manifest.getTpaSet()
                         .stream()
-                        .filter(tpa -> tpa.getName() != null)
-                        //.filter(p -> p.getName().equals(n.getName()) && p.getDeparturePlan().equals(n.getDeparturePlan())))
-                        .filter(p -> p.getName().equals(n.getName()) && n.getDeparturePlan().equals(p.getDeparturePlan())))
+                        .filter(tpa -> tpa.getName() != null)//.filter(p -> p.getName().equals(n.getName()) && p.getDeparturePlan().equals(n.getDeparturePlan())))
+                        .filter(tpa -> tpa.getName().equals(n.getName())
+                                && n.getDeparturePlan().equals(tpa.getDeparturePlan())))
                 .filter(tpa -> tpa.getIsActive() != null && !tpa.getIsActive())
                 .collect(Collectors.toSet());
     }
@@ -316,8 +319,9 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
             for (ManifestReference manifestReference : manifestReferenceSet) {
                 if (manifestReference != null) {
                     Set<ConstraintViolation<ManifestReference>> constraintValidator = validator.validate(manifestReference);
-                    if (!constraintValidator.isEmpty()) {
-                        log.info("Reference {} in Manifest {} would not be persisted: {}", manifestReference.getReference().getName(), manifestReference.getManifestCode(), constraintValidator);
+                    if (!constraintValidator.isEmpty() || !manifestReference.getReference().getIsActive()) {
+                        log.info("Reference {} in Manifest {} would not be persisted: {}", manifestReference.getReference().getNumber(), manifestReference.getManifestCode(), constraintValidator);
+                        log.info("Reference {} in Manifest {} would not be persisted, The agreement {} isActive={}", manifestReference.getReference().getNumber(), manifestReference.getManifestCode(), manifestReference.getReference().getSupplierAgreement(), manifestReference.getReference().getIsActive());
                         manifestReference.setIsActive(false);
                     } else {
                         manifestReference.setIsActive(true);

@@ -101,11 +101,12 @@ should have "isActive = false". Check again before saving? TO implement or not?
     NOK Tests:
     
     Test ManifestReferences
-        Not Existing Reference
-        add ManRef to not eixting manifest
-        add ManRef without TPA 
-        What if reference is not active
-        
+       + Not Existing Reference
+       -/+ add ManRef to not eixting manifest => not possible test Case? 
+       + add ManRef without TPA - ManifestRefrence will not pass the validation
+       + What if ~~reference~~ agreement is not active
+       - Test if forecasted supplier-customer doesn't match with agreement of the refrence
+       
     Test TTT
         Not Existing CC, XD, TXD
         Create TTT with the same parameters as existing one
@@ -119,6 +120,8 @@ should have "isActive = false". Check again before saving? TO implement or not?
         Create TPA with bad dates, too late dates, what if there no appropriate WH_CUST settings
         
     ExcelManifestService Test?
+    
+-. Code Refactoring for ExcelManifestController: create Validator class to move all the validations into it.
    
 -. When customer is set to inactive all warehouses connections with it have to be switched to inActive.
     Customer with picked up and not delivered manifests cannot be switched to inActive. 
@@ -161,4 +164,5 @@ Excel Matrix Template
    - if customer or supplier is not active
    - the dates which are Sundays and Saturdays should be checked. Sundays to red, Saturdays to Orange
    - REFERENCE_FORECAST sheet. combination of manifest and agreement is repeated. 
+   - if There is arrival date and time provided in warehouse so the TPA name should be provided also, if no => Red
    

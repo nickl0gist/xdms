@@ -193,7 +193,7 @@ public class ExcelManifestControllerTest {
 
         //Check if the manifests were saved properly
         Assert.assertEquals(3, excelManifestService.getManifestService().getAllManifests().size());
-        Assert.assertEquals(3, excelManifestService.getManifestReferenceService().getAllManifestReferences().size());
+        Assert.assertEquals(2, excelManifestService.getManifestReferenceService().getAllManifestReferences().size());
         Assert.assertEquals(7, excelManifestService.getTruckService().getTpaService().getAllTpa().size());
         Assert.assertEquals(7, excelManifestService.getTruckService().getTttService().getAllTtt().size());
 
@@ -264,7 +264,7 @@ public class ExcelManifestControllerTest {
 
     /**
      * Test the attempt to upload ManifestReference forecast with not existing Schedule Agreement between Platform and
-     * supplier
+     * supplier and with reference which has supplier agreement isActive=false
      * @throws Exception
      */
     @Test
@@ -278,7 +278,8 @@ public class ExcelManifestControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0]['manifestMapDTO']['3'].isActive").value(false))
-                .andExpect(jsonPath("$[0]['manifestMapDTO']['4'].isActive").value(false));
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['4'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['5'].isActive").value(false));
 
     }
 
@@ -298,6 +299,7 @@ public class ExcelManifestControllerTest {
             Sheet manifestSheet = workbook.getSheet(excelProperties.getManifestsSheetName());
             Row rowMSheet3 = manifestSheet.getRow(2);
             Row rowMSheet4 = manifestSheet.getRow(3);
+            Row rowMSheet5 = manifestSheet.getRow(4);
             LocalDate nowDate = LocalDate.now();
 
             //Block where Excel file is being updated to correspond to actual timetable.
@@ -332,6 +334,26 @@ public class ExcelManifestControllerTest {
                 //Customer Date and Time
                 rowMSheet4.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(17)));
                 rowMSheet4.getCell(18).setCellValue(DateUtil.convertTime("12:00:00"));
+
+                if(rowMSheet5 != null){
+                    //The Third Manifest Supplier -> CC -> XD -> TXD -> Customer
+                    //Supplier Date and Time
+                    rowMSheet5.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(8)));
+                    rowMSheet5.getCell(2).setCellValue(DateUtil.convertTime("11:30:00"));
+                    //CC Date and Time
+                    rowMSheet5.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                    rowMSheet5.getCell(6).setCellValue(DateUtil.convertTime("12:30:00"));
+                    //XD Date and Time
+                    rowMSheet5.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                    rowMSheet5.getCell(10).setCellValue(DateUtil.convertTime("12:40:00"));
+                    //TXD Date and Time
+                    rowMSheet5.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(13)));
+                    rowMSheet5.getCell(14).setCellValue(DateUtil.convertTime("17:00:00"));
+                    //Customer Date and Time
+                    rowMSheet5.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(17)));
+                    rowMSheet5.getCell(18).setCellValue(DateUtil.convertTime("12:00:00"));
+                }
+
             }
             inputStream.close();
             FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/" + path);

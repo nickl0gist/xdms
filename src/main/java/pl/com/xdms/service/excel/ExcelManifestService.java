@@ -276,6 +276,7 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
             if (reference == null) {
                 log.info("Agreement {} wasn't found", getStringFromCell(row.getCell(1)));
                 reference = new Reference();
+                reference.setIsActive(false);
                 reference.setSupplierAgreement("Unknown Agreement!");
                 manifestReference.setReference(reference);
                 manifestReferenceSet.add(manifestReference);
@@ -398,7 +399,7 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
         if (dateTimeETA.isBefore(ZonedDateTime.now())
                 || dateTimeTxdEta.isBefore(ZonedDateTime.now())
                 || dateTimeETD.isBefore(ZonedDateTime.now())) {
-
+            tpa.setDeparturePlan(dateTimeETD.toLocalDateTime().toString());
             tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
             log.info("dateTimeETA {}, \n or dateTimeTxdEta {}, \n or dateTimeETD {} is in the Past", dateTimeETA, dateTimeTxdEta, dateTimeETD);
             return tpa;
