@@ -165,4 +165,5 @@ Excel Matrix Template
    - the dates which are Sundays and Saturdays should be checked. Sundays to red, Saturdays to Orange
    - REFERENCE_FORECAST sheet. combination of manifest and agreement is repeated. 
    - if There is arrival date and time provided in warehouse so the TPA name should be provided also, if no => Red
+   - Sequence of dates in each Row (Each previous date should be less than Each next Date and Time)
    

@@ -180,19 +180,36 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
      * Extracts entities which have status isActive=false from given manifestReferenceSetDTO set by given manifest Code.
      * If Reference in the ManReference entity has status isActive=False the current ManReference status will set to
      * isActive=False
+     *
      * @param manifestReferenceSetDTO Source set where entities would be found.
-     * @param manifest - Manifest entity for comparison
+     * @param manifest                - Manifest entity for comparison
      * @return filtered Set of ManifestReferences according to conditions
      */
     private Set<ManifestReference> getInactiveManifestReferenceSetFromGivenSet(Set<ManifestReference> manifestReferenceSetDTO, Manifest manifest) {
+        log.info("Checking ManRefSet for manifest {}", manifest.getManifestCode());
+
         return manifestReferenceSetDTO.stream()
                 .filter(n -> manifest.getManifestCode().equals(n.getManifestCode()))
-                .filter(manRef -> manRef.getIsActive() != null && !manRef.getIsActive() || manRef.getTpaCode()==null )
+                .filter(manRef -> {
+                    try {
+                        log.info("ManifestReference for Manifest: {} is Active = {} ; Reference: {}", manifest.getManifestCode(), manRef.getIsActive(), manRef.getReference().getNumber());
+                        log.info("Does ManifestReference have TPA = {}", manRef.getTpaCode() != null);
+                        log.info("Reference Supplier {} is Matching with Manifest Supplier {} - {}", manRef.getReference().getSupplier().getName(), manifest.getSupplier().getName(), manRef.getReference().getSupplier().equals(manifest.getSupplier()));
+                        log.info("Reference Customer {} is Matching with Manifest Customer {} - {}", manRef.getReference().getCustomer().getName(), manifest.getCustomer().getName(), manRef.getReference().getCustomer().equals(manifest.getCustomer()));
+                    } catch (NullPointerException e) {
+                        log.info("Exception caught {}", e.getStackTrace());
+                    }
+                    return manRef.getIsActive() != null && !manRef.getIsActive()
+                            || manRef.getTpaCode() == null
+                            || !manRef.getReference().getSupplier().equals(manifest.getSupplier())
+                            || !manRef.getReference().getCustomer().equals(manifest.getCustomer());
+                })
                 .collect(Collectors.toSet());
     }
 
     /**
      * Check if the Supplier and Customer in given Manifest are Active isActive=True
+     *
      * @param manifest - manifest to check
      * @return boolean
      */

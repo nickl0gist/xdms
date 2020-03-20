@@ -157,7 +157,12 @@ values
     (44, '15:00', 'P0DT2H0M', 16, 2),
     (45, '15:00', 'P0DT2H0M', 16, 3),
     (46, '15:00', 'P0DT2H0M', 16, 4),
-    (47, '15:00', 'P0DT2H0M', 16, 5);
+    (47, '15:00', 'P0DT2H0M', 16, 5),
+    (48, '10:00', 'P1DT2H0M', 6, 1),
+    (49, '10:00', 'P1DT2H0M', 6, 2),
+    (50, '10:00', 'P1DT2H0M', 6, 3),
+    (51, '10:00', 'P1DT2H0M', 6, 4),
+    (52, '10:00', 'P1DT2H0M', 6, 5);
 
 insert into manifests
 (manifestid, manifest_code, pallet_qty_planned, box_qty_planned, totalldm_planned,

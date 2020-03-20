@@ -1,6 +1,7 @@
 package pl.com.xdms.domain.customer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -15,6 +16,7 @@ import java.util.Set;
 @Setter
 @Getter
 @ToString
+@EqualsAndHashCode
 public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -72,4 +74,5 @@ public class Customer {
     @Size(min = 6, max = 6)
     @Pattern(regexp = "GMT[+-][0-9]{2}")
     private String timeZone;
+
 }
