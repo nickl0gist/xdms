@@ -58,16 +58,52 @@ file and give it back to validation.
 +20. Adjust existing tests to new DB constraints. Make all tests to run
 
 +21.      Test Manifest
-                 + Two Manifests with the same number
-                 + No TPA, No TTT
-                 + Not Existing Customer
-                 + Not Existing Supplier
-                 + Manifest with wrong Manifest Code
-                 + What if Supplier is not Active
-                 + What if Customer is not Active
-                 
-                 
-
+                 √ Two Manifests with the same number
+                 √ No TPA, No TTT
+                 √ Not Existing Customer
+                 √ Not Existing Supplier
+                 √ Manifest with wrong Manifest Code
+                 √ What if Supplier is not Active
+                 √ What if Customer is not Active
+              Test ManifestReferences
+                 √ Not Existing Reference
+                 √ add ManRef to not existing manifest => not possible test Case? 
+                 √ add ManRef without TPA - ManifestReference will not pass the validation
+                 √ What if ~~reference~~ agreement is not active
+                 √ Test if forecast supplier-customer doesn't match with agreement of the reference   
+             Test endpoints: 
+             + GET template /manifest_upload_template.xlsx
+             - POST data with file /manifests/uploadFile
+                 - test validation method different cases:
+                     √ ok test
+                     √ nok test
+                     √ partial ok/nok test
+             √ SAVE(POST) parsed from Excel JSON /forecast/save 
+             Test Methods +/-
+                 √ manifestValidation
+                     √1. manifest with same code already existing in DB
+                     √2. manifest with not compliant conditions
+                     √3. manifest with compliant conditions
+                 ~ - tttSetValidation <private>
+                 ~ - tpaSetValidation <private>
+                 ~ - manifestReferenceSetValidator <private>
+                 ~ - connectManiRefToManifestAndTPA ? <private>
+                 ~ - connectManifestWithTpaAndTtt ? <private>
+            NOK Tests:
+                Test TTT
+                    Not Existing 
+                        √ CC, 
+                        √ XD, 
+                        √ TXD, 
+                        √ Customer
+                     √Create TTT with the same parameters as existing one
+                Test TPA
+                    Not Existing 
+                        √ CC, 
+                        √ XD, 
+                        √ TXD, 
+                        √ Customer
+                        √ Create TPA with the same parameters
 not done
 -
 
@@ -76,48 +112,15 @@ should have "isActive = false". Check again before saving? TO implement or not?
 
 -. new tests to test ExcelManifestController actions:
     
-    Test endpoints: 
-    + GET template /manifest_upload_template.xlsx
-    - POST data with file /manifests/uploadFile
-        - test validation method different cases:
-            + ok test
-            + nok test
-            + partial ok/nok test
-    + SAVE(POST) parsed from Excel JSON /forecast/save
-    
-    Test Methods +/-
-        - manifestValidation
-            +1. manifest with same code already existing in DB
-            +2. manifest with not compliant conditions
-            +3. manifest with compliant conditions
-        ~ - tttSetValidation
-        ~ - tpaSetValidation
-        ~ - manifestReferenceSetValidator
-        ~ - connectManiRefToManifestAndTPA ?
-        ~ - connectManifestWithTpaAndTtt ?
-    
-    +OK Test for good DTO
-    
-    NOK Tests:
-    
-    Test ManifestReferences
-       + Not Existing Reference
-       -/+ add ManRef to not eixting manifest => not possible test Case? 
-       + add ManRef without TPA - ManifestRefrence will not pass the validation
-       + What if ~~reference~~ agreement is not active
-       - Test if forecasted supplier-customer doesn't match with agreement of the refrence
-       
+    NOK Tests:       
     Test TTT
-        Not Existing CC, XD, TXD
-        Create TTT with the same parameters as existing one
         Create 2 similar TTT for different WH
-        Create TTT with bad dates, too late dates, what if there no appropriate WH_CUST settings
-        
+        Create TTT with bad dates, too late dates, what if there no appropriate WH_CUST settings -> NullPointerException ? Create Handler ?
     Test TPA
-        Not Existing CC, XD, TXD, Customer
         Create TPA with the same parameters
         Create 2 similar TPA for different WH
-        Create TPA with bad dates, too late dates, what if there no appropriate WH_CUST settings
+        Create TPA with bad dates, too late dates, what if there no appropriate WH_CUST settings -> NullPointerException ? Create Handler ?
+        
         
     ExcelManifestService Test?
     

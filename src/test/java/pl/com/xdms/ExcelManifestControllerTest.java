@@ -20,7 +20,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import pl.com.xdms.configuration.ExcelProperties;
+import pl.com.xdms.domain.dto.ManifestTpaTttDTO;
+import pl.com.xdms.domain.tpa.TPA;
+import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.service.excel.ExcelManifestService;
+import pl.com.xdms.service.truck.TruckService;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +34,7 @@ import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -57,6 +62,8 @@ public class ExcelManifestControllerTest {
     private ExcelProperties excelProperties;
     @Autowired
     private ExcelManifestService excelManifestService;
+    @Autowired
+    private TruckService truckService;
 
     /**
      * Test the endpoint "/coordinator/excel/download/manifest_upload_template.xlsx" which downloads the template of Excel file
@@ -118,8 +125,8 @@ public class ExcelManifestControllerTest {
     }
 
     /**
-     * Test of uploading forecast within file manifestUploadTemplateTest2.xlsx. It contains 3 manifests to be implemented
-     * into the system. The first manifest should pass all validations and ready to be implemented into the system while
+     * Test of uploading forecast within file manifestUploadTemplateTest2.xlsx. It contains 3 manifests to be saved
+     * into the system. The first manifest should pass all validations and ready to be saved into the system while
      * the two other should have isActive=false.
      * @throws Exception of file opening
      */
@@ -147,7 +154,7 @@ public class ExcelManifestControllerTest {
      */
     @Test
     public void uploadFileWithProperInformation() throws Exception{
-        updateManifestForecastWithProperInfo();
+        updateManifestForecastWithProperInfo("excelTests/manifestUploadGoodForecast.xlsx");
 
         ClassLoader classLoader = getClass().getClassLoader();
         File file2 = new File(classLoader.getResource("excelTests/manifestUploadGoodForecast.xlsx").getFile());
@@ -167,7 +174,7 @@ public class ExcelManifestControllerTest {
      */
     @Test
     public void uploadFileWithProperInformationAndSaveItToDB() throws Exception{
-        updateManifestForecastWithProperInfo();
+        updateManifestForecastWithProperInfo("excelTests/manifestUploadGoodForecast.xlsx");
 
         ClassLoader classLoader = getClass().getClassLoader();
         File file2 = new File(classLoader.getResource("excelTests/manifestUploadGoodForecast.xlsx").getFile());
@@ -282,9 +289,14 @@ public class ExcelManifestControllerTest {
 
     }
 
+    /**
+     * Test of the case when Customer and Supplier of the Reference from DB matching or not with Customer and Supplier
+     * of the Manifest which being saved in DB.
+     * @throws Exception of file opening
+     */
     @Test
     public void manifestReferenceSupplierCustomerVersusReferenceCustomerSupplierTest() throws Exception{
-        updateManifestREferenceSupplCustCompareToRefereneceSupplCust();
+        updateManifestReferenceSupplCustCompareToRefereneceSupplCust();
 
         ClassLoader classLoader = getClass().getClassLoader();
         File file2 = new File(classLoader.getResource("excelTests/manifestREferenceSupplCustCompareToRefereneceSupplCust.xlsx").getFile());
@@ -298,7 +310,60 @@ public class ExcelManifestControllerTest {
                 .andExpect(jsonPath("$[0]['manifestMapDTO']['5'].isActive").value(true));
     }
 
-    private void updateManifestREferenceSupplCustCompareToRefereneceSupplCust() {
+    /**
+     * Test the case when all manifest are ok in uploaded file. And all of the manifests should have status isActive=true
+     * @throws Exception of file opening
+     */
+    @Test
+    public void manifestHasNotExistingCC_XD_TXD() throws Exception{
+        updateManifestForecastWithProperInfo("excelTests/manifestUploadNotExistingCC_XD_TXD.xlsx");
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file2 = new File(classLoader.getResource("excelTests/manifestUploadNotExistingCC_XD_TXD.xlsx").getFile());
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file2.toPath()));
+
+        mockMvc.perform(multipart("/coordinator/excel/manifests/uploadFile").file(mockMultipartFile))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['3'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['4'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['5'].isActive").value(false));
+    }
+
+    /**
+     * Test case when user tries to save TPA or TTT which already exists in DB. The manifest with such TPA or TTT
+     * should have status isActive = false.
+     * @throws Exception of file opening
+     */
+    @Test
+    public void alreadyExistingTpaAndTttInDatabase() throws Exception{
+        updateManifestForecastWithProperInfo("excelTests/manifestUploadGoodForecastAndExistingAlreadyTPAinDB.xlsx");
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file2 = new File(classLoader.getResource("excelTests/manifestUploadGoodForecastAndExistingAlreadyTPAinDB.xlsx").getFile());
+
+        Map<Long, ManifestTpaTttDTO> mapBeforePosting = excelManifestService.readExcel(file2);
+        TPA tpaToSave = mapBeforePosting.entrySet().iterator().next().getValue().getTpaSetDTO().stream().filter(tpa -> tpa.getName().equals("SAO1")).findFirst().orElse(null); //row 3
+        TruckTimeTable tttToSave = mapBeforePosting.entrySet().iterator().next().getValue().getTttSetDTO().stream().filter(ttt -> ttt.getTruckName().equals("STD2")).findFirst().orElse(null); //row 5
+        truckService.getTpaService().save(tpaToSave);
+        truckService.getTttService().save(tttToSave);
+
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file2.toPath()));
+
+        MvcResult result = mockMvc.perform(multipart("/coordinator/excel/manifests/uploadFile").file(mockMultipartFile))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['3'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['4'].isActive").value(true))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['5'].isActive").value(false))
+                .andReturn();
+    }
+
+    /**
+     * Fills information for the file which used for test case in
+     * manifestReferenceSupplierCustomerVersusReferenceCustomerSupplierTest
+     */
+    private void updateManifestReferenceSupplCustCompareToRefereneceSupplCust() {
         ClassLoader classLoader = ExcelManifestControllerTest.class.getClassLoader();
         //file with customers to emulate file which will be sent by user.
         File file = new File(classLoader.getResource("excelTests/manifestREferenceSupplCustCompareToRefereneceSupplCust.xlsx").getFile());
@@ -615,11 +680,12 @@ public class ExcelManifestControllerTest {
     /**
      * Method Updates information in the file excelTests/manifestUploadGoodForecast.xlsx with proper information
      * for manifest forecast used to be checked for OK tests and save(POST) using endpoint "coordinator/excel/forecast/save"
+     * @param path - path to file to be updated
      */
-    private void updateManifestForecastWithProperInfo(){
+    private void updateManifestForecastWithProperInfo(String path){
         ClassLoader classLoader = ExcelManifestControllerTest.class.getClassLoader();
         //file with customers to emulate file which will be sent by user.
-        File file = new File(classLoader.getResource("excelTests/manifestUploadGoodForecast.xlsx").getFile());
+        File file = new File(classLoader.getResource(path).getFile());
 
         try (FileInputStream inputStream = new FileInputStream(file);
             Workbook workbook = WorkbookFactory.create(inputStream)) {
@@ -682,7 +748,7 @@ public class ExcelManifestControllerTest {
             }
 
             inputStream.close();
-            FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/excelTests/manifestUploadGoodForecast.xlsx");
+            FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/" + path);
             workbook.write(outputStream);
             workbook.close();
             outputStream.close();

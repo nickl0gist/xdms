@@ -355,6 +355,12 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
         log.info("Collecting new TPA with name [{}] ----------------------------", tpa.getName());
 
         Warehouse warehouse = warehouseService.getWarehouseByName(getStringFromCell(row.getCell(warehouseNameColumn)));
+        if(warehouse == null){
+            log.info("The warehouse was not found, please check your Excel on row {}", row.getRowNum());
+            tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
+            tpa.setDeparturePlan(LocalDateTime.now().toString());
+            return tpa;
+        }
 
         Customer customer = customerService.getCustomerByName(getStringFromCell(row.getCell(customerNameColumn)));
         if(customer == null){
@@ -363,12 +369,13 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
             tpa.setDeparturePlan(LocalDateTime.now().toString());
             return tpa;
         }
+
         WhCustomer whCustomer = whCustomerService.findByWarehouseAndCustomer(warehouse, customer);
 
-        LocalDate dateOfArrivingToCustomer = getLocalDateTime(row.getCell(customerNameColumn + 1), row.getCell(customerNameColumn + 2)).toLocalDate();// getLocalDateCell(row.getCell(customerNameColumn + 1));
-        LocalTime timeOfArrivingToCustomer = getLocalDateTime(row.getCell(customerNameColumn + 1), row.getCell(customerNameColumn + 2)).toLocalTime();//getLocalTimeCell(row.getCell(customerNameColumn + 2));
-        LocalDate dateOfArrivingToWarehouse = getLocalDateTime(row.getCell(warehouseNameColumn + 1),row.getCell(warehouseNameColumn + 2)).toLocalDate(); //getLocalDateCell(row.getCell(warehouseNameColumn + 1));
-        LocalTime timeOfArrivingToWarehouse = getLocalDateTime(row.getCell(warehouseNameColumn + 1),row.getCell(warehouseNameColumn + 2)).toLocalTime(); //getLocalTimeCell(row.getCell(warehouseNameColumn + 2));
+        LocalDate dateOfArrivingToCustomer = getLocalDateTime(row.getCell(customerNameColumn + 1), row.getCell(customerNameColumn + 2)).toLocalDate();
+        LocalTime timeOfArrivingToCustomer = getLocalDateTime(row.getCell(customerNameColumn + 1), row.getCell(customerNameColumn + 2)).toLocalTime();
+        LocalDate dateOfArrivingToWarehouse = getLocalDateTime(row.getCell(warehouseNameColumn + 1),row.getCell(warehouseNameColumn + 2)).toLocalDate();
+        LocalTime timeOfArrivingToWarehouse = getLocalDateTime(row.getCell(warehouseNameColumn + 1),row.getCell(warehouseNameColumn + 2)).toLocalTime();
 
         if (ChronoUnit.DAYS.between(dateOfArrivingToCustomer, ZonedDateTime.now()) > 180 ||
                 ChronoUnit.DAYS.between(dateOfArrivingToWarehouse, ZonedDateTime.now()) > 180) {

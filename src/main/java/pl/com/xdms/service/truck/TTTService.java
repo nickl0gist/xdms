@@ -52,4 +52,8 @@ public class TTTService {
     public List<TruckTimeTable> getAllTtt() {
         return tttRepository.findAll();
     }
+
+    public TruckTimeTable save(TruckTimeTable ttt) {
+        return tttRepository.save(ttt);
+    }
 }

@@ -17,7 +17,9 @@ import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
-import pl.com.xdms.service.*;
+import pl.com.xdms.service.FileStorageService;
+import pl.com.xdms.service.ManifestReferenceService;
+import pl.com.xdms.service.ManifestService;
 import pl.com.xdms.service.excel.ExcelManifestService;
 import pl.com.xdms.service.truck.TruckService;
 
@@ -152,16 +154,17 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
                     Set<ConstraintViolation<Manifest>> constraintValidator = validator.validate(manifest);
                     Set<TruckTimeTable> checkingTTTset = getInActiveTttFromSet(tttSetDTO, manifest);
                     Set<TPA> checkingTPAset = getInActiveTpaFromSet(tpaSetDTO, manifest);
-                    Set<ManifestReference> manifestReferenceSet = getInactiveManifestReferenceSetFromGivenSet(manifestReferenceSetDTO, manifest);
+                    Set<ManifestReference> manifestReferenceSet = getInactiveManifestReferenceSetFromGivenSet(manifestReferenceSetDTO, tpaSetDTO, manifest);
                     log.info("ManRef : {}", manifestReferenceSet);
 
                     if (!constraintValidator.isEmpty() || !checkingTTTset.isEmpty() || !checkingTPAset.isEmpty() || !manifestReferenceSet.isEmpty()) {
                         log.info("Manifest {} from Row {} would not be persisted: {} " +
-                                        "\n TPA set has wrong forecast - {}!, " +
-                                        "\n TTT set has wrong forecast - {}!" +
+                                        "\n TPA set has errors - {}!, or TPA set is empty - {}!" +
+                                        "\n TTT set has errors - {}! or TTT set is empty - {}!" +
                                         "\n ManifestReferences have Errors - {}!",
                                 manifest.getManifestCode(), longManifestEntry.getKey(), constraintValidator,
-                                !checkingTPAset.isEmpty(), !checkingTTTset.isEmpty(), !manifestReferenceSet.isEmpty());
+                                !checkingTPAset.isEmpty(), tpaSetDTO.isEmpty(),
+                                !checkingTTTset.isEmpty(), tttSetDTO.isEmpty(), !manifestReferenceSet.isEmpty());
 
                         manifest.setIsActive(false);
                     } else if (manifestService.isManifestExisting(manifest)) {
@@ -182,25 +185,29 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
      * isActive=False
      *
      * @param manifestReferenceSetDTO Source set where entities would be found.
+     * @param tpaSetDTO
      * @param manifest                - Manifest entity for comparison
      * @return filtered Set of ManifestReferences according to conditions
      */
-    private Set<ManifestReference> getInactiveManifestReferenceSetFromGivenSet(Set<ManifestReference> manifestReferenceSetDTO, Manifest manifest) {
+    private Set<ManifestReference> getInactiveManifestReferenceSetFromGivenSet(Set<ManifestReference> manifestReferenceSetDTO, Set<TPA> tpaSetDTO, Manifest manifest) {
         log.info("Checking ManRefSet for manifest {}", manifest.getManifestCode());
 
         return manifestReferenceSetDTO.stream()
                 .filter(n -> manifest.getManifestCode().equals(n.getManifestCode()))
                 .filter(manRef -> {
+                    boolean condition = false;
                     try {
+                        TPA manRefTpa = tpaSetDTO.stream().filter(tpa -> tpa.getName().equals(manRef.getTpaCode())).findFirst().orElse(null);
+                        condition = manRefTpa == null ? false : manRefTpa.getIsActive();
                         log.info("ManifestReference for Manifest: {} is Active = {} ; Reference: {}", manifest.getManifestCode(), manRef.getIsActive(), manRef.getReference().getNumber());
-                        log.info("Does ManifestReference have TPA = {}", manRef.getTpaCode() != null);
+                        log.info("Does ManifestReference have appropriate TPA = {}", condition);
                         log.info("Reference Supplier {} is Matching with Manifest Supplier {} - {}", manRef.getReference().getSupplier().getName(), manifest.getSupplier().getName(), manRef.getReference().getSupplier().equals(manifest.getSupplier()));
                         log.info("Reference Customer {} is Matching with Manifest Customer {} - {}", manRef.getReference().getCustomer().getName(), manifest.getCustomer().getName(), manRef.getReference().getCustomer().equals(manifest.getCustomer()));
                     } catch (NullPointerException e) {
-                        log.info("Exception caught {}", e.getStackTrace());
+                        log.info("Exception caught {} \n Reference wasn't found", e.getStackTrace());
                     }
                     return manRef.getIsActive() != null && !manRef.getIsActive()
-                            || manRef.getTpaCode() == null
+                            || !condition
                             || !manRef.getReference().getSupplier().equals(manifest.getSupplier())
                             || !manRef.getReference().getCustomer().equals(manifest.getCustomer());
                 })
@@ -248,7 +255,6 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
      * @return set of filtered Tpa
      */
     private Set<TPA> getInActiveTpaFromSet(Set<TPA> tpaSetDTO, Manifest manifest) {
-        log.info("tpaSetDTO {}", tpaSetDTO);
         return tpaSetDTO.stream()
                 .flatMap(n -> manifest.getTpaSet()
                         .stream()
@@ -278,12 +284,15 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
                         log.info("TTT {} would not be persisted: {}", ttt.getTruckName(), constraintValidator);
                         ttt.setIsActive(false);
                     } else if (alreadyExisting || ttt.getTttStatus().getTttStatusName().equals(TTTEnum.ERROR)) {
+                        ttt.setTttStatus(truckService.getTttService().getTttStatusByEnum(TTTEnum.ERROR));
                         log.info("TTT {} would not be persisted: 1. Such Truck Name and ETA plan already existing: {} 2. The status is: {}",
                                 ttt.getTruckName(), alreadyExisting, ttt.getTttStatus());
                         ttt.setIsActive(false);
                     } else {
                         ttt.setIsActive(true);
                     }
+                } else {
+                    log.info("TTT is null and wouldn't be persisted");
                 }
             }
             return tttSet.stream().filter(Objects::nonNull).collect(Collectors.toSet());
@@ -304,12 +313,14 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
         if (tpaSet != null) {
             for (TPA tpa : tpaSet) {
                 if (tpa != null) {
+                    log.info("Tpa Name {} And Status {}", tpa.getName(), tpa.getStatus().getStatusName());
                     boolean alreadyExisting = truckService.getTpaService().isTpaExisting(tpa);
                     Set<ConstraintViolation<TPA>> constraintValidator = validator.validate(tpa);
                     if (!constraintValidator.isEmpty()) {
                         log.info("TPA {} would not be persisted: {}", tpa.getName(), constraintValidator);
                         tpa.setIsActive(false);
                     } else if (alreadyExisting || tpa.getStatus().getStatusName().equals(TPAEnum.ERROR)) {
+                        tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
                         log.info("TPA {} would not be persisted: 1. Such TPA name and ETD plan already existing: {} 2. The status is: {}",
                                 tpa.getName(), alreadyExisting, tpa.getStatus());
                         tpa.setIsActive(false);

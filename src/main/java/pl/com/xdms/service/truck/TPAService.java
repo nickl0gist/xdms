@@ -49,6 +49,10 @@ public class TPAService {
         return tpaRepository.saveAll(tpaSet);
     }
 
+    public TPA save(TPA tpa){
+        return tpaRepository.save(tpa);
+    }
+
     public List<TPA> getAllTpa() {
         return tpaRepository.findAll();
     }

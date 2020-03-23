@@ -84,7 +84,8 @@ VALUES
   (13, 5, 8, true, 'P0DT2H10M'),
   (14, 4, 7, true, 'P0DT2H30M'),
   (15, 4, 4, true, 'P0DT2H0M'),
-  (16, 4, 3, true, 'P0DT2H0M');
+  (16, 4, 3, true, 'P0DT2H0M'),
+  (17, 4, 1, true, 'P0DT2H0M');
 
 insert into users
   (id,username, first_name, last_name, email, password, role_id)
@@ -162,7 +163,12 @@ values
     (49, '10:00', 'P1DT2H0M', 6, 2),
     (50, '10:00', 'P1DT2H0M', 6, 3),
     (51, '10:00', 'P1DT2H0M', 6, 4),
-    (52, '10:00', 'P1DT2H0M', 6, 5);
+    (52, '10:00', 'P1DT2H0M', 6, 5),
+    (53, '10:00', 'P1DT2H0M', 17, 1),
+    (54, '10:00', 'P1DT2H0M', 17, 2),
+    (55, '10:00', 'P1DT2H0M', 17, 3),
+    (56, '10:00', 'P1DT2H0M', 17, 4),
+    (57, '10:00', 'P1DT2H0M', 17, 5);
 
 insert into manifests
 (manifestid, manifest_code, pallet_qty_planned, box_qty_planned, totalldm_planned,
