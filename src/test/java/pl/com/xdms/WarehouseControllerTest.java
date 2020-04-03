@@ -72,7 +72,7 @@ public class WarehouseControllerTest {
     public void getAllWarehousesTest() throws Exception {
         mockMvc.perform(get("/admin/warehouses"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)));
+                .andExpect(jsonPath("$", hasSize(6)));
     }
 
     @Test
@@ -95,7 +95,7 @@ public class WarehouseControllerTest {
     public void getOnlyActiveWarehousesTest() throws Exception {
         mockMvc.perform(get("/admin/warehouses/active"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)));
+                .andExpect(jsonPath("$", hasSize(4)));
     }
 
     @Test
@@ -110,9 +110,9 @@ public class WarehouseControllerTest {
         mockMvc.perform(get("/admin/warehouses/ordered_by/name/asc"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)))
+                .andExpect(jsonPath("$", hasSize(6)))
                 .andExpect(jsonPath("$[0].warehouseID").value(3))
-                .andExpect(jsonPath("$[4].warehouseID").value(4));
+                .andExpect(jsonPath("$[4].warehouseID").value(2));
     }
 
     @Test
@@ -120,9 +120,9 @@ public class WarehouseControllerTest {
         mockMvc.perform(get("/admin/warehouses/ordered_by/country/desc"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)))
+                .andExpect(jsonPath("$", hasSize(6)))
                 .andExpect(jsonPath("$[0].warehouseID").value(5))
-                .andExpect(jsonPath("$[4].warehouseID").value(3));
+                .andExpect(jsonPath("$[4].warehouseID").value(6));
     }
 
     @Test
@@ -195,8 +195,8 @@ public class WarehouseControllerTest {
                 .andDo(print())
                 .andExpect(status().is(201));
         Warehouse persistedWarehouse = warehouseService.getWarehouseByUrl(newWarehouse.getUrlCode());
-        Assert.assertEquals(6, warehouseService.getAllWarehouses().size());
-        Assert.assertEquals(8, whCustomerService.getAllWhCustomersByWarehouseNotActive(persistedWarehouse).size());
+        Assert.assertEquals(7, warehouseService.getAllWarehouses().size());
+        Assert.assertEquals(9, whCustomerService.getAllWhCustomersByWarehouseNotActive(persistedWarehouse).size());
         Assert.assertEquals(2, whCustomerService.getAllWhCustomersByWarehouseNotActive(firstWarehouse).size());
     }
 
@@ -237,7 +237,7 @@ public class WarehouseControllerTest {
                 .andDo(print())
                 .andExpect(status().is(201));
 
-        Assert.assertEquals(6, warehouseService.getAllWarehouses().size());
+        Assert.assertEquals(7, warehouseService.getAllWarehouses().size());
     }
 
     @Test
@@ -253,7 +253,7 @@ public class WarehouseControllerTest {
                 .andDo(print())
                 .andExpect(status().is(201));
 
-        Assert.assertEquals(6, warehouseService.getAllWarehouses().size());
+        Assert.assertEquals(7, warehouseService.getAllWarehouses().size());
     }
 
     private String jsonClean(String json) {

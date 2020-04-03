@@ -296,7 +296,7 @@ public class ExcelManifestControllerTest {
      */
     @Test
     public void manifestReferenceSupplierCustomerVersusReferenceCustomerSupplierTest() throws Exception{
-        updateManifestReferenceSupplCustCompareToRefereneceSupplCust();
+        updateManifestReferenceSupplCustCompareToReferenceSupplCust();
 
         ClassLoader classLoader = getClass().getClassLoader();
         File file2 = new File(classLoader.getResource("excelTests/manifestREferenceSupplCustCompareToRefereneceSupplCust.xlsx").getFile());
@@ -360,10 +360,427 @@ public class ExcelManifestControllerTest {
     }
 
     /**
+     * Test cases when there are some TTT or TPA has same name for the different conditions
+     * (for the same or different Wh-Customer, etc...)
+     * @throws Exception of file opening
+     */
+    @Test
+    public void sameTttAndTpaForTwoDifferentWarehouses() throws Exception{
+        updateManifestForecastWithTheSameTttAndTpaForDifferentWarehouses();
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file2 = new File(classLoader.getResource("excelTests/manifestUploadForecastWithConflictTpaAndTtt.xlsx").getFile());
+
+        Map<Long, ManifestTpaTttDTO> mapBeforePosting = excelManifestService.readExcel(file2);
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file2.toPath()));
+
+        MvcResult result = mockMvc.perform(multipart("/coordinator/excel/manifests/uploadFile").file(mockMultipartFile))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['3'].isActive").value(true))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['4'].isActive").value(true))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['5'].isActive").value(true))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['6'].isActive").value(true))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['7'].isActive").value(true))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['8'].isActive").value(true))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['9'].isActive").value(true))
+                .andReturn();
+    }
+
+    /**
+     * Test cases when provided TPA or TTT has dates in The Past of ETA to any of the Warehouses
+     * @throws Exception of file opening
+     */
+    @Test
+    public void uploadFileWithTpaAndTttWithDatesInThePast() throws Exception{
+        updateManifestForecastWithTpaAndTttWithDatesInThePast();
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file2 = new File(classLoader.getResource("excelTests/manifestUploadWithLateDatesForTpaOrTtt.xlsx").getFile());
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file2.toPath()));
+
+        mockMvc.perform(multipart("/coordinator/excel/manifests/uploadFile").file(mockMultipartFile))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['3'].isActive").value(true)) // - control check
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['4'].isActive").value(false)) // works for right time in ETA to CC in Excel file
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['5'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['tttSetDTO'][?(@.truckName == \"STD1\" && @.['tttStatus'].tttStatusName == \"PENDING\")]").exists())
+                .andExpect(jsonPath("$[0]['tttSetDTO'][?(@.truckName == \"STD2\" && @.['tttStatus'].tttStatusName == \"DELAYED\")]").exists())
+                .andExpect(jsonPath("$[0]['tttSetDTO'][?(@.truckName == \"NON01\" && @.['tttStatus'].tttStatusName == \"DELAYED\")]").exists())
+                .andExpect(jsonPath("$[0]['tttSetDTO'][?(@.truckName == \"ABSD01\" && @.['tttStatus'].tttStatusName == \"DELAYED\")]").exists())
+                .andExpect(jsonPath("$[0]['tpaSetDTO'][?(@.name == \"GRO\" && @.['status'].statusName == \"BUFFER\")]").exists())
+                .andExpect(jsonPath("$[0]['tpaSetDTO'][?(@.name == \"STD1\" && @.['status'].statusName == \"ERROR\")]").exists())
+                .andExpect(jsonPath("$[0]['tpaSetDTO'][?(@.name == \"STD2\" && @.['status'].statusName == \"ERROR\")]").exists())
+                .andExpect(jsonPath("$[0]['tpaSetDTO'][?(@.name == \"ARG1\" && @.['status'].statusName == \"ERROR\")]").exists());
+    }
+
+    /**
+     * Test cases when date or time, indicated in Excel forecast file, has wrong data type.
+     * @throws Exception for file opening
+     */
+    @Test
+    public void uploadFileNotSupportedDatesAndTimeInTpaAndTttTest() throws Exception{
+        updateFileWithNotSupportedDatesAndTimeInTpaAndTtt();
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file2 = new File(classLoader.getResource("excelTests/manifestUploadNotSupportedDatesAndTimeInTpaAndTtt.xlsx").getFile());
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file2.toPath()));
+
+        mockMvc.perform(multipart("/coordinator/excel/manifests/uploadFile").file(mockMultipartFile))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['3'].isActive").value(true))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['4'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['5'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['tttSetDTO'][?(@.truckName == \"STD1\" && @.['tttStatus'].tttStatusName == \"ERROR\")]").exists())
+                .andExpect(jsonPath("$[0]['tttSetDTO'][?(@.truckName == \"ABSD01\" && @.['tttStatus'].tttStatusName == \"ERROR\")]").exists())
+                .andExpect(jsonPath("$[0]['tpaSetDTO'][?(@.name == \"GRO1\" && @.['status'].statusName == \"ERROR\")]").exists())
+                .andExpect(jsonPath("$[0]['tpaSetDTO'][?(@.name == \"STD1\" && @.['status'].statusName == \"ERROR\")]").exists())
+                .andExpect(jsonPath("$[0]['tpaSetDTO'][?(@.name == \"STD2\" && @.['status'].statusName == \"ERROR\")]").exists());
+    }
+
+    @Test
+    public void whCustomerIsNotExistingInDatabase () throws Exception{
+
+        updateManifestForecastWithProperInfo("excelTests/manifestUploadWhCustomerIsNotFound.xlsx");
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file2 = new File(classLoader.getResource("excelTests/manifestUploadWhCustomerIsNotFound.xlsx").getFile());
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file2.toPath()));
+
+        mockMvc.perform(multipart("/coordinator/excel/manifests/uploadFile").file(mockMultipartFile))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['3'].isActive").value(true))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['4'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['manifestMapDTO']['5'].isActive").value(false))
+                .andExpect(jsonPath("$[0]['tpaSetDTO'][?(@.name == \"BRA1\" && @.['status'].statusName == \"ERROR\")]").exists())
+                .andExpect(jsonPath("$[0]['tpaSetDTO'][?(@.name == \"GRO1\" && @.['status'].statusName == \"ERROR\")]").exists())
+                .andExpect(jsonPath("$[0]['tpaSetDTO'][?(@.name == \"ARG1\" && @.['status'].statusName == \"ERROR\")]").exists());
+    }
+
+    /**
+     * Updates file excelTests/manifestUploadNotSupportedDatesAndTimeInTpaAndTtt.xlsx with actual date conditions for
+     * test uploadFileNotSupportedDatesAndTimeInTpaAndTttTest
+     */
+    private void updateFileWithNotSupportedDatesAndTimeInTpaAndTtt() {
+        ClassLoader classLoader = ExcelManifestControllerTest.class.getClassLoader();
+        //file with customers to emulate file which will be sent by user.
+        File file = new File(classLoader.getResource("excelTests/manifestUploadNotSupportedDatesAndTimeInTpaAndTtt.xlsx").getFile());
+
+        try (FileInputStream inputStream = new FileInputStream(file);
+             Workbook workbook = WorkbookFactory.create(inputStream)) {
+            //get excel workbook
+            Sheet manifestSheet = workbook.getSheet(excelProperties.getManifestsSheetName());
+            Sheet referenceSheet = workbook.getSheet(excelProperties.getReferenceForecastSheetName());
+
+            Row rowMSheet3 = manifestSheet.getRow(2);
+            Row rowMSheet4 = manifestSheet.getRow(3);
+            Row rowMSheet5 = manifestSheet.getRow(4);
+
+            LocalDate nowDate = LocalDate.now();
+
+            //Block where Excel file is being updated to correspond to actual timetable.
+            {
+                //The First manifest Supplier -> CC -> TXD -> Customer
+                //Supplier Date and Time
+                rowMSheet3.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(9)));
+                rowMSheet3.getCell(2).setCellValue(DateUtil.convertTime("10:30:00"));
+                //CC Date and Time
+                rowMSheet3.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                rowMSheet3.getCell(6).setCellValue(DateUtil.convertTime("15:30:00"));
+                //TXD Date and Time
+                rowMSheet3.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(12)));
+                rowMSheet3.getCell(14).setCellValue(DateUtil.convertTime("11:00:00"));
+                //Customer Date and Time
+                rowMSheet3.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(25)));
+                rowMSheet3.getCell(18).setCellValue(DateUtil.convertTime("10:00:00"));
+
+                //The Second Manifest Supplier -> CC -> XD -> TXD -> Customer
+                //Supplier Date and Time
+                rowMSheet4.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(8)));
+                rowMSheet4.getCell(2).setCellValue(DateUtil.convertTime("11:30:00"));
+                //CC Date and Time
+                rowMSheet4.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(8)));
+                rowMSheet4.getCell(6).setCellValue(DateUtil.convertTime("16:30:00"));
+                //XD Date and Time Wouldn't be updated in order to keep wrong format of date
+                //rowMSheet4.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                //rowMSheet4.getCell(10).setCellValue(DateUtil.convertTime("12:40:00"));
+
+                //TXD Date and Time
+                rowMSheet4.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(13)));
+                rowMSheet4.getCell(14).setCellValue(DateUtil.convertTime("17:00:00"));
+                //Customer Date and Time
+                rowMSheet4.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(17)));
+                rowMSheet4.getCell(18).setCellValue(DateUtil.convertTime("12:00:00"));
+
+                //The Third Manifest Supplier -> CC -> XD -> Customer
+                //Supplier Date and Time
+                rowMSheet5.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(4)));
+                rowMSheet5.getCell(2).setCellValue(DateUtil.convertTime("08:30:00"));
+
+                //CC Date and Time Wouldn't be updated in order to keep wrong format of date
+                //rowMSheet5.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                //rowMSheet5.getCell(6).setCellValue(DateUtil.convertTime("10:30:00"));
+                //XD Date and Time
+                rowMSheet5.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                rowMSheet5.getCell(10).setCellValue(DateUtil.convertTime("13:55:00"));
+                //Customer Date and Time
+                rowMSheet5.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                rowMSheet5.getCell(18).setCellValue(DateUtil.convertTime("17:00:00"));
+            }
+
+            inputStream.close();
+            FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/excelTests/manifestUploadNotSupportedDatesAndTimeInTpaAndTtt.xlsx");
+            workbook.write(outputStream);
+            workbook.close();
+            outputStream.close();
+
+        } catch (IOException e) {
+            log.warn("Error occurred while reading the file with Manifests: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Updates file excelTests/manifestUploadWithLateDatesForTpaOrTtt.xlsx with actual date conditions for
+     * test uploadFileWithTpaAndTttWithDatesInThePast
+     */
+    private void updateManifestForecastWithTpaAndTttWithDatesInThePast() {
+        ClassLoader classLoader = ExcelManifestControllerTest.class.getClassLoader();
+        //file with customers to emulate file which will be sent by user.
+        File file = new File(classLoader.getResource("excelTests/manifestUploadWithLateDatesForTpaOrTtt.xlsx").getFile());
+
+        try (FileInputStream inputStream = new FileInputStream(file);
+             Workbook workbook = WorkbookFactory.create(inputStream)) {
+            //get excel workbook
+            Sheet manifestSheet = workbook.getSheet(excelProperties.getManifestsSheetName());
+            Sheet referenceSheet = workbook.getSheet(excelProperties.getReferenceForecastSheetName());
+
+            Row rowMSheet3 = manifestSheet.getRow(2);
+            Row rowMSheet4 = manifestSheet.getRow(3);
+            Row rowMSheet5 = manifestSheet.getRow(4);
+
+            LocalDate nowDate = LocalDate.now();
+
+            //Block where Excel file is being updated to correspond to actual timetable.
+            {
+                //The First manifest Supplier -> CC -> TXD -> Customer
+                //Supplier Date and Time
+                rowMSheet3.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(9)));
+                rowMSheet3.getCell(2).setCellValue(DateUtil.convertTime("10:30:00"));
+                //CC Date and Time
+                rowMSheet3.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                rowMSheet3.getCell(6).setCellValue(DateUtil.convertTime("15:30:00"));
+                //TXD Date and Time
+                rowMSheet3.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(12)));
+                rowMSheet3.getCell(14).setCellValue(DateUtil.convertTime("11:00:00"));
+                //Customer Date and Time
+                rowMSheet3.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(25)));
+                rowMSheet3.getCell(18).setCellValue(DateUtil.convertTime("10:00:00"));
+
+                //The Second Manifest Supplier -> CC -> XD -> TXD -> Customer
+                //Supplier Date and Time
+                rowMSheet4.getCell(1).setCellValue(localDateToDate(nowDate.minusDays(2)));
+                rowMSheet4.getCell(2).setCellValue(DateUtil.convertTime("11:30:00"));
+                //CC Date and Time
+                rowMSheet4.getCell(5).setCellValue(localDateToDate(nowDate.minusDays(1)));
+                rowMSheet4.getCell(6).setCellValue(DateUtil.convertTime("06:30:00"));
+                //XD Date and Time
+                rowMSheet4.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(2)));
+                rowMSheet4.getCell(10).setCellValue(DateUtil.convertTime("12:40:00"));
+                //TXD Date and Time
+                rowMSheet4.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(6)));
+                rowMSheet4.getCell(14).setCellValue(DateUtil.convertTime("17:00:00"));
+                //Customer Date and Time
+                rowMSheet4.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                rowMSheet4.getCell(18).setCellValue(DateUtil.convertTime("12:00:00"));
+
+                //The Third Manifest Supplier -> CC -> XD -> Customer
+                //Supplier Date and Time
+                rowMSheet5.getCell(1).setCellValue(localDateToDate(nowDate.minusDays(4)));
+                rowMSheet5.getCell(2).setCellValue(DateUtil.convertTime("08:30:00"));
+                //CC Date and Time
+                rowMSheet5.getCell(5).setCellValue(localDateToDate(nowDate.minusDays(2)));
+                rowMSheet5.getCell(6).setCellValue(DateUtil.convertTime("10:30:00"));
+                //XD Date and Time
+                rowMSheet5.getCell(9).setCellValue(localDateToDate(nowDate));
+                rowMSheet5.getCell(10).setCellValue(DateUtil.convertTime("13:55:00"));
+                //Customer Date and Time
+                rowMSheet5.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(6)));
+                rowMSheet5.getCell(18).setCellValue(DateUtil.convertTime("17:00:00"));
+            }
+
+            inputStream.close();
+            FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/excelTests/manifestUploadWithLateDatesForTpaOrTtt.xlsx");
+            workbook.write(outputStream);
+            workbook.close();
+            outputStream.close();
+
+        } catch (IOException e) {
+            log.warn("Error occurred while reading the file with Manifests: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Updates schedule for the manifests in the test sameTttAndTpaForTwoDifferentWarehouses
+     */
+    private void updateManifestForecastWithTheSameTttAndTpaForDifferentWarehouses() {
+        ClassLoader classLoader = ExcelManifestControllerTest.class.getClassLoader();
+        //file with customers to emulate file which will be sent by user.
+        File file = new File(classLoader.getResource("excelTests/manifestUploadForecastWithConflictTpaAndTtt.xlsx").getFile());
+
+        try (FileInputStream inputStream = new FileInputStream(file);
+             Workbook workbook = WorkbookFactory.create(inputStream)) {
+            //get excel workbook
+            Sheet manifestSheet = workbook.getSheet(excelProperties.getManifestsSheetName());
+            Sheet referenceSheet = workbook.getSheet(excelProperties.getReferenceForecastSheetName());
+
+            Row rowMSheet3 = manifestSheet.getRow(2);
+            Row rowMSheet4 = manifestSheet.getRow(3);
+            Row rowMSheet5 = manifestSheet.getRow(4);
+            Row rowMSheet6 = manifestSheet.getRow(5);
+            Row rowMSheet7 = manifestSheet.getRow(6);
+            Row rowMSheet8 = manifestSheet.getRow(7);
+            Row rowMSheet9 = manifestSheet.getRow(8);
+
+            LocalDate nowDate = LocalDate.now();
+
+            //Block where Excel file is being updated to correspond to actual timetable.
+            {
+                //The First manifest Supplier -> CC -> TXD -> Customer Should be isActive = True as control Row3
+                {
+                    //The First manifest Supplier -> CC -> TXD -> Customer Should be isActive = True as control
+                    //Supplier Date and Time
+                    rowMSheet3.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(9)));
+                    rowMSheet3.getCell(2).setCellValue(DateUtil.convertTime("10:30:00"));
+                    //CC Date and Time
+                    rowMSheet3.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                    rowMSheet3.getCell(6).setCellValue(DateUtil.convertTime("15:30:00"));
+                    //TXD Date and Time
+                    rowMSheet3.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(12)));
+                    rowMSheet3.getCell(14).setCellValue(DateUtil.convertTime("11:00:00"));
+                    //Customer Date and Time
+                    rowMSheet3.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(25)));
+                    rowMSheet3.getCell(18).setCellValue(DateUtil.convertTime("10:00:00"));
+                }
+                //The Same TTT for different WH Row 5 and Row 4
+                {
+                    //The Same TTT for different WH Row 5 and Row 4
+                    //Row 4 The Second Manifest Supplier -> CC -> XD -> TXD -> Customer
+                    //Supplier Date and Time
+                    rowMSheet4.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(6)));
+                    rowMSheet4.getCell(2).setCellValue(DateUtil.convertTime("11:30:00"));
+                    //CC Date and Time
+                    rowMSheet4.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                    rowMSheet4.getCell(6).setCellValue(DateUtil.convertTime("17:30:00"));
+                    //XD Date and Time
+                    rowMSheet4.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                    rowMSheet4.getCell(10).setCellValue(DateUtil.convertTime("12:40:00"));
+                    //TXD Date and Time
+                    rowMSheet4.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(13)));
+                    rowMSheet4.getCell(14).setCellValue(DateUtil.convertTime("17:00:00"));
+                    //Customer Date and Time
+                    rowMSheet4.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(17)));
+                    rowMSheet4.getCell(18).setCellValue(DateUtil.convertTime("12:00:00"));
+
+                    //Row 5 The Third Manifest Supplier -> CC -> XD -> Customer
+                    //Supplier Date and Time
+                    rowMSheet5.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(4)));
+                    rowMSheet5.getCell(2).setCellValue(DateUtil.convertTime("08:30:00"));
+                    //CC Date and Time
+                    rowMSheet5.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                    rowMSheet5.getCell(6).setCellValue(DateUtil.convertTime("10:30:00"));
+                    //XD Date and Time
+                    rowMSheet5.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                    rowMSheet5.getCell(10).setCellValue(DateUtil.convertTime("12:40:00"));
+                    //Customer Date and Time
+                    rowMSheet5.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                    rowMSheet5.getCell(18).setCellValue(DateUtil.convertTime("17:00:00"));
+                }
+                //The Same TPA info (Name and ETA to customer) from different WH to same customer
+                // Row 6 and Row 7
+                {
+                    //Row 6 Supplier -> CC -> XD -> TXD -> Customer
+                    //Supplier Date and Time
+                    rowMSheet6.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                    rowMSheet6.getCell(2).setCellValue(DateUtil.convertTime("11:30:00"));
+                    //CC Date and Time
+                    rowMSheet6.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                    rowMSheet6.getCell(6).setCellValue(DateUtil.convertTime("12:00:00"));
+                    //XD Date and Time
+                    rowMSheet6.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                    rowMSheet6.getCell(10).setCellValue(DateUtil.convertTime("12:40:00"));
+                    //TXD Date and Time
+                    rowMSheet6.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(13)));
+                    rowMSheet6.getCell(14).setCellValue(DateUtil.convertTime("17:00:00"));
+                    //Customer Date and Time
+                    rowMSheet6.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(17)));
+                    rowMSheet6.getCell(18).setCellValue(DateUtil.convertTime("12:00:00"));
+
+                    //Row 7 Supplier -> CC -> XD -> Customer
+                    //Supplier Date and Time
+                    rowMSheet7.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(4)));
+                    rowMSheet7.getCell(2).setCellValue(DateUtil.convertTime("08:30:00"));
+                    //CC Date and Time
+                    rowMSheet7.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                    rowMSheet7.getCell(6).setCellValue(DateUtil.convertTime("10:00:00"));
+                    //XD Date and Time
+                    rowMSheet7.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                    rowMSheet7.getCell(10).setCellValue(DateUtil.convertTime("12:40:00"));
+                    //Customer Date and Time
+                    rowMSheet7.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                    rowMSheet7.getCell(18).setCellValue(DateUtil.convertTime("17:00:00"));
+                }
+                //The same TPA from different WH to different Customers (same ETA)
+                //Row 8 and Row 9
+                {
+                    //Row 8 Supplier -> CC -> Customer
+                    //Supplier Date and Time
+                    rowMSheet8.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                    rowMSheet8.getCell(2).setCellValue(DateUtil.convertTime("11:30:00"));
+                    //CC Date and Time
+                    rowMSheet8.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                    rowMSheet8.getCell(6).setCellValue(DateUtil.convertTime("12:00:00"));
+                    //XD Date and Time
+                    rowMSheet8.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                    rowMSheet8.getCell(10).setCellValue(DateUtil.convertTime("08:40:00"));
+                    //TXD Date and Time
+                    rowMSheet8.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(13)));
+                    rowMSheet8.getCell(14).setCellValue(DateUtil.convertTime("16:00:00"));
+                    //Customer Date and Time
+                    rowMSheet8.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(17)));
+                    rowMSheet8.getCell(18).setCellValue(DateUtil.convertTime("12:00:00"));
+
+                    //Row 9
+                    //Supplier Date and Time
+                    rowMSheet9.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(6)));
+                    rowMSheet9.getCell(2).setCellValue(DateUtil.convertTime("08:30:00"));
+                    //CC Date and Time
+                    rowMSheet9.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                    rowMSheet9.getCell(6).setCellValue(DateUtil.convertTime("10:00:00"));
+                    //Customer Date and Time
+                    rowMSheet9.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(17)));
+                    rowMSheet9.getCell(18).setCellValue(DateUtil.convertTime("17:00:00"));
+                }
+            }
+
+            inputStream.close();
+            FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/excelTests/manifestUploadForecastWithConflictTpaAndTtt.xlsx");
+            workbook.write(outputStream);
+            workbook.close();
+            outputStream.close();
+
+        } catch (IOException e) {
+            log.warn("Error occurred while reading the file with Manifests: {}", e.getMessage());
+        }
+    }
+
+    /**
      * Fills information for the file which used for test case in
      * manifestReferenceSupplierCustomerVersusReferenceCustomerSupplierTest
      */
-    private void updateManifestReferenceSupplCustCompareToRefereneceSupplCust() {
+    private void updateManifestReferenceSupplCustCompareToReferenceSupplCust() {
         ClassLoader classLoader = ExcelManifestControllerTest.class.getClassLoader();
         //file with customers to emulate file which will be sent by user.
         File file = new File(classLoader.getResource("excelTests/manifestREferenceSupplCustCompareToRefereneceSupplCust.xlsx").getFile());
@@ -421,10 +838,13 @@ public class ExcelManifestControllerTest {
                 rowMSheet5.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
                 rowMSheet5.getCell(6).setCellValue(DateUtil.convertTime("10:30:00"));
                 //XD Date and Time
-                rowMSheet5.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                rowMSheet5.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(9)));
                 rowMSheet5.getCell(10).setCellValue(DateUtil.convertTime("13:55:00"));
+                //TXD Date and Time
+                rowMSheet5.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                rowMSheet5.getCell(14).setCellValue(DateUtil.convertTime("09:00:00"));
                 //Customer Date and Time
-                rowMSheet5.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(11)));
+                rowMSheet5.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(12)));
                 rowMSheet5.getCell(18).setCellValue(DateUtil.convertTime("17:00:00"));
             }
 
@@ -656,6 +1076,7 @@ public class ExcelManifestControllerTest {
             //get excel workbook
             Sheet manifestSheet = workbook.getSheet(excelProperties.getManifestsSheetName());
             Row rowMSheet3 = manifestSheet.getRow(2);
+            Row rowMSheet4 = manifestSheet.getRow(3);
             LocalDate nowDate = LocalDate.now();
             {
                 rowMSheet3.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(8)));
@@ -666,6 +1087,17 @@ public class ExcelManifestControllerTest {
                 rowMSheet3.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(18)));
                 rowMSheet3.getCell(14).setCellValue(DateUtil.convertTime("11:00:00"));
                 rowMSheet3.getCell(18).setCellValue(DateUtil.convertTime("10:00:00"));
+
+                rowMSheet4.getCell(1).setCellValue(localDateToDate(nowDate.plusDays(6)));
+                rowMSheet4.getCell(2).setCellValue(DateUtil.convertTime("11:30:00"));
+                rowMSheet4.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
+                rowMSheet4.getCell(6).setCellValue(DateUtil.convertTime("9:30:00"));
+                rowMSheet4.getCell(9).setCellValue(localDateToDate(nowDate.plusDays(10)));
+                rowMSheet4.getCell(10).setCellValue(DateUtil.convertTime("16:40:00"));
+                rowMSheet4.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(12)));
+                rowMSheet4.getCell(14).setCellValue(DateUtil.convertTime("17:00:00"));
+                rowMSheet4.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(18)));
+                rowMSheet4.getCell(18).setCellValue(DateUtil.convertTime("10:00:00"));
             }
             inputStream.close();
             FileOutputStream outputStream = new FileOutputStream("E:/UBU/_XDMS/src/test/resources/" + path);

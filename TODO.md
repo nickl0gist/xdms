@@ -96,14 +96,32 @@ file and give it back to validation.
                         √ XD, 
                         √ TXD, 
                         √ Customer
-                     √Create TTT with the same parameters as existing one
+                        √Create TTT with the same parameters as existing one
+                            Create 2 similar TTT for different WH:
+                                In such case the both TTT will be prepared according to provided conditions. The name will be the same as 
+                                indicated in Excel file
+                            Two TTT with same Name and WHCustomer combination but with different anticipated ETA to Customer Warehouse:
+                                Only last calculated TTT will be saved to TTTSetDto according to Set Java Rules.
+                        Create TTT:
+                            √ with bad dates, 
+                            √ too late dates, 
+                            √ what if there no appropriate WH_CUST settings ~~-> NullPointerException ? Create Handler ?~~Doesn't matter for TTT
                 Test TPA
                     Not Existing 
                         √ CC, 
                         √ XD, 
                         √ TXD, 
                         √ Customer
-                        √ Create TPA with the same parameters
+                        √ Create TPA with the same parameters as existing one
+                            Create 2 similar TPA for different WH:
+                                In such case the both TPA will be prepared according to provided conditions. The name will be the same as 
+                                indicated in Excel file
+                            Two TPA with same Name and WHCustomer combination but with different anticipated ETA to Customer Warehouse:
+                                Only last calculated TPA will be saved to TPASetDto according to Set Java Rules. 
+                        √ Create TPA: 
+                                    √ with bad dates, 
+                                    √ too late dates, 
+                                    √ what if there no appropriate WH_CUST settings -> ~~NullPointerException ? Create Handler ?~~ TPA -> Error
 not done
 -
 
@@ -114,13 +132,7 @@ should have "isActive = false". Check again before saving? TO implement or not?
     
     NOK Tests:       
     Test TTT
-        Create 2 similar TTT for different WH
-        Create TTT with bad dates, too late dates, what if there no appropriate WH_CUST settings -> NullPointerException ? Create Handler ?
-    Test TPA
-        Create TPA with the same parameters
-        Create 2 similar TPA for different WH
-        Create TPA with bad dates, too late dates, what if there no appropriate WH_CUST settings -> NullPointerException ? Create Handler ?
-        
+
         
     ExcelManifestService Test?
     

@@ -122,6 +122,6 @@ public class ExcelCustomerControllerTest {
         //Check if the objects were saved properly.
         // THe base has already 8 suppliers and 2 suppliers from the excel
         // file will be added after passing the file to the system
-        Assert.assertEquals(10, customerService.getAllCustomers().size());
+        Assert.assertEquals(11, customerService.getAllCustomers().size());
     }
 }

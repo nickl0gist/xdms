@@ -35,7 +35,8 @@ values
   (5, 'NoName', 555555, 'AR', 'BUENOS', 'NoName@budapest.hu', false, 755755, 'Bdfres', 'GMT+02'),
   (6, 'CC Swie', 'cc_swie', 'PL', 'Swiebodzice','pawel@wieczorek.pl', true, '04-200', 'Lotnicza - 1', 'GMT+02'),
   (7, 'XD Gro', 'xd_gro', 'PL', 'Grojec', 'sławek@barscz.pl', true, '05-600', 'Spoldzielcza - 2', 'GMT+02'),
-  (8, 'XD STD', 'xd_std', 'GE', 'Stadthagen', 'udo@muller.ge', true, '20-212', 'Muller - 20', 'GMT+02');
+  (8, 'XD STD', 'xd_std', 'GE', 'Stadthagen', 'udo@muller.ge', true, '20-212', 'Muller - 20', 'GMT+02'),
+  (9, 'SPEC_TEST', 123456, 'UA', 'KYIV', 'kaktus@coco.ua', true, 832454, 'Watutina', 'GMT+03');
 
 insert into reference
   (referenceid, number, name, hs_code, pcs_perpu, pu_perhu, weight, weight_of_packaging,
@@ -64,7 +65,8 @@ VALUES
   (2, 'Grojec', 'PL', 'sławek@barscz.pl', true, 'XD Gro', '05-600', 'Spoldzielcza - 2', 3, 'xd_gro', 'GMT+02'),
   (3, 'Irun', 'ES', 'itziar@dominges.es', false, 'CC IRUN', '99-992', 'EPO - 20', 1, 'cc_irun', 'GMT+02'),
   (4, 'Stadthagen', 'GE', 'udo@muller.ge', true, 'XD STD', '20-212', 'Muller - 20', 2, 'xd_std', 'GMT+02'),
-  (5, 'Bambury', 'RO', 'roman@romamiks.ro', false, 'CC ROMANY', '20-212', 'Muller - 20', 1, 'cc_arad', 'GMT+02');
+  (5, 'Bambury', 'RO', 'roman@romamiks.ro', false, 'CC ROMANY', '20-212', 'Muller - 20', 1, 'cc_arad', 'GMT+02'),
+  (6, 'Stadthagen', 'GE', 'udo@muller.ge', true, 'TXD STD', '20-212', 'Muller - 20', 2, 'txd_std', 'GMT+02');
 
 insert into warehouse_customer
   (wh_customerid, warehouseid, customerid, is_active,transit_time)
@@ -85,7 +87,8 @@ VALUES
   (14, 4, 7, true, 'P0DT2H30M'),
   (15, 4, 4, true, 'P0DT2H0M'),
   (16, 4, 3, true, 'P0DT2H0M'),
-  (17, 4, 1, true, 'P0DT2H0M');
+  (17, 4, 1, true, 'P0DT2H0M'),
+  (18, 5, 7, true, 'P0DT2H0M');
 
 insert into users
   (id,username, first_name, last_name, email, password, role_id)
@@ -168,7 +171,12 @@ values
     (54, '10:00', 'P1DT2H0M', 17, 2),
     (55, '10:00', 'P1DT2H0M', 17, 3),
     (56, '10:00', 'P1DT2H0M', 17, 4),
-    (57, '10:00', 'P1DT2H0M', 17, 5);
+    (57, '10:00', 'P1DT2H0M', 17, 5),
+    (58, '12:00', 'P1DT1H0M', 18, 1),
+    (59, '12:00', 'P1DT1H0M', 18, 2),
+    (60, '12:00', 'P1DT1H0M', 18, 3),
+    (61, '12:00', 'P1DT1H0M', 18, 4),
+    (62, '12:00', 'P1DT1H0M', 18, 5);
 
 insert into manifests
 (manifestid, manifest_code, pallet_qty_planned, box_qty_planned, totalldm_planned,

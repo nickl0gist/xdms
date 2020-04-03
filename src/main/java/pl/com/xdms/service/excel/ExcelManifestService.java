@@ -235,7 +235,6 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
             collector.getTpaSetDTO().addAll(manifest.getTpaSet());
             collector.getTttSetDTO().addAll(manifest.getTruckTimeTableSet().stream().filter(Objects::nonNull).collect(Collectors.toSet()));
             collector.getManifestMapDTO().put(row.getRowNum() + 1L, manifest);
-
         }
         collector.getManifestReferenceSetDTO().forEach(x -> collector.getTpaSetDTO().add(x.getTpa()));
         resultMap.put(1L, collector);
@@ -352,11 +351,11 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
     private TPA collectTPA(Row row, int warehouseNameColumn, int customerNameColumn) {
         TPA tpa = new TPA();
         tpa.setName(getStringFromCell(row.getCell(warehouseNameColumn + 3)));
-        log.info("Collecting new TPA with name [{}] ----------------------------", tpa.getName());
+        log.info("Collecting new TPA with name [{}] || Row Number {} ----------------------------", tpa.getName(), row.getRowNum() + 1);
 
         Warehouse warehouse = warehouseService.getWarehouseByName(getStringFromCell(row.getCell(warehouseNameColumn)));
         if(warehouse == null){
-            log.info("The warehouse was not found, please check your Excel on row {}", row.getRowNum());
+            log.info("The warehouse was not found, please check your Excel on row {}", row.getRowNum() + 1);
             tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
             tpa.setDeparturePlan(LocalDateTime.now().toString());
             return tpa;
@@ -364,13 +363,19 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
 
         Customer customer = customerService.getCustomerByName(getStringFromCell(row.getCell(customerNameColumn)));
         if(customer == null){
-            log.info("The customer was not found, please check your Excel on row {}", row.getRowNum());
+            log.info("The customer was not found, please check your Excel on row {}", row.getRowNum() + 1);
             tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
             tpa.setDeparturePlan(LocalDateTime.now().toString());
             return tpa;
         }
 
         WhCustomer whCustomer = whCustomerService.findByWarehouseAndCustomer(warehouse, customer);
+        if(whCustomer == null){
+            log.info("The Warehouse {} is not connected to Customer {} . Check settings for these Entities Row:{}", warehouse.getName(), customer.getName(), row.getRowNum() + 1);
+            tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
+            tpa.setDeparturePlan(LocalDateTime.now().toString());
+            return tpa;
+        }
 
         LocalDate dateOfArrivingToCustomer = getLocalDateTime(row.getCell(customerNameColumn + 1), row.getCell(customerNameColumn + 2)).toLocalDate();
         LocalTime timeOfArrivingToCustomer = getLocalDateTime(row.getCell(customerNameColumn + 1), row.getCell(customerNameColumn + 2)).toLocalTime();
@@ -388,51 +393,51 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
 
         // Creation ZoneDateTime of the moment when Manifest Should arrive to customer
         // based on LocalTime and ZoneId of Customer
-        log.info("dateTimeETA = Date {}, Time {}", dateOfArrivingToCustomer, timeOfArrivingToCustomer);
-        ZonedDateTime dateTimeETA = ZonedDateTime.of(getLocalDateTime(row.getCell(customerNameColumn + 1),
+        log.info("dateTimeETAToCustomer = Date {}, Time {}", dateOfArrivingToCustomer, timeOfArrivingToCustomer);
+        ZonedDateTime dateTimeETAToCustomer = ZonedDateTime.of(getLocalDateTime(row.getCell(customerNameColumn + 1),
                 row.getCell(customerNameColumn + 2)), ZoneId.of(customer.getTimeZone()));
 
         // Creation ZoneDateTime of the moment when Manifest Should arrive to warehouse
         // based on LocalTime and ZoneId of Warehouse
-        log.info("dateTimeTxdEta = Date {}, Time {}", dateOfArrivingToWarehouse, timeOfArrivingToWarehouse);
-        ZonedDateTime dateTimeTxdEta = ZonedDateTime.of(getLocalDateTime(row.getCell(warehouseNameColumn + 1),
+        log.info("dateTimeEtaToWarehouse = Date {}, Time {}", dateOfArrivingToWarehouse, timeOfArrivingToWarehouse);
+        ZonedDateTime dateTimeEtaToWarehouse = ZonedDateTime.of(getLocalDateTime(row.getCell(warehouseNameColumn + 1),
                 row.getCell(warehouseNameColumn + 2)), ZoneId.of(warehouse.getTimeZone()));
 
         // Creation ZoneDateTime of the moment when Manifest Should be released from Warehouse
-        // based on Warehouse_Customer TransitTime and dateTimeETA and timeZone of Warehouse
-        ZonedDateTime dateTimeETD = dateTimeETA.minusMinutes(whCustomerService.getTTminutes(whCustomer)).withZoneSameInstant(ZoneId.of(warehouse.getTimeZone()));
-        log.info("Calculated time dateTimeETD = {} of departure from warehouse to reach planned arriving moment at Customer Warehouse {}", dateTimeETD, customer.getName());
+        // based on Warehouse_Customer TransitTime and dateTimeETAToCustomer and timeZone of Warehouse
+        ZonedDateTime dateTimeETDfromWarehouse = dateTimeETAToCustomer.minusMinutes(whCustomerService.getTTminutes(whCustomer)).withZoneSameInstant(ZoneId.of(warehouse.getTimeZone()));
+        log.info("Calculated time dateTimeETDfromWarehouse = {} of departure from warehouse to reach planned arriving moment at Customer Warehouse {}", dateTimeETDfromWarehouse, customer.getName());
         // IF all above calculated dates are in the past return tpa with status Error.
-        if (dateTimeETA.isBefore(ZonedDateTime.now())
-                || dateTimeTxdEta.isBefore(ZonedDateTime.now())
-                || dateTimeETD.isBefore(ZonedDateTime.now())) {
-            tpa.setDeparturePlan(dateTimeETD.toLocalDateTime().toString());
+        if (dateTimeETAToCustomer.isBefore(ZonedDateTime.now())
+                || dateTimeEtaToWarehouse.isBefore(ZonedDateTime.now())
+                || dateTimeETDfromWarehouse.isBefore(ZonedDateTime.now())) {
+            tpa.setDeparturePlan(dateTimeETDfromWarehouse.toLocalDateTime().toString());
             tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
-            log.info("dateTimeETA {}, \n or dateTimeTxdEta {}, \n or dateTimeETD {} is in the Past", dateTimeETA, dateTimeTxdEta, dateTimeETD);
+            log.info("dateTimeETAToCustomer {}, \n or dateTimeEtaToWarehouse {}, \n or dateTimeETDfromWarehouse {} is in the Past", dateTimeETAToCustomer, dateTimeEtaToWarehouse, dateTimeETDfromWarehouse);
             return tpa;
         }
 
         // if amount of days between TPA ETD and ZoneDateTime.now() greater than 180 days, tpa status will
         // be assigned as Error
-        if (ChronoUnit.DAYS.between(dateTimeETD, ZonedDateTime.now()) > 180) {
-            tpa.setDeparturePlan(dateTimeETD.toLocalDateTime().toString());
+        if (ChronoUnit.DAYS.between(dateTimeETDfromWarehouse, ZonedDateTime.now()) > 180) {
+            tpa.setDeparturePlan(dateTimeETDfromWarehouse.toLocalDateTime().toString());
             tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
             log.info("amount of days between TPA_ETD(departure) and ZoneDateTime.now() greater than 180 days");
             return tpa;
         }
 
         //Calculation of appropriate TPA and ZoneTimeDateStamp when the manifest will be sent
-        Map.Entry<ZonedDateTime, TpaDaysSetting> calculatedETD = truckService.getAppropriateTpaSetting(dateTimeETD, whCustomer).entrySet().iterator().next();
+        Map.Entry<ZonedDateTime, TpaDaysSetting> calculatedETD = truckService.getAppropriateTpaSetting(dateTimeETDfromWarehouse, whCustomer).entrySet().iterator().next();
         TpaDaysSetting appropriateTpa = calculatedETD.getValue();
         ZonedDateTime calculatedDateTimeETD = calculatedETD.getKey();
         log.info("calculatedDateTimeETD = {}", calculatedDateTimeETD);
 
         //if calculated ETD is before ETA of manifest arriving to warehouse set TPA status Error
-        if (calculatedDateTimeETD.isBefore(dateTimeTxdEta)) {
+        if (calculatedDateTimeETD.isBefore(dateTimeEtaToWarehouse)) {
             tpa.setDeparturePlan(calculatedDateTimeETD.toLocalDateTime().toString());
             tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.ERROR));
-            log.info("TPA \"{}\" error: calculated ETD({}) is before ETA({}) of manifest arriving to warehouse \"{}\"",
-                    tpa.getName(), calculatedDateTimeETD, dateTimeTxdEta, whCustomer.getCustomer().getName());
+            log.info("TPA \"{}\" [ERROR]: calculated ETD({}) is before ETA({}) of manifest arriving to warehouse \"{}\"",
+                    tpa.getName(), calculatedDateTimeETD, dateTimeEtaToWarehouse, whCustomer.getWarehouse().getName());
 
             return tpa;
         }
@@ -505,11 +510,13 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
             ttt.setTruckName(truckName);
             ttt.setTttArrivalDatePlan(etaDateTime.toString());
             if (LocalDateTime.now().isAfter(etaDateTime)) {
+                log.info("TTT {} has ETA is in the Past, TTT status is {}", etaDateTime, TTTEnum.DELAYED);
                 ttt.setTttStatus(truckService.getTttService().getTttStatusByEnum(TTTEnum.DELAYED));
             } else {
                 ttt.setTttStatus(truckService.getTttService().getTttStatusByEnum(TTTEnum.PENDING));
             }
             if (ChronoUnit.DAYS.between(etaDateTime, LocalDateTime.now()) > 180) {
+                log.info("TTT {} has ETA is far in the Past (more 180 days), TTT status is {}", etaDateTime, TTTEnum.ERROR);
                 ttt.setTttStatus(truckService.getTttService().getTttStatusByEnum(TTTEnum.ERROR));
             }
         } else {

@@ -185,7 +185,7 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
      * isActive=False
      *
      * @param manifestReferenceSetDTO Source set where entities would be found.
-     * @param tpaSetDTO
+     * @param tpaSetDTO               - Set of TPA where TPA for ManReference will be searched.
      * @param manifest                - Manifest entity for comparison
      * @return filtered Set of ManifestReferences according to conditions
      */
@@ -204,7 +204,7 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
                         log.info("Reference Supplier {} is Matching with Manifest Supplier {} - {}", manRef.getReference().getSupplier().getName(), manifest.getSupplier().getName(), manRef.getReference().getSupplier().equals(manifest.getSupplier()));
                         log.info("Reference Customer {} is Matching with Manifest Customer {} - {}", manRef.getReference().getCustomer().getName(), manifest.getCustomer().getName(), manRef.getReference().getCustomer().equals(manifest.getCustomer()));
                     } catch (NullPointerException e) {
-                        log.info("Exception caught {} \n Reference wasn't found", e.getStackTrace());
+                        log.info("Exception caught {} \n Reference wasn't found", e.getMessage());
                     }
                     return manRef.getIsActive() != null && !manRef.getIsActive()
                             || !condition
@@ -278,6 +278,7 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
         if (tttSet != null) {
             for (TruckTimeTable ttt : tttSet) {
                 if (ttt != null) {
+                    log.info("TTT Name {} And Status {}", ttt.getTruckName(), ttt.getTttStatus().getTttStatusName());
                     Set<ConstraintViolation<TruckTimeTable>> constraintValidator = validator.validate(ttt);
                     boolean alreadyExisting = truckService.getTttService().isTttExisting(ttt);
                     if (!constraintValidator.isEmpty()) {
@@ -313,7 +314,7 @@ public class ExcelManifestController implements ExcelController<ManifestTpaTttDT
         if (tpaSet != null) {
             for (TPA tpa : tpaSet) {
                 if (tpa != null) {
-                    log.info("Tpa Name {} And Status {}", tpa.getName(), tpa.getStatus().getStatusName());
+                    log.info("TPA Name {} And Status {}", tpa.getName(), tpa.getStatus().getStatusName());
                     boolean alreadyExisting = truckService.getTpaService().isTpaExisting(tpa);
                     Set<ConstraintViolation<TPA>> constraintValidator = validator.validate(tpa);
                     if (!constraintValidator.isEmpty()) {
