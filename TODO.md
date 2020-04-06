@@ -125,15 +125,10 @@ file and give it back to validation.
 not done
 -
 
--. check all saveAllEntities methods in controllers which implement ExcelController class. The response entities 
+-. check all saveAllEntities methods in controllers which implement ExcelController interface. The response entities 
 should have "isActive = false". Check again before saving? TO implement or not?
 
 -. new tests to test ExcelManifestController actions:
-    
-    NOK Tests:       
-    Test TTT
-
-        
     ExcelManifestService Test?
     
 -. Code Refactoring for ExcelManifestController: create Validator class to move all the validations into it.
@@ -148,7 +143,7 @@ should have "isActive = false". Check again before saving? TO implement or not?
 -. manually added matrix. pick CC XD, if has references -> pick TXD, pick TTT TPA od create new according to warehouse 
 and date. Pick Customer and Supplier.
 
--. Schedule Tasks to update TPA and TTT status from BUFFER to PENDING etc.
+-. Schedule Tasks to update TPA and TTT status from BUFFER to PENDING etc. Scheduled annotation 
 
 
 2.1.0

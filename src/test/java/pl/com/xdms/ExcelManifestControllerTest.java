@@ -759,6 +759,9 @@ public class ExcelManifestControllerTest {
                     //CC Date and Time
                     rowMSheet9.getCell(5).setCellValue(localDateToDate(nowDate.plusDays(7)));
                     rowMSheet9.getCell(6).setCellValue(DateUtil.convertTime("10:00:00"));
+                    //TXD Date and Time
+                    rowMSheet9.getCell(13).setCellValue(localDateToDate(nowDate.plusDays(13)));
+                    rowMSheet9.getCell(14).setCellValue(DateUtil.convertTime("16:00:00"));
                     //Customer Date and Time
                     rowMSheet9.getCell(17).setCellValue(localDateToDate(nowDate.plusDays(17)));
                     rowMSheet9.getCell(18).setCellValue(DateUtil.convertTime("17:00:00"));
