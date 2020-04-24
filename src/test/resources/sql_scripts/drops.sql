@@ -16,8 +16,10 @@ delete from tpa_days_settings;
 delete from working_days;
 delete from warehouse_customer;
 delete from customers;
+delete from ttt;
 delete from warehouses;
 delete from wh_type;
 delete from tpa_status;
 delete from ttt_status;
+
 

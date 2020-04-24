@@ -3,14 +3,17 @@ package pl.com.xdms.service.truck;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pl.com.xdms.domain.tpa.TPA;
-import pl.com.xdms.domain.tpa.TPAEnum;
-import pl.com.xdms.domain.tpa.TpaStatus;
+import pl.com.xdms.domain.tpa.*;
+import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.domain.warehouse.WhCustomer;
 import pl.com.xdms.repository.TPARepository;
 import pl.com.xdms.repository.TpaStatusRepository;
+import pl.com.xdms.service.WhCustomerService;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Created on 08.12.2019
@@ -23,11 +26,19 @@ import java.util.Optional;
 public class TPAService {
     private final TPARepository tpaRepository;
     private final TpaStatusRepository tpaStatusRepository;
+    private final TpaDaysSettingsService tpaDaysSettingsService;
+    private final WorkingDayService workingDayService;
+    private final WhCustomerService whCustomerService;
 
     @Autowired
-    public TPAService(TPARepository tpaRepository, TpaStatusRepository tpaStatusRepository) {
+    public TPAService(TPARepository tpaRepository, TpaStatusRepository tpaStatusRepository,
+                      TpaDaysSettingsService tpaDaysSettingsService, WorkingDayService workingDayService,
+                      WhCustomerService whCustomerService) {
         this.tpaRepository = tpaRepository;
         this.tpaStatusRepository = tpaStatusRepository;
+        this.tpaDaysSettingsService = tpaDaysSettingsService;
+        this.workingDayService = workingDayService;
+        this.whCustomerService = whCustomerService;
     }
 
     public TpaStatus getTpaStatusByEnum (TPAEnum tpaEnum){
@@ -55,5 +66,21 @@ public class TPAService {
 
     public List<TPA> getAllTpa() {
         return tpaRepository.findAll();
+    }
+
+    public List<TPA> getTpaByWarehouseAndDay(Warehouse warehouse, String tpaDepartureDatePlan) {
+        //convert String to LocalDate
+        LocalDate localDate = LocalDate.parse(tpaDepartureDatePlan);
+
+        Long dayNumber = (long) localDate.getDayOfWeek().getValue();
+        WorkingDay workingDay = workingDayService.getWorkingDayByNumber(dayNumber);
+        List<WhCustomer> whCustomerList = whCustomerService.getAllWhCustomerByWarehouse(warehouse);
+
+        Set<TpaDaysSetting> tpaDaysSettingSet = tpaDaysSettingsService.getAllTpaDaySettingsByListOfWhCustomerAndWorkingDay(whCustomerList, workingDay);
+        return tpaRepository.findByTpaDaysSettingInAndDeparturePlanStartsWith(tpaDaysSettingSet, tpaDepartureDatePlan);
+    }
+
+    public TPA getTpaById(Long id) {
+        return tpaRepository.findById(id).orElse(null);
     }
 }

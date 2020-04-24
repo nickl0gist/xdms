@@ -10,6 +10,8 @@ import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TpaDaysSetting;
 import pl.com.xdms.domain.tpa.WorkingDay;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
+import pl.com.xdms.domain.warehouse.WHTypeEnum;
+import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.domain.warehouse.WhCustomer;
 import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.ManifestService;
@@ -21,7 +23,6 @@ import java.util.stream.Collectors;
 
 /**
  * Created on 08.12.2019
- *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -74,7 +75,7 @@ public class TruckService {
         WorkingDay workingDay = workingDayService.getWorkingDayByNumber((long) dateTimeETD.getDayOfWeek().getValue());
 
         //Getting list of TpaDaysSetting for current Wh_Customer and Working day
-        List<TpaDaysSetting> listOfTpaSettingsForDepartureDay = tpaDaysSettingsService.getTpaDaySettingsByWarehouseAndWorkingDay(whCustomer, workingDay);
+        List<TpaDaysSetting> listOfTpaSettingsForDepartureDay = tpaDaysSettingsService.getTpaDaySettingsByWhCustomerAndWorkingDay(whCustomer, workingDay);
 
         log.info("The list of TpaDaysSettings - {}", listOfTpaSettingsForDepartureDay);
 
@@ -89,7 +90,7 @@ public class TruckService {
             }
 
             workingDay = workingDayService.getWorkingDayByNumber((long) dateTimeETD.getDayOfWeek().getValue());
-            chosenSetting = getTpaDaysSetting(dateTimeETD, tpaDaysSettingsService.getTpaDaySettingsByWarehouseAndWorkingDay(whCustomer, workingDay));
+            chosenSetting = getTpaDaysSetting(dateTimeETD, tpaDaysSettingsService.getTpaDaySettingsByWhCustomerAndWorkingDay(whCustomer, workingDay));
         }
         chosenSetting = chosenSetting == null ? new TpaDaysSetting() : chosenSetting;
         dateTimeETD = ZonedDateTime.of(dateTimeETD.toLocalDate(), getLocalTimeFromString(chosenSetting.getLocalTime()), dateTimeETD.getZone());
@@ -223,6 +224,54 @@ public class TruckService {
             manifest.setTpaSet(newTPAset);
         }
         return manifests;
+    }
+
+    /**
+     * Performs deletion of the TTT depending on Warehouse type it regards.
+     * @param truckTimeTable - to be deleted.
+     * @return
+     */
+    @Transactional
+    public boolean deleteTtt(TruckTimeTable truckTimeTable) {
+        boolean result = false;
+        Warehouse warehouse = truckTimeTable.getWarehouse();
+        WHTypeEnum whTypeEnum = warehouse.getWhType().getType();
+        if (whTypeEnum.equals(WHTypeEnum.CC)) {
+            result = deleteTttFromCc(truckTimeTable, warehouse);
+        } else if (whTypeEnum.equals(WHTypeEnum.XD)){
+            result = deleteTttFromXd(truckTimeTable, warehouse);
+        } else if (whTypeEnum.equals(WHTypeEnum.TXD)) {
+            result = deleteTttFromTxd(truckTimeTable, warehouse);
+        }
+        return result;
+    }
+
+    //TODO
+    private boolean deleteTttFromTxd(TruckTimeTable truckTimeTable, Warehouse warehouse) {
+        return false;
+    }
+
+    //TODO
+    private boolean deleteTttFromXd(TruckTimeTable truckTimeTable, Warehouse warehouse) {
+        return false;
+    }
+
+    private boolean deleteTttFromCc(TruckTimeTable truckTimeTable, Warehouse warehouse) {
+        Set<Manifest> manifestSet = truckTimeTable.getManifestSet();
+
+        Set <Manifest> manifestSetToCheck = manifestSet.stream().filter(manifest -> manifest.getPalletQtyReal() != null).collect(Collectors.toSet());
+        if(!manifestSetToCheck.isEmpty()){
+            log.info("Manifest Set for TTT {} is not empty \n {}", truckTimeTable.getTruckName(), manifestSetToCheck);
+            return false;
+        }
+        manifestSet.forEach(manifest ->
+                manifest.setTpaSet(manifest.getTpaSet().stream()
+                        .filter(tpa -> !tpa.getTpaDaysSetting().getWhCustomer().getWarehouse().equals(warehouse))
+                        .collect(Collectors.toSet())));
+
+        getTttService().deleteTtt(truckTimeTable);
+        manifestService.saveAll(new ArrayList<>(manifestSet));
+        return true;
     }
 
     private LocalTime getLocalTimeFromString (String timeString){

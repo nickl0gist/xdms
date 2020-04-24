@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TTTStatus;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
+import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.repository.TTTRepository;
 import pl.com.xdms.repository.TttStatusRepository;
 
@@ -55,5 +56,17 @@ public class TTTService {
 
     public TruckTimeTable save(TruckTimeTable ttt) {
         return tttRepository.save(ttt);
+    }
+
+    public List<TruckTimeTable> getTttByWarehouseAndDay(Warehouse warehouse, String tttArrivalDatePlan){
+        return tttRepository.findByWarehouseAndTttArrivalDatePlanStartsWith(warehouse, tttArrivalDatePlan);
+    }
+
+    public TruckTimeTable getTttById(Long id) {
+        return tttRepository.findById(id).orElse(null);
+    }
+
+    public void deleteTtt(TruckTimeTable truckTimeTable) {
+        tttRepository.delete(truckTimeTable);
     }
 }

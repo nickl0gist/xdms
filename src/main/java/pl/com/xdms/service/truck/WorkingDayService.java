@@ -22,7 +22,7 @@ public class WorkingDayService {
         this.workingDayRepository = workingDayRepository;
     }
 
-    public List<WorkingDay> getAllWorkingDays(){
+    public List<WorkingDay> getAllWorkingDays() {
         return workingDayRepository.findAll();
     }
 

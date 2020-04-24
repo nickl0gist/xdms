@@ -10,6 +10,7 @@ import pl.com.xdms.domain.warehouse.WhCustomer;
 import pl.com.xdms.repository.TpaDaysSettingsRepository;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created on 08.12.2019
@@ -30,7 +31,7 @@ public class TpaDaysSettingsService {
         this.settingsRepository = settingsRepository;
     }
 
-    public List<TpaDaysSetting> getTpaDaySettingsByWarehouseAndWorkingDay(WhCustomer whCustomer, WorkingDay workingDay){
+    public List<TpaDaysSetting> getTpaDaySettingsByWhCustomerAndWorkingDay(WhCustomer whCustomer, WorkingDay workingDay){
         return settingsRepository.findAllByWhCustomerAndWorkingDay(whCustomer, workingDay);
     }
 
@@ -56,7 +57,7 @@ public class TpaDaysSettingsService {
      * @return persisted @code tpaDaysSetting.
      */
     private TpaDaysSetting save(TpaDaysSetting tpaDaysSetting) {
-        List<TpaDaysSetting> tpaDaysSettings = getTpaDaySettingsByWarehouseAndWorkingDay(tpaDaysSetting.getWhCustomer(), tpaDaysSetting.getWorkingDay());
+        List<TpaDaysSetting> tpaDaysSettings = getTpaDaySettingsByWhCustomerAndWorkingDay(tpaDaysSetting.getWhCustomer(), tpaDaysSetting.getWorkingDay());
 
         for (TpaDaysSetting tpaSetting: tpaDaysSettings) {
             if (tpaSetting.getLocalTime().equals(tpaDaysSetting.getLocalTime())){
@@ -66,4 +67,8 @@ public class TpaDaysSettingsService {
         return settingsRepository.save(tpaDaysSetting);
     }
 
+
+    public Set<TpaDaysSetting> getAllTpaDaySettingsByListOfWhCustomerAndWorkingDay(List<WhCustomer> whCustomerList, WorkingDay workingDay) {
+        return settingsRepository.findAllByWhCustomerInAndWorkingDay(whCustomerList, workingDay);
+    }
 }

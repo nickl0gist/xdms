@@ -36,7 +36,7 @@ done
 
 11+. TimeZone issue. Additional Column created in Warehouse and in Customer to define timezone. 
 
-12+. extract CustomSerializator into separate file and rename it
+12+. extract CustomSerializer into separate file and rename it
 
 13+. add column in Excel to ~~group~~ indicate truck name from suppliers. If it is one truck to represent milkrun truck. 
 This column should represent TTT in certain warehouse
@@ -48,7 +48,7 @@ This column should represent TTT in certain warehouse
 +16. Add condition to Excel to keep manifest codes in Manifest sheet as unique values.
 
 +17. create mechanism to check if the manifest already existing in DB: check by manifest code;
-tpa, ttt : check by name and by planned date and if they hasnt status error.
+tpa, ttt : check by name and by planned date and if they hasn't status error.
  
 +18. Created DTO which will contain TPA-set ManifestSet TTT-set and ManifestReferenceSet to collect information from Loaded 
 file and give it back to validation.
@@ -122,8 +122,34 @@ file and give it back to validation.
                                     √ with bad dates, 
                                     √ too late dates, 
                                     √ what if there no appropriate WH_CUST settings -> ~~NullPointerException ? Create Handler ?~~ TPA -> Error
++22
 not done
+
++22 Code Refactoring for ExcelManifestController: create Validator class to move all the validations into it.
+
++23 TruckTimeTableController created. Endpoints created: get all TTT for certain warehouse and certain date,
+ get TTT by id, creation of new TTT using usual form. 
+ Tests created: 
+ getAllTttByTheWarehouseAndCertainDate
+ getAllTttByTheWarehouseAndCertainDateWrongRegex
+ getTttByIdTest
+ getTttByIdNotFound
+ createNewTtt
+ createNewTttStatusDelayed
+ createNewTttWithNotExistingWarehouse
+ createNewTttWithNullWarehouse
+
+
+Not done
 -
+
+-. Create mechanism which will be responsible of checking TTT and TPA status each time when get requests for particular
+Warehouse and Date will be proceeded. 
+
+-. TPA status before saving check the date . if day is the same change to In Progress 
+if TPA is for next Day or later change to BuFFER
+
+-. What if user tries to delete TPA TTT Manifest Manifest-Reference by id for warehouse he doesn't have access? 
 
 -. check all saveAllEntities methods in controllers which implement ExcelController interface. The response entities 
 should have "isActive = false". Check again before saving? TO implement or not?
@@ -131,7 +157,7 @@ should have "isActive = false". Check again before saving? TO implement or not?
 -. new tests to test ExcelManifestController actions:
     ExcelManifestService Test?
     
--. Code Refactoring for ExcelManifestController: create Validator class to move all the validations into it.
+
    
 -. When customer is set to inactive all warehouses connections with it have to be switched to inActive.
     Customer with picked up and not delivered manifests cannot be switched to inActive. 
@@ -140,7 +166,7 @@ should have "isActive = false". Check again before saving? TO implement or not?
 
 -. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
 
--. manually added matrix. pick CC XD, if has references -> pick TXD, pick TTT TPA od create new according to warehouse 
+-. manually added matrix. pick CC XD, if has references -> pick TXD, pick TTT TPA or create new according to warehouse 
 and date. Pick Customer and Supplier.
 
 -. Schedule Tasks to update TPA and TTT status from BUFFER to PENDING etc. Scheduled annotation 
@@ -177,3 +203,8 @@ Excel Matrix Template
    - if There is arrival date and time provided in warehouse so the TPA name should be provided also, if no => Red
    - Sequence of dates in each Row (Each previous date should be less than Each next Date and Time)
    
+Attention!
+-
+
+- TTTService could find ambiguous TTTs in method getTttByTruckNameAndTttArrivalDatePlan if the Name and Date 
+are the same for different Warehouses

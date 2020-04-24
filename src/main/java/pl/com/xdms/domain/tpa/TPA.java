@@ -60,7 +60,6 @@ public class TPA {
             name = "tpa_manifest_reference",
             joinColumns = @JoinColumn(name = "tpaID"),
             inverseJoinColumns = @JoinColumn(name = "manifest_reference_id"))
-    //@JsonManagedReference
     @ToString.Exclude
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<ManifestReference> manifestReferenceSet = new LinkedHashSet<>();
@@ -70,7 +69,6 @@ public class TPA {
             name = "tpa_manifest",
             joinColumns = @JoinColumn(name = "tpaID"),
             inverseJoinColumns = @JoinColumn(name = "manifest_id"))
-    //@JsonManagedReference
     @ToString.Exclude
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<Manifest> manifestSet = new LinkedHashSet<>();
