@@ -143,6 +143,8 @@ not done
 Not done
 -
 
+-. Find Manifests with empty TTT set ot TPA set
+
 -. Create mechanism which will be responsible of checking TTT and TPA status each time when get requests for particular
 Warehouse and Date will be proceeded. 
 

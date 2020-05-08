@@ -9,6 +9,7 @@ import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TpaDaysSetting;
 import pl.com.xdms.domain.tpa.WorkingDay;
+import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.domain.warehouse.WHTypeEnum;
 import pl.com.xdms.domain.warehouse.Warehouse;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 /**
  * Created on 08.12.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -129,6 +131,7 @@ public class TruckService {
     /**
      * Saves TTT TPA entities to Database. Connect TPAs and TTTs with Manifests. Save all Manifests and receive these
      * Manifests as DB entities. Add TPA to each ManifestReferences. Save all and receive them as entities from DB
+     *
      * @param manifestMapDTO          - Map of manifest to be saved in Database
      * @param tpaSetDTO               - set of TPA entities to be saved in Database
      * @param tttSetDTO               - set of TTT entities to be saved in Database
@@ -164,9 +167,10 @@ public class TruckService {
 
     /**
      * Add TPA and Manifest to each ManifestReferences.
+     *
      * @param manifestReferences - List of manifestReferences entities
-     * @param manifestsFromDB - manifests from Database
-     * @param tpaListFromDB - TPA list from DB
+     * @param manifestsFromDB    - manifests from Database
+     * @param tpaListFromDB      - TPA list from DB
      * @return the List of the same ManifestReference entities with added to each of them related Manifest and TPA.
      * It connects Manifest by ManifestCode in manifest and in manifestReference. And by tpaCode from TPA and manifestReference.
      * If it is not possible to find appropriate Manifest or TPA null will be passed instead.
@@ -191,6 +195,7 @@ public class TruckService {
 
     /**
      * Connect TPAs and TTTs from Database with Manifests .
+     *
      * @param manifests                - List of manifestReferences entities received from request.
      * @param truckTimeTableListFromDB - TTT list from Database
      * @param tpaListFromDB            - TPA list from Database
@@ -228,8 +233,12 @@ public class TruckService {
 
     /**
      * Performs deletion of the TTT depending on Warehouse type it regards.
+     * If Warehouse is CC type -> deleteTttFromCc
+     * If Warehouse is XD type -> deleteTttFromXd
+     * If Warehouse is TXD type -> deleteTttFromTxd
+     *
      * @param truckTimeTable - to be deleted.
-     * @return
+     * @return boolean parameter. True is TTT was deleted successfully, False - if wasn't.
      */
     @Transactional
     public boolean deleteTtt(TruckTimeTable truckTimeTable) {
@@ -238,7 +247,7 @@ public class TruckService {
         WHTypeEnum whTypeEnum = warehouse.getWhType().getType();
         if (whTypeEnum.equals(WHTypeEnum.CC)) {
             result = deleteTttFromCc(truckTimeTable, warehouse);
-        } else if (whTypeEnum.equals(WHTypeEnum.XD)){
+        } else if (whTypeEnum.equals(WHTypeEnum.XD)) {
             result = deleteTttFromXd(truckTimeTable, warehouse);
         } else if (whTypeEnum.equals(WHTypeEnum.TXD)) {
             result = deleteTttFromTxd(truckTimeTable, warehouse);
@@ -253,29 +262,122 @@ public class TruckService {
 
     //TODO
     private boolean deleteTttFromXd(TruckTimeTable truckTimeTable, Warehouse warehouse) {
-        return false;
-    }
-
-    private boolean deleteTttFromCc(TruckTimeTable truckTimeTable, Warehouse warehouse) {
         Set<Manifest> manifestSet = truckTimeTable.getManifestSet();
 
-        Set <Manifest> manifestSetToCheck = manifestSet.stream().filter(manifest -> manifest.getPalletQtyReal() != null).collect(Collectors.toSet());
-        if(!manifestSetToCheck.isEmpty()){
-            log.info("Manifest Set for TTT {} is not empty \n {}", truckTimeTable.getTruckName(), manifestSetToCheck);
+        //if there any manifest which has TTT in CC and doesn't in TXD. If they are, so TTT from XD couldn't be deleted.
+        Set<Manifest> manifestSetCcToXD = manifestSet.stream()
+                .filter(manifest -> {
+                    //filtering of manifests which don't have TTT in TXD
+                    Set<WHTypeEnum> whTypeEnums = manifest.getTruckTimeTableSet().stream().map(ttt -> ttt.getWarehouse().getWhType().getType()).collect(Collectors.toSet());
+                    return !whTypeEnums.contains(WHTypeEnum.TXD);
+                })
+                //filtering of manifests which have TTT in CC
+                .filter(manifest -> manifest.getTruckTimeTableSet().stream()
+                        .anyMatch(ttt -> ttt.getWarehouse().getWhType().getType().equals(WHTypeEnum.CC)))
+                .collect(Collectors.toSet());
+
+        if (truckTimeTable.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED) || !manifestSetCcToXD.isEmpty()) {
+            log.info("The TTT {} has already arrived and cannot be removed", truckTimeTable.getTruckName());
+            log.info("Or TTT {} has manifests which should be dispatched from XD to customer and these manifests have TTT in CC: {}", truckTimeTable.getTruckName(), !manifestSetCcToXD.isEmpty());
             return false;
         }
-        manifestSet.forEach(manifest ->
-                manifest.setTpaSet(manifest.getTpaSet().stream()
-                        .filter(tpa -> !tpa.getTpaDaysSetting().getWhCustomer().getWarehouse().equals(warehouse))
-                        .collect(Collectors.toSet())));
 
+        //When all conditions are OK:
+        String tttName = truckTimeTable.getTruckName();
+        manifestSet.forEach(manifest -> {
+            //Does manifest have to arrive to TXD?
+            TruckTimeTable oldTttTxd = manifest.getTruckTimeTableSet().stream().filter(ttt -> ttt.getWarehouse().getWhType().getType().equals(WHTypeEnum.TXD)).findFirst().orElse(null);
+            TruckTimeTable newTtt = new TruckTimeTable();
+            if(oldTttTxd != null){
+                //Remove Old TTT for TXD from TttSet in manifest
+                manifest.getTruckTimeTableSet().remove(oldTttTxd);
+                //Filling info in new TTT
+                newTtt = fillingInfoInNewTTT(tttName, oldTttTxd);
+                //if such TTT as newTtt is already existing in DB or not
+                if (tttService.isTttExisting(newTtt)) {
+                    newTtt = tttService.getTttByTruckNameAndTttArrivalDatePlan(newTtt);
+                }
+                // add manifest to manifestSet and save newTtt
+                newTtt.getManifestSet().add(manifest);
+                tttService.save(newTtt);
+            }
+            //Change TPA set for manifest - delete only TPA from Warehouse(warehouse) the TTT(truckTimeTable) comes to.
+            manifest.setTpaSet(manifest.getTpaSet().stream()
+                    .filter(tpa -> !tpa.getTpaDaysSetting().getWhCustomer().getWarehouse().equals(warehouse))
+                    .collect(Collectors.toSet()));
+        });
         getTttService().deleteTtt(truckTimeTable);
         manifestService.saveAll(new ArrayList<>(manifestSet));
         return true;
     }
 
-    private LocalTime getLocalTimeFromString (String timeString){
-        int hours = Integer.parseInt(timeString.substring(0,2));
+    /**
+     * Deletes the TTT if it is for Warehouse which has type CC. Also deletes all manifests in TPA this manifests belongs to.
+     * @param truckTimeTable - TruckTimeTable to delete.
+     * @param warehouse      - Warehouse which has this TTT.
+     * @return boolean. True - if TTT was deleted, False - wasn't. If any of the manifests has already provided real
+     * qty of pallets it will not delete the TTT.
+     */
+    private boolean deleteTttFromCc(TruckTimeTable truckTimeTable, Warehouse warehouse) {
+        Set<Manifest> manifestSet = truckTimeTable.getManifestSet();
+
+        //It's impossible to delete TTT when it has status ARRIVED
+        if (truckTimeTable.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED)) {
+            log.info("The TTT {} has already arrived and cannot be removed", truckTimeTable.getTruckName());
+            return false;
+        }
+        String tttName = truckTimeTable.getTruckName();
+        // Stream dedicated to update all manifests from TTT in way to delete them from TPA of the Warehouse.
+        manifestSet.forEach(manifest -> {
+            //Does manifest have to arrive to TXD?
+            TruckTimeTable oldTttTxd = manifest.getTruckTimeTableSet().stream().filter(ttt -> ttt.getWarehouse().getWhType().getType().equals(WHTypeEnum.TXD)).findFirst().orElse(null);
+            //Does manifest have to arrive to XD?
+            TruckTimeTable oldTtt = manifest.getTruckTimeTableSet().stream().filter(ttt -> ttt.getWarehouse().getWhType().getType().equals(WHTypeEnum.XD)).findFirst().orElse(oldTttTxd);
+
+            TruckTimeTable newTtt = new TruckTimeTable();
+            if (oldTtt != null) {
+                //Remove manifest from set of manifests in Old TTT
+                oldTtt.getManifestSet().remove(manifest);
+                tttService.save(oldTtt);
+                //Filling info in new TTT
+                newTtt = fillingInfoInNewTTT(tttName, oldTtt);
+                //if such TTT as newTtt is already existing in DB or not
+                if (tttService.isTttExisting(newTtt)) {
+                    newTtt = tttService.getTttByTruckNameAndTttArrivalDatePlan(newTtt);
+                }
+            }
+            // add manifest to manifestSet and save newTtt
+            newTtt.getManifestSet().add(manifest);
+            tttService.save(newTtt);
+            //Change TPA set for manifest - delete only TPA from Warehouse(warehouse) the TTT(truckTimeTable) comes to.
+            manifest.setTpaSet(manifest.getTpaSet().stream()
+                    .filter(tpa -> !tpa.getTpaDaysSetting().getWhCustomer().getWarehouse().equals(warehouse))
+                    .collect(Collectors.toSet()));
+        });
+        getTttService().deleteTtt(truckTimeTable);
+        manifestService.saveAll(new ArrayList<>(manifestSet));
+        return true;
+    }
+
+    /**
+     * Filling info in new TTT
+     * @param tttName - Name of the New TTT
+     * @param oldTtt - TTT donor of the info
+     * @return - New TTT with filled info.
+     */
+    private TruckTimeTable fillingInfoInNewTTT(String tttName, TruckTimeTable oldTtt) {
+        TruckTimeTable newTtt = new TruckTimeTable();
+        newTtt.setTruckName(tttName);
+        newTtt.setTttArrivalDatePlan(oldTtt.getTttArrivalDatePlan());
+        newTtt.setWarehouse(oldTtt.getWarehouse());
+        newTtt.setTttStatus(oldTtt.getTttStatus());
+        newTtt.setIsActive(true);
+        newTtt.setManifestSet(new HashSet<>());
+        return newTtt;
+    }
+
+    private LocalTime getLocalTimeFromString(String timeString) {
+        int hours = Integer.parseInt(timeString.substring(0, 2));
         int minutes = Integer.parseInt(timeString.substring(3));
         return LocalTime.of(hours, minutes);
     }

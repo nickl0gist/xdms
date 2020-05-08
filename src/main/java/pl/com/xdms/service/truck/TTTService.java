@@ -40,7 +40,7 @@ public class TTTService {
         return tttFromDb != null;
     }
 
-    private TruckTimeTable getTttByTruckNameAndTttArrivalDatePlan(TruckTimeTable ttt) {
+    public TruckTimeTable getTttByTruckNameAndTttArrivalDatePlan(TruckTimeTable ttt) {
         Optional<TruckTimeTable> tttFromDb = tttRepository.findByTruckNameAndTttETAPlan(ttt.getTruckName(),
                 ttt.getTttArrivalDatePlan());
         return tttFromDb.orElse(null);
