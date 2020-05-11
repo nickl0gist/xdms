@@ -15,12 +15,16 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.service.WarehouseService;
 import pl.com.xdms.service.truck.TruckService;
 
-import javax.transaction.Transactional;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -43,6 +47,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         @Sql(value = {"/sql_scripts/drops.sql"}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 })
 public class TruckTimeTableControllerTest {
+
+    @PersistenceUnit
+    private EntityManagerFactory entityManagerFactory;
 
     @Autowired
     private MockMvc mockMvc;
@@ -440,17 +447,30 @@ public class TruckTimeTableControllerTest {
     }
 
     @Test
-    @Transactional // used to avoid LazyInitializationException which occurs while ManifestSet for TTT is loading.
     public void updateTttStatusOk() throws Exception {
-
-        TruckTimeTable truckTimeTable = truckService.getTttService().getTttById(2L);
-        truckTimeTable.setTruckName("New_Name");
-        truckTimeTable.setTttArrivalDatePlan("2020-05-30T13:00");
-
         ObjectMapper om = new ObjectMapper();
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-        //String json = ow.writeValueAsString(truckTimeTable);
+
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+        entityManager.getTransaction().begin();
+        TruckTimeTable truckTimeTable = entityManager.find(TruckTimeTable.class, 2L);//truckService.getTttService().getTttById(2L);
+        Set<Manifest> manifestSet = truckTimeTable.getManifestSet();
+
+        //Next call initialize the Set of Manifest in order to avoid LazyLoadException
+        manifestSet.iterator();
+
+        //Detach Entity to avoid saving the new information in DB 
+        entityManager.detach(truckTimeTable);
+
+        truckTimeTable.setTruckName("New_Name");
+        truckTimeTable.setTttArrivalDatePlan("2020-05-30T13:00");
         String json = om.writeValueAsString(truckTimeTable);
+        entityManager.getTransaction().commit();
+        entityManager.close();
+
+        //Check that Old Name of TTT remains in DB after the previous Transaction session committed.
+        Assert.assertEquals("TPA3", truckService.getTttService().getTttById(2L).getTruckName());
 
         this.mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
@@ -463,6 +483,5 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$.tttArrivalDatePlan").value("2020-05-30T13:00"))
                 .andExpect(jsonPath("$.['manifestSet']", hasSize(2)));
     }
-
 
 }

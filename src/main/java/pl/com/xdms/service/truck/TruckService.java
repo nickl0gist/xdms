@@ -18,7 +18,10 @@ import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.ManifestService;
 
 import javax.transaction.Transactional;
-import java.time.*;
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -162,7 +165,7 @@ public class TruckService {
                 .stream()
                 .filter(manref -> manref.getIsActive() && manref.getManifest() != null)
                 .collect(Collectors.toList());
-        manifestReferencesFromDB = manifestReferenceService.saveAll(manifestReferencesFromDB);
+        manifestReferenceService.saveAll(manifestReferencesFromDB);
     }
 
     /**
@@ -260,7 +263,18 @@ public class TruckService {
         return false;
     }
 
-    //TODO
+    /**
+     * Deletes the TTT if it is for Warehouse which has type XD. Also deletes all manifests in TPA this manifests belongs to.
+     * If Manifests should go through TXD, method will create new TTT in TXD from CC or Direct connection
+     * @param truckTimeTable - TruckTimeTable to delete.
+     * @param warehouse      - Warehouse which has this TTT.
+     * @return boolean. True - if TTT was deleted, False - wasn't.
+     *      False:
+     *          - If TTT has Status Arrived;
+     *          - If manifest has TTT in CC and in XD but not in the TXD.
+     *      True:
+     *          - if TTT was deleted.
+     */
     private boolean deleteTttFromXd(TruckTimeTable truckTimeTable, Warehouse warehouse) {
         Set<Manifest> manifestSet = truckTimeTable.getManifestSet();
 
@@ -281,7 +295,6 @@ public class TruckService {
             log.info("Or TTT {} has manifests which should be dispatched from XD to customer and these manifests have TTT in CC: {}", truckTimeTable.getTruckName(), !manifestSetCcToXD.isEmpty());
             return false;
         }
-
         //When all conditions are OK:
         String tttName = truckTimeTable.getTruckName();
         manifestSet.forEach(manifest -> {
