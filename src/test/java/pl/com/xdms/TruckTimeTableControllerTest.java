@@ -29,8 +29,7 @@ import java.util.Set;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Created on 12.04.2020
@@ -335,10 +334,10 @@ public class TruckTimeTableControllerTest {
      */
     @Test
     public void deleteTttFromXdTestCcXdCustomer() throws Exception {
-        //Perform deletion of one of the TTT with id 1000 which not exists
         mockMvc.perform(delete("/ttt/delete/15"))
                 .andDo(print())
-                .andExpect(status().is(422));
+                .andExpect(status().is(400))
+                .andExpect(header().stringValues("Message","TTT could not be deleted. Check Manifests from this TTT"));
     }
 
     /**
@@ -424,6 +423,71 @@ public class TruckTimeTableControllerTest {
     }
 
     /**
+     * Test of attempt to delete TTT from the TXD Warehouse and all manifests from this TTT don't have any TPA except of
+     * TPA which used by ManifestReference to be dispatched from TXD. After the TTT will be deleted the ManifestReferences
+     * from this TTT should be deleted from Their TPA
+     *
+     * @throws Exception for mockMvc.
+     */
+    @Test
+    public void deleteTttFromTxdStatus200() throws Exception{
+        //1. Check the size of manifestReferenceSet in TPA 24 before TTT 21 removing
+        mockMvc.perform(get("/tpa/24"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$['manifestReferenceSet']", hasSize(2)));
+
+        //2. Removing TTT 24 from DB
+        mockMvc.perform(delete("/ttt/delete/21"))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(header().stringValues("Message","TTT with id=21 was successfully removed."));
+
+        //3. Check the size of manifestReferenceSet in TPA 24 after TTT 21 removing
+        mockMvc.perform(get("/tpa/24"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$['manifestReferenceSet']", hasSize(1)));
+    }
+
+    /**
+     * Test of attempt to Delete TTT from TXD warehouse when manifests from this TTT have TPAs in other warehouses.
+     * Should return status 400 and message in http headers.
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteTttFromTxdResponse400() throws Exception{
+        mockMvc.perform(delete("/ttt/delete/27"))
+                .andDo(print())
+                .andExpect(status().is(400))
+                .andExpect(header().stringValues("Message","TTT could not be deleted. Check Manifests from this TTT"));
+    }
+
+    /**
+     * Test of attempt to Delete TTT from TXD which doesn't exist
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteTttFromTxdResponse404() throws Exception {
+        mockMvc.perform(delete("/ttt/delete/127"))
+                .andDo(print())
+                .andExpect(status().is(404))
+                .andExpect(header().stringValues("Message","TTT Not Found"));
+    }
+
+    /**
+     * Test of attempt to Delete TTT from TXD with status Arrive
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteTttFromTxdResponse422() throws Exception {
+        mockMvc.perform(delete("/ttt/delete/28"))
+                .andDo(print())
+                .andExpect(status().is(422))
+                .andExpect(header().stringValues("Message","TTT with id=28 has status Arrived"));
+    }
+
+    /**
      * Test when user tries to delete TTT which doesn't exist
      * @throws Exception exception for mockMvc Exception
      */
@@ -449,8 +513,6 @@ public class TruckTimeTableControllerTest {
     @Test
     public void updateTttStatusOk() throws Exception {
         ObjectMapper om = new ObjectMapper();
-        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
         entityManager.getTransaction().begin();

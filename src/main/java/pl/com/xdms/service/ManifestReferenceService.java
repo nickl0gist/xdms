@@ -30,4 +30,8 @@ public class ManifestReferenceService {
     public List<ManifestReference> getAllManifestReferences(){
         return manifestReferenceRepository.findAll();
     }
+
+    public ManifestReference save(ManifestReference manifestReference){
+       return manifestReferenceRepository.save(manifestReference);
+    }
 }

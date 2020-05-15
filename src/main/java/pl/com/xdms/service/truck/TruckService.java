@@ -9,7 +9,6 @@ import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TpaDaysSetting;
 import pl.com.xdms.domain.tpa.WorkingDay;
-import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.domain.warehouse.WHTypeEnum;
 import pl.com.xdms.domain.warehouse.Warehouse;
@@ -243,7 +242,7 @@ public class TruckService {
      * @param truckTimeTable - to be deleted.
      * @return boolean parameter. True is TTT was deleted successfully, False - if wasn't.
      */
-    @Transactional
+    @Transactional(rollbackOn = RuntimeException.class)
     public boolean deleteTtt(TruckTimeTable truckTimeTable) {
         boolean result = false;
         Warehouse warehouse = truckTimeTable.getWarehouse();
@@ -253,13 +252,39 @@ public class TruckService {
         } else if (whTypeEnum.equals(WHTypeEnum.XD)) {
             result = deleteTttFromXd(truckTimeTable, warehouse);
         } else if (whTypeEnum.equals(WHTypeEnum.TXD)) {
-            result = deleteTttFromTxd(truckTimeTable, warehouse);
+            result = deleteTttFromTxd(truckTimeTable);
         }
         return result;
     }
 
-    //TODO
-    private boolean deleteTttFromTxd(TruckTimeTable truckTimeTable, Warehouse warehouse) {
+    /**
+     * Performs deletion of the TTT in TXD.
+     * Only If each Manifest in Manifest Set of given TTT doesn't have any TPA or the Manifest Set is Empty at all The TTT
+     * will be removed. And all ManifestReferences in each Set of Manifests will be removed from TPA from TXD.
+     * @param truckTimeTable - to be deleted.
+     * @return boolean.
+     *      True - if removing was successful;
+     *      False - if wasn't;
+     */
+    private boolean deleteTttFromTxd(TruckTimeTable truckTimeTable) {
+        //Get all Manifests from TTT
+        Set<Manifest> manifestSet = truckTimeTable.getManifestSet();
+        //Filter ManifestSet to get Any of them which have any TPA in CC or XD
+        Set<Manifest> manifestsWithTpa = manifestSet.stream()
+                .filter(manifest -> !manifest.getTpaSet().isEmpty())
+                .collect(Collectors.toSet());
+        //If there are no any XD, CC TPA in any Manifest
+        if(manifestsWithTpa.isEmpty()){
+            // Delete connection of All ManifestReference entities with their TPA and save them to DB
+            manifestSet.stream()
+                    .flatMap(manifest -> manifest.getManifestsReferenceSet().stream())
+                    .forEach(mR -> {
+                        mR.setTpa(null);
+                        manifestReferenceService.save(mR);
+                    });
+            tttService.deleteTtt(truckTimeTable);
+            return true;
+        }
         return false;
     }
 
@@ -269,11 +294,10 @@ public class TruckService {
      * @param truckTimeTable - TruckTimeTable to delete.
      * @param warehouse      - Warehouse which has this TTT.
      * @return boolean. True - if TTT was deleted, False - wasn't.
-     *      False:
-     *          - If TTT has Status Arrived;
-     *          - If manifest has TTT in CC and in XD but not in the TXD.
-     *      True:
-     *          - if TTT was deleted.
+     * False:
+     * - If manifest has TTT in CC and in XD but not in the TXD.
+     * True:
+     * - if TTT was deleted.
      */
     private boolean deleteTttFromXd(TruckTimeTable truckTimeTable, Warehouse warehouse) {
         Set<Manifest> manifestSet = truckTimeTable.getManifestSet();
@@ -290,9 +314,8 @@ public class TruckService {
                         .anyMatch(ttt -> ttt.getWarehouse().getWhType().getType().equals(WHTypeEnum.CC)))
                 .collect(Collectors.toSet());
 
-        if (truckTimeTable.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED) || !manifestSetCcToXD.isEmpty()) {
-            log.info("The TTT {} has already arrived and cannot be removed", truckTimeTable.getTruckName());
-            log.info("Or TTT {} has manifests which should be dispatched from XD to customer and these manifests have TTT in CC: {}", truckTimeTable.getTruckName(), !manifestSetCcToXD.isEmpty());
+        if (!manifestSetCcToXD.isEmpty()) {
+            log.info("TTT {} has manifests which should be dispatched from XD to customer and these manifests have TTT in CC", truckTimeTable.getTruckName());
             return false;
         }
         //When all conditions are OK:
@@ -301,7 +324,7 @@ public class TruckService {
             //Does manifest have to arrive to TXD?
             TruckTimeTable oldTttTxd = manifest.getTruckTimeTableSet().stream().filter(ttt -> ttt.getWarehouse().getWhType().getType().equals(WHTypeEnum.TXD)).findFirst().orElse(null);
             TruckTimeTable newTtt = new TruckTimeTable();
-            if(oldTttTxd != null){
+            if (oldTttTxd != null) {
                 //Remove Old TTT for TXD from TttSet in manifest
                 manifest.getTruckTimeTableSet().remove(oldTttTxd);
                 //Filling info in new TTT
@@ -328,18 +351,12 @@ public class TruckService {
      * Deletes the TTT if it is for Warehouse which has type CC. Also deletes all manifests in TPA this manifests belongs to.
      * @param truckTimeTable - TruckTimeTable to delete.
      * @param warehouse      - Warehouse which has this TTT.
-     * @return boolean. True - if TTT was deleted, False - wasn't. If any of the manifests has already provided real
-     * qty of pallets it will not delete the TTT.
+     * @return boolean. True - if TTT was deleted. Never returns False.
      */
     private boolean deleteTttFromCc(TruckTimeTable truckTimeTable, Warehouse warehouse) {
         Set<Manifest> manifestSet = truckTimeTable.getManifestSet();
-
-        //It's impossible to delete TTT when it has status ARRIVED
-        if (truckTimeTable.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED)) {
-            log.info("The TTT {} has already arrived and cannot be removed", truckTimeTable.getTruckName());
-            return false;
-        }
         String tttName = truckTimeTable.getTruckName();
+
         // Stream dedicated to update all manifests from TTT in way to delete them from TPA of the Warehouse.
         manifestSet.forEach(manifest -> {
             //Does manifest have to arrive to TXD?
@@ -375,7 +392,7 @@ public class TruckService {
     /**
      * Filling info in new TTT
      * @param tttName - Name of the New TTT
-     * @param oldTtt - TTT donor of the info
+     * @param oldTtt  - TTT donor of the info
      * @return - New TTT with filled info.
      */
     private TruckTimeTable fillingInfoInNewTTT(String tttName, TruckTimeTable oldTtt) {

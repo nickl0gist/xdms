@@ -143,6 +143,8 @@ not done
 Not done
 -
 
+-. Manifest Management page which shows all manifests with empty TTT and TPA list, this page allows to assign TPA or TTT
+
 -. Find Manifests with empty TTT set ot TPA set
 
 -. Create mechanism which will be responsible of checking TTT and TPA status each time when get requests for particular
@@ -204,6 +206,8 @@ Excel Matrix Template
    - REFERENCE_FORECAST sheet. combination of manifest and agreement is repeated. 
    - if There is arrival date and time provided in warehouse so the TPA name should be provided also, if no => Red
    - Sequence of dates in each Row (Each previous date should be less than Each next Date and Time)
+   - Duplicates in T Column Red Color
+   - Dates in R N J F columns should be Ordered by Date
    
 Attention!
 -
