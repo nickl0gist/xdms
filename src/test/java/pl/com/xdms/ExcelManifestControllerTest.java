@@ -371,7 +371,7 @@ public class ExcelManifestControllerTest {
         ClassLoader classLoader = getClass().getClassLoader();
         File file2 = new File(classLoader.getResource("excelTests/manifestUploadForecastWithConflictTpaAndTtt.xlsx").getFile());
 
-        Map<Long, ManifestTpaTttDTO> mapBeforePosting = excelManifestService.readExcel(file2);
+        //Map<Long, ManifestTpaTttDTO> mapBeforePosting = excelManifestService.readExcel(file2);
         MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file2.toPath()));
 
         MvcResult result = mockMvc.perform(multipart("/coordinator/excel/manifests/uploadFile").file(mockMultipartFile))

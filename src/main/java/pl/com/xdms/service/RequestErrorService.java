@@ -14,7 +14,6 @@ import java.util.Map;
 public class RequestErrorService {
 
     private Map<String, String> getErrors(BindingResult bindingResult) {
-        int i = 0;
         Map<String, String> errors = new HashMap<>();
         for (ObjectError error : bindingResult.getAllErrors()) {
             String key = error.getObjectName() +"-" + ((FieldError) error).getField() + "_";

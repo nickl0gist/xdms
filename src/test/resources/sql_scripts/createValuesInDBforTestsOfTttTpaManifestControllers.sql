@@ -317,7 +317,9 @@ values
 (22, 'GRO-XII', 3, '2020-05-14T14:30', 31), /*XD STD _ WhID = 4; XD Gro CustID = 7; WHCust id = 14*/
 (23, 'BRA1-II', 3, '2020-05-11T14:30', 28),
 (24, 'LUGA1',   3, '2020-05-21T10:00', 51),/* Wh Cust 6*/
-(25, 'BRA-II',  3, '2020-05-13T20:00', 35);/* Wh Cust 8*/
+(25, 'BRA-II',  3, '2020-05-13T20:00', 35),/* Wh Cust 8*/
+(26, 'CLOSED_TPA',  1, '2020-05-20T20:00', 35),
+(27, 'TEST_TPA',   3, '2020-05-25T10:00', 51);/* Wh Cust 8*/
 
 
 insert into tpa_manifest

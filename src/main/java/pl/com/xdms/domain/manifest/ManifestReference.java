@@ -93,10 +93,11 @@ public class ManifestReference {
             name = "tpa_manifest_reference",
             joinColumns = @JoinColumn(name = "manifest_reference_id"),
             inverseJoinColumns = @JoinColumn(name = "tpaID"))
-    @JsonIdentityInfo(
-            generator = ObjectIdGenerators.PropertyGenerator.class,
-            property = "name"
-    )
+//    @JsonIdentityInfo(
+//            generator = ObjectIdGenerators.PropertyGenerator.class,
+//            property = "name"
+//    )
+    @JsonIgnore
     private TPA tpa;
 
     @Transient

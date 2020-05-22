@@ -337,7 +337,7 @@ public class TruckTimeTableControllerTest {
         mockMvc.perform(delete("/ttt/delete/15"))
                 .andDo(print())
                 .andExpect(status().is(400))
-                .andExpect(header().stringValues("Message","TTT could not be deleted. Check Manifests from this TTT"));
+                .andExpect(header().stringValues("Message", "TTT could not be deleted. Check Manifests from this TTT"));
     }
 
     /**
@@ -345,10 +345,10 @@ public class TruckTimeTableControllerTest {
      * 1. Supplier -> CC -> XD -> TXD -> Customer
      * Both of them will be departure from XD with different TPA. The 1st TPA has 2 manifest the second one - 1 manifest
      * When the TTT will be deleted from XD next changes should be provided:
-     *  - TTT EXT1 should be deleted from XD;
-     *  - TTT with truckName EXT1 should be created in TXD for date 2020-05-14T13:13;
-     *  - TTT with truckName EXT1 should be created in TXD for date 2020-05-13T07:07;
-     *  - The manifests feom old EXT1 TTT should be deleted from appropriate TPA's from the Same warehouse;
+     * - TTT EXT1 should be deleted from XD;
+     * - TTT with truckName EXT1 should be created in TXD for date 2020-05-14T13:13;
+     * - TTT with truckName EXT1 should be created in TXD for date 2020-05-13T07:07;
+     * - The manifests feom old EXT1 TTT should be deleted from appropriate TPA's from the Same warehouse;
      *
      * @throws Exception for mockMvc
      */
@@ -430,7 +430,7 @@ public class TruckTimeTableControllerTest {
      * @throws Exception for mockMvc.
      */
     @Test
-    public void deleteTttFromTxdStatus200() throws Exception{
+    public void deleteTttFromTxdStatus200() throws Exception {
         //1. Check the size of manifestReferenceSet in TPA 24 before TTT 21 removing
         mockMvc.perform(get("/tpa/24"))
                 .andDo(print())
@@ -441,7 +441,7 @@ public class TruckTimeTableControllerTest {
         mockMvc.perform(delete("/ttt/delete/21"))
                 .andDo(print())
                 .andExpect(status().is(200))
-                .andExpect(header().stringValues("Message","TTT with id=21 was successfully removed."));
+                .andExpect(header().stringValues("Message", "TTT with id=21 was successfully removed."));
 
         //3. Check the size of manifestReferenceSet in TPA 24 after TTT 21 removing
         mockMvc.perform(get("/tpa/24"))
@@ -453,18 +453,20 @@ public class TruckTimeTableControllerTest {
     /**
      * Test of attempt to Delete TTT from TXD warehouse when manifests from this TTT have TPAs in other warehouses.
      * Should return status 400 and message in http headers.
+     *
      * @throws Exception for mockMvc
      */
     @Test
-    public void deleteTttFromTxdResponse400() throws Exception{
+    public void deleteTttFromTxdResponse400() throws Exception {
         mockMvc.perform(delete("/ttt/delete/27"))
                 .andDo(print())
                 .andExpect(status().is(400))
-                .andExpect(header().stringValues("Message","TTT could not be deleted. Check Manifests from this TTT"));
+                .andExpect(header().stringValues("Message", "TTT could not be deleted. Check Manifests from this TTT"));
     }
 
     /**
      * Test of attempt to Delete TTT from TXD which doesn't exist
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -472,11 +474,12 @@ public class TruckTimeTableControllerTest {
         mockMvc.perform(delete("/ttt/delete/127"))
                 .andDo(print())
                 .andExpect(status().is(404))
-                .andExpect(header().stringValues("Message","TTT Not Found"));
+                .andExpect(header().stringValues("Message", "TTT Not Found"));
     }
 
     /**
      * Test of attempt to Delete TTT from TXD with status Arrive
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -484,11 +487,12 @@ public class TruckTimeTableControllerTest {
         mockMvc.perform(delete("/ttt/delete/28"))
                 .andDo(print())
                 .andExpect(status().is(422))
-                .andExpect(header().stringValues("Message","TTT with id=28 has status Arrived"));
+                .andExpect(header().stringValues("Message", "TTT with id=28 has status Arrived"));
     }
 
     /**
      * Test when user tries to delete TTT which doesn't exist
+     *
      * @throws Exception exception for mockMvc Exception
      */
     @Test
@@ -501,6 +505,7 @@ public class TruckTimeTableControllerTest {
 
     /**
      * Test when user tries to delete TTT which has status ARRIVED
+     *
      * @throws Exception exception for mockMvc Exception
      */
     @Test
@@ -510,8 +515,12 @@ public class TruckTimeTableControllerTest {
                 .andExpect(status().is(422));
     }
 
+    /**
+     * Check the Attempt of Updating the TTT. Status 200 should be returned.
+     * @throws Exception for mockMvc
+     */
     @Test
-    public void updateTttStatusOk() throws Exception {
+    public void updateTttStatusOk200() throws Exception {
         ObjectMapper om = new ObjectMapper();
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -526,7 +535,7 @@ public class TruckTimeTableControllerTest {
         entityManager.detach(truckTimeTable);
 
         truckTimeTable.setTruckName("New_Name");
-        truckTimeTable.setTttArrivalDatePlan("2020-05-30T13:00");
+        truckTimeTable.setTttArrivalDatePlan("2030-05-30T13:00");
         String json = om.writeValueAsString(truckTimeTable);
         entityManager.getTransaction().commit();
         entityManager.close();
@@ -534,16 +543,154 @@ public class TruckTimeTableControllerTest {
         //Check that Old Name of TTT remains in DB after the previous Transaction session committed.
         Assert.assertEquals("TPA3", truckService.getTttService().getTttById(2L).getTruckName());
 
-        this.mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
-                .andExpect(status().is(200));
+                .andExpect(status().is(200))
+                .andExpect(header().stringValues("Message:", "TTT with id=2 was successfully updated"));
 
         mockMvc.perform(get("/ttt/2"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.truckName").value("New_Name"))
-                .andExpect(jsonPath("$.tttArrivalDatePlan").value("2020-05-30T13:00"))
+                .andExpect(jsonPath("$.tttArrivalDatePlan").value("2030-05-30T13:00"))
                 .andExpect(jsonPath("$.['manifestSet']", hasSize(2)));
+    }
+
+    /**
+     * Case when given TTT has id which doesn't exist in DB.
+     * Status 404 should be returned
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void updateTttStatus404WrongId() throws Exception{
+        ObjectMapper om = new ObjectMapper();
+        newTtt.setTttID(1000L);
+        String json = om.writeValueAsString(newTtt);
+
+        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(404))
+                .andExpect(header().stringValues("Error:", "TTT with id=1000 not found, returning error"));
+    }
+
+    /**
+     * Case when given TTT has null value for ID
+     * Status 404 should be returned
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void updateTttStatus404NullId() throws Exception{
+        ObjectMapper om = new ObjectMapper();
+        String json = om.writeValueAsString(newTtt);
+
+        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(404))
+                .andExpect(header().stringValues("ERROR", "Not Existing"));
+    }
+
+    /**
+     * Case when user tries to update TTT by providing the Arrival Date Plan which is in the Past
+     * Status 422 should be returned
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void updateTttStatus422EtaInThePast() throws Exception{
+        ObjectMapper om = new ObjectMapper();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+        entityManager.getTransaction().begin();
+        TruckTimeTable truckTimeTable = entityManager.find(TruckTimeTable.class, 2L);//truckService.getTttService().getTttById(2L);
+        Set<Manifest> manifestSet = truckTimeTable.getManifestSet();
+
+        //Next call initialize the Set of Manifest in order to avoid LazyLoadException
+        manifestSet.iterator();
+
+        //Detach Entity to avoid saving the new information in DB
+        entityManager.detach(truckTimeTable);
+
+        truckTimeTable.setTruckName("New_NAME");
+        truckTimeTable.setTttArrivalDatePlan("2020-05-05T13:00");
+        String json = om.writeValueAsString(truckTimeTable);
+        entityManager.getTransaction().commit();
+        entityManager.close();
+
+        //Check that Old Name of TTT remains in DB after the previous Transaction session committed.
+        Assert.assertEquals("TPA3", truckService.getTttService().getTttById(2L).getTruckName());
+
+        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(422))
+                .andExpect(header().stringValues("Error:", "TTT id=2 has status ARRIVED or ETA date is in the Past"));
+    }
+
+    /**
+     * Case when user tries to update TTT which has status ARRIVED.
+     * Status 422 should be returned
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void updateTttStatus422TttArrived() throws Exception{
+        ObjectMapper om = new ObjectMapper();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+        entityManager.getTransaction().begin();
+        TruckTimeTable truckTimeTable = entityManager.find(TruckTimeTable.class, 28L);//(28, 'BRA1-II',  '2020-05-12T12:00', 3, 2);
+        Set<Manifest> manifestSet = truckTimeTable.getManifestSet();
+
+        //Next call initialize the Set of Manifest in order to avoid LazyLoadException
+        manifestSet.iterator();
+
+        //Detach Entity to avoid saving the new information in DB
+        entityManager.detach(truckTimeTable);
+
+        truckTimeTable.setTruckName("New_NAME");
+        truckTimeTable.setTttArrivalDatePlan("2030-05-05T13:00");
+        String json = om.writeValueAsString(truckTimeTable);
+        entityManager.getTransaction().commit();
+        entityManager.close();
+
+        //Check that Old Name of TTT remains in DB after the previous Transaction session committed.
+        Assert.assertEquals("TPA3", truckService.getTttService().getTttById(2L).getTruckName());
+
+        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(422))
+                .andExpect(header().stringValues("Error:", "TTT id=28 has status ARRIVED or ETA date is in the Past"));
+    }
+
+    /**
+     * Check the attempt of updating the TTT with Name and ArrivalPlan in wrong format. Status 412 should be returned.
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void updateTttStatus412() throws Exception{
+        ObjectMapper om = new ObjectMapper();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+        entityManager.getTransaction().begin();
+        TruckTimeTable truckTimeTable = entityManager.find(TruckTimeTable.class, 2L);//truckService.getTttService().getTttById(2L);
+        Set<Manifest> manifestSet = truckTimeTable.getManifestSet();
+
+        //Next call initialize the Set of Manifest in order to avoid LazyLoadException
+        manifestSet.iterator();
+
+        //Detach Entity to avoid saving the new information in DB
+        entityManager.detach(truckTimeTable);
+
+        truckTimeTable.setTruckName("NAME!");
+        truckTimeTable.setTttArrivalDatePlan("2030-05-XXT13:00");
+        String json = om.writeValueAsString(truckTimeTable);
+        entityManager.getTransaction().commit();
+        entityManager.close();
+
+        //Check that Old Name of TTT remains in DB after the previous Transaction session committed.
+        Assert.assertEquals("TPA3", truckService.getTttService().getTttById(2L).getTruckName());
+
+        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(412))
+                .andExpect(header().stringValues("truckTimeTable-tttArrivalDatePlan_Pattern", "must match \"^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9](:[0-5][0-9])?$\""));
     }
 
 }

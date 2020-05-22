@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TTTStatus;
@@ -13,13 +14,10 @@ import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.WarehouseService;
 import pl.com.xdms.service.truck.TruckService;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created on 09.04.2020
@@ -79,39 +77,34 @@ public class TruckTimeTableController {
      * before saving entity.
      *
      * @param truckTimeTable -TruckTimeTable entity to be persisted in DataBase
-     * @return TruckTimeTable saved in Database with id. Or 422 page with provided TruckTimeTable in request if there
+     * @return TruckTimeTable saved in Database with id. Or 412 page with provided TruckTimeTable in request if there
      * error will be found.
      */
     @PostMapping("ttt/create")
-    public ResponseEntity<TruckTimeTable> createTruckTimeTable(@RequestBody TruckTimeTable truckTimeTable) {
-        Warehouse warehouse = null;
-        if (truckTimeTable.getWarehouse() != null) {
-            warehouse = warehouseService.getWarehouseById(truckTimeTable.getWarehouse().getWarehouseID());
-            truckTimeTable.setWarehouse(warehouse);
-        }
+    public ResponseEntity<TruckTimeTable> createTruckTimeTable(@RequestBody @Valid TruckTimeTable truckTimeTable, BindingResult bindingResult) {
 
+        if (truckTimeTable.getWarehouse() == null) {
+            return ResponseEntity.unprocessableEntity().body(truckTimeTable);
+        }
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
         LocalDateTime dateTime = LocalDateTime.parse(truckTimeTable.getTttArrivalDatePlan(), formatter);
         TTTStatus tttStatus = truckService.getTttService().getTttStatusByEnum(TTTEnum.PENDING);
-
         if (dateTime.isBefore(LocalDateTime.now())) {
             tttStatus = truckService.getTttService().getTttStatusByEnum(TTTEnum.DELAYED);
         }
-        truckTimeTable.setTttStatus(tttStatus);
-        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        Set<ConstraintViolation<TruckTimeTable>> constraintValidator = validator.validate(truckTimeTable);
-
-        if (!constraintValidator.isEmpty() || warehouse == null) {
-            StringBuilder b = new StringBuilder();
-            constraintValidator.forEach(b::append);
-            return ResponseEntity.status(422).header("Error message", b.toString()).body(truckTimeTable);
+        //if given entity doesn't correspond conditions of parameters annotation in TTT class
+        if (bindingResult.hasErrors()) {
+            HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
+            return ResponseEntity.status(412).headers(headers).body(truckTimeTable);
         }
-        log.info("Try to create TruckTimeTable with TruckName: {}, for Warehouse: {}", truckTimeTable.getTruckName(), warehouse.getName());
+        truckTimeTable.setTttStatus(tttStatus);
+        log.info("Try to create TruckTimeTable with TruckName: {}, for Warehouse: {}", truckTimeTable.getTruckName(), truckTimeTable.getWarehouse().getName());
         return ResponseEntity.status(201).body(truckService.getTttService().save(truckTimeTable));
     }
 
     /**
      * Endpoint for Delete request of the TTT. ID parameter will be used to find the TTT in DB.
+     *
      * @param id - Long ID of the TTT in the Database.
      * @return 200 - if the TTT was removed successfully;
      * 404 - if TTT wasn't found by ID;
@@ -143,28 +136,40 @@ public class TruckTimeTableController {
 
     /**
      * Update Truck Time update EndPoint. ID parameter of TTT will be used to find it in DB
+     *
      * @param truckTimeTable - The entity of TTT which should be updated.
      * @return Response Entity with codes:
      * - 404 - if the Entity wasn't found in DB by given ID;
-     * - 412 - in Case when given TTT has status Arrived or Delayed, or given Date of arrival is in the Past;
+     * - 412 - if TTT doesn't correspond the conditions defined in TruckTimeTable class;
+     * - 422 - in Case when given TTT has status Arrived or Delayed, or given Date of arrival is in the Past;
      * - 200 - if TTT was updated successfully.
      */
     @PutMapping("ttt/update")
-    public ResponseEntity<TruckTimeTable> updateTruckTimeTable(@RequestBody TruckTimeTable truckTimeTable) {
-        TruckTimeTable tttFromDataBase = truckService.getTttService().getTttById(truckTimeTable.getTttID());
-        if (tttFromDataBase == null) {
-            log.warn("TTT with id: {} not found, returning error", truckTimeTable.getTttID());
-            return ResponseEntity.notFound().build();
-        } else if (tttFromDataBase.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED) ||
-                LocalDateTime.parse(tttFromDataBase.getTttArrivalDatePlan()).isBefore(LocalDateTime.now()) ||
-                LocalDateTime.parse(truckTimeTable.getTttArrivalDatePlan()).isBefore(LocalDateTime.now())) {
-            log.info("TTT with id: {} has status ARRIVED or DELAYED and couldn't be changed: {}", tttFromDataBase.getTttID(), tttFromDataBase.getTttStatus().getTttStatusName());
-            log.info("Also check the ETA in given TTT, the Date couldn't be in the past. Is in the Past? : {}", LocalDateTime.parse(truckTimeTable.getTttArrivalDatePlan()).isBefore(LocalDateTime.now()));
-            return ResponseEntity.status(412).build(); //PRECONDITION_FAILED
+    public ResponseEntity<TruckTimeTable> updateTruckTimeTable(@RequestBody @Valid TruckTimeTable truckTimeTable, BindingResult bindingResult) {
+        HttpHeaders headers = new HttpHeaders();
+        Long id = truckTimeTable.getTttID();
+        if (id != null) {
+            TruckTimeTable tttFromDataBase = truckService.getTttService().getTttById(truckTimeTable.getTttID());
+            //if given entity doesn't correspond conditions of parameters annotation in TTT class
+            if (bindingResult.hasErrors()) {
+                headers = requestErrorService.getErrorHeaders(bindingResult);
+                return ResponseEntity.status(412).headers(headers).body(truckTimeTable); //PRECONDITION_FAILED
+            }
+            if (tttFromDataBase == null) {
+                log.warn("TTT with id: {} not found, returning error", truckTimeTable.getTttID());
+                headers.set("Error:", String.format("TTT with id=%d not found, returning error", id));
+                return ResponseEntity.notFound().headers(headers).build(); // 404
+            } else if (tttFromDataBase.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED) ||
+                    LocalDateTime.parse(truckTimeTable.getTttArrivalDatePlan()).isBefore(LocalDateTime.now())) {
+                log.info("TTT with id: {} has status ARRIVED and couldn't be changed: {}", tttFromDataBase.getTttID(), tttFromDataBase.getTttStatus().getTttStatusName());
+                log.info("Also check the ETA in given TTT, the Date couldn't be in the past. Is in the Past? : {}", LocalDateTime.parse(truckTimeTable.getTttArrivalDatePlan()).isBefore(LocalDateTime.now()));
+                return ResponseEntity.status(422).header("Error:", String.format("TTT id=%d has status ARRIVED or ETA date is in the Past", id)).build(); //UNPROCESSABLE_ENTITY
+            }
+            tttFromDataBase.setTttArrivalDatePlan(truckTimeTable.getTttArrivalDatePlan());
+            tttFromDataBase.setTruckName(truckTimeTable.getTruckName());
+            truckService.getTttService().save(tttFromDataBase);
+            return ResponseEntity.status(200).header("Message:", String.format("TTT with id=%d was successfully updated", id)).build(); //OK
         }
-        tttFromDataBase.setTttArrivalDatePlan(truckTimeTable.getTttArrivalDatePlan());
-        tttFromDataBase.setTruckName(truckTimeTable.getTruckName());
-        truckService.getTttService().save(tttFromDataBase);
-        return ResponseEntity.status(200).build(); //OK status
+        return ResponseEntity.notFound().header("ERROR", "Not Existing").build();
     }
 }
