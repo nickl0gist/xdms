@@ -41,7 +41,6 @@ public class TruckTimeTable {
     @Pattern(regexp = "^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9](:[0-5][0-9])?$")
     private String tttArrivalDateReal;
 
-    @NotNull
     @ManyToOne
     @JoinColumn
     private TTTStatus tttStatus;

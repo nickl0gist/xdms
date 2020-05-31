@@ -24,10 +24,10 @@ import pl.com.xdms.service.truck.TruckService;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
+import java.time.LocalDateTime;
 import java.util.Set;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -69,6 +69,7 @@ public class TpaControllerTest {
 
     /**
      * Check the attempt of updating the TPA. Status 200 should be returned.
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -111,6 +112,7 @@ public class TpaControllerTest {
 
     /**
      * Check the attempt of updating the TPA with Name and DeparturePlan in wrong format. Status 412 should be returned.
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -154,10 +156,11 @@ public class TpaControllerTest {
     /**
      * Case when given TPA has id which doesn't exist in DB.
      * Status 404 should be returned
+     *
      * @throws Exception for mockMvc
      */
     @Test
-    public void updateTestOfTpaResponse404() throws Exception{
+    public void updateTestOfTpaResponse404() throws Exception {
         ObjectMapper om = new ObjectMapper();
         newTpa.setTpaID(10000L);
         String json = om.writeValueAsString(newTpa);
@@ -171,10 +174,11 @@ public class TpaControllerTest {
     /**
      * Case when given TPA has null value for ID
      * Status 404 should be returned
+     *
      * @throws Exception for mockMvc
      */
     @Test
-    public void updateTestOfTpaResponse404NullGiven() throws Exception{
+    public void updateTestOfTpaResponse404NullGiven() throws Exception {
         ObjectMapper om = new ObjectMapper();
         String json = om.writeValueAsString(newTpa);
 
@@ -187,10 +191,11 @@ public class TpaControllerTest {
     /**
      * Case when user tries to update TPA which has status CLOSED.
      * Status 422 should be returned
+     *
      * @throws Exception for mockMvc
      */
     @Test
-    public void updateTpaResponse422ClosedTest () throws Exception {
+    public void updateTpaResponse422ClosedTest() throws Exception {
         ObjectMapper om = new ObjectMapper();
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -223,10 +228,11 @@ public class TpaControllerTest {
     /**
      * Case when user tries to update TPA by providing the Departure Date Plan which is in the Past
      * Status 422 should be returned
+     *
      * @throws Exception for mockMvc
      */
     @Test
-    public void updateTpaResponseDateInThePast422Test () throws Exception {
+    public void updateTpaResponseDateInThePast422Test() throws Exception {
         ObjectMapper om = new ObjectMapper();
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -254,6 +260,79 @@ public class TpaControllerTest {
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(header().stringValues("Message:", "Given Dates are in the Past or The TPA id=27 is CLOSED"));
+    }
+
+    /**
+     * Case when user tries to create TPA manually by passing TPA entity without provided
+     * planned ETD time.
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void createNewTpaWrongConstraints412() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        newTpa.setTpaDaysSetting(truckService.getTpaDaysSettingsService().getTpaDaySettingsById(14L));
+        String json = om.writeValueAsString(newTpa);
+        mockMvc.perform(post("/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(412))
+                .andExpect(header().stringValues("TPA-departurePlan_NotBlank", "must not be blank"))
+                .andExpect(header().stringValues("TPA-departurePlan_NotNull", "must not be null"));
+    }
+
+    /**
+     * Case when user tries to create TPA manually by passing TPA entity with planned ETD time which is in the Past.
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void createNewTpaEtdInThePast() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        newTpa.setTpaDaysSetting(truckService.getTpaDaysSettingsService().getTpaDaySettingsById(14L));
+        newTpa.setDeparturePlan("2020-05-25T10:00");
+        String json = om.writeValueAsString(newTpa);
+        mockMvc.perform(post("/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(422))
+                .andExpect(header().stringValues("Error:", "The ETD of the TPA is in the Past."));
+    }
+
+    /**
+     * Case when user tries to create TPA manually by passing TPA entity with planned ETD time which is in the
+     * very same day of creation. The status of TPA should be IN_PROGRESS
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void createNewTpaEtdHasActualDate() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        newTpa.setTpaDaysSetting(truckService.getTpaDaysSettingsService().getTpaDaySettingsById(14L));
+        log.info(LocalDateTime.now().toString());
+        newTpa.setDeparturePlan(LocalDateTime.now().plusHours(1L).toString().substring(0,16));
+        String json = om.writeValueAsString(newTpa);
+        mockMvc.perform(post("/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(header().stringValues("Message:", "The TPA name=TPA_test was successfully saved in Warehouse XD Gro"))
+                .andExpect(jsonPath("$.['status'].statusName").value("IN_PROGRESS"));
+    }
+
+    /**
+     * Case when user tries to create TPA manually by passing TPA entity with planned ETD time which is in the
+     * future and not at the same day of creation. The status of TPA should be BUFFER
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void createNewTpaEtdHasDateInFuture() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        newTpa.setTpaDaysSetting(truckService.getTpaDaysSettingsService().getTpaDaySettingsById(14L));
+        log.info(LocalDateTime.now().toString());
+        newTpa.setDeparturePlan(LocalDateTime.now().plusDays(1L).plusHours(1L).toString().substring(0,16));
+        String json = om.writeValueAsString(newTpa);
+        mockMvc.perform(post("/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(header().stringValues("Message:", "The TPA name=TPA_test was successfully saved in Warehouse XD Gro"))
+                .andExpect(jsonPath("$.['status'].statusName").value("BUFFER"));
     }
 
 }

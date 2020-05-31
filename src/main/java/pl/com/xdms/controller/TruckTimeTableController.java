@@ -150,15 +150,14 @@ public class TruckTimeTableController {
         Long id = truckTimeTable.getTttID();
         if (id != null) {
             TruckTimeTable tttFromDataBase = truckService.getTttService().getTttById(truckTimeTable.getTttID());
-            //if given entity doesn't correspond conditions of parameters annotation in TTT class
-            if (bindingResult.hasErrors()) {
-                headers = requestErrorService.getErrorHeaders(bindingResult);
-                return ResponseEntity.status(412).headers(headers).body(truckTimeTable); //PRECONDITION_FAILED
-            }
             if (tttFromDataBase == null) {
                 log.warn("TTT with id: {} not found, returning error", truckTimeTable.getTttID());
                 headers.set("Error:", String.format("TTT with id=%d not found, returning error", id));
                 return ResponseEntity.notFound().headers(headers).build(); // 404
+            } else if (bindingResult.hasErrors()){
+                //if given entity doesn't correspond conditions of parameters annotation in TTT class
+                headers = requestErrorService.getErrorHeaders(bindingResult);
+                return ResponseEntity.status(412).headers(headers).body(truckTimeTable); //PRECONDITION_FAILED
             } else if (tttFromDataBase.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED) ||
                     LocalDateTime.parse(truckTimeTable.getTttArrivalDatePlan()).isBefore(LocalDateTime.now())) {
                 log.info("TTT with id: {} has status ARRIVED and couldn't be changed: {}", tttFromDataBase.getTttID(), tttFromDataBase.getTttStatus().getTttStatusName());

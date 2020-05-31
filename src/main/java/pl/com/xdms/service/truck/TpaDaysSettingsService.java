@@ -71,4 +71,8 @@ public class TpaDaysSettingsService {
     public Set<TpaDaysSetting> getAllTpaDaySettingsByListOfWhCustomerAndWorkingDay(List<WhCustomer> whCustomerList, WorkingDay workingDay) {
         return settingsRepository.findAllByWhCustomerInAndWorkingDay(whCustomerList, workingDay);
     }
+
+    public TpaDaysSetting getTpaDaySettingsById(Long id) {
+        return settingsRepository.findById(id).orElse(null);
+    }
 }
