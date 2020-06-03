@@ -27,6 +27,7 @@ import javax.persistence.PersistenceUnit;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -228,7 +229,6 @@ public class TpaControllerTest {
     /**
      * Case when user tries to update TPA by providing the Departure Date Plan which is in the Past
      * Status 422 should be returned
-     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -265,7 +265,6 @@ public class TpaControllerTest {
     /**
      * Case when user tries to create TPA manually by passing TPA entity without provided
      * planned ETD time.
-     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -282,7 +281,6 @@ public class TpaControllerTest {
 
     /**
      * Case when user tries to create TPA manually by passing TPA entity with planned ETD time which is in the Past.
-     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -335,4 +333,86 @@ public class TpaControllerTest {
                 .andExpect(jsonPath("$.['status'].statusName").value("BUFFER"));
     }
 
+    /**
+     * Test of attempt to get schedule of outbound trucks from Warehouse to particular CUstomer
+     * using Id WhCustomer and Id of workingDay
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void getTpaDaySettingsByWhCustomerAndWorkingDayTest200() throws Exception {
+        mockMvc.perform(get("/tpa_settings/16/4"))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(jsonPath("$", hasSize(2)));
+    }
+
+    /**
+     * Case when Id of given WorkingDay is out of range
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void getTpaDaySettingsByWhCustomerAndWorkingDayTest404() throws Exception {
+        mockMvc.perform(get("/tpa_settings/16/9"))
+                .andDo(print())
+                .andExpect(status().is(404));
+    }
+
+    /**
+     * Case when user tries to get Settings for the pare Warehouse Customer which is not active
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void getTpaDaySettingsByWhCustomerAndWorkingDayTest422() throws Exception {
+        mockMvc.perform(get("/tpa_settings/3/3"))
+                .andDo(print())
+                .andExpect(status().is(422));
+    }
+
+    /**
+     * Case when given url-code of the Warehouse wasn't found in Database
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void getListOfTpaByWarehouseAndDayTest200() throws Exception {
+        mockMvc.perform(get("/cc_arad/tpa/2020-05-06"))
+                .andDo(print())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(status().is(200));
+    }
+
+    /**
+     * Case when given url-code of the Warehouse wasn't found in Database
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void getListOfTpaByWarehouseAndDayTest404() throws Exception {
+        mockMvc.perform(get("/not_exist/tpa/2020-05-06"))
+                .andDo(print())
+                .andExpect(header().stringValues("Error:", "The Warehouse with url-code:\"not_exist\" wasn't found"))
+                .andExpect(status().is(404));
+    }
+
+    /**
+     * Case when given date has value which not corresponds to regex condition:
+     * tpaDepartureDatePlan:^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]?$
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void getListOfTpaByWarehouseAndDayTest404BadDate() throws Exception {
+        mockMvc.perform(get("/cc_arad/tpa/2020-25-06"))
+                .andDo(print())
+                .andExpect(status().is(404));
+    }
+
+    /**
+     * Case when date formatter in TpaController throws Exception.
+     * It could happen when month value is in range [13-19]
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void getListOfTpaByWarehouseAndDayTest400BadDateWithException() throws Exception {
+        mockMvc.perform(get("/cc_arad/tpa/2020-15-06"))
+                .andDo(print())
+                .andExpect(status().is(400));
+    }
 }

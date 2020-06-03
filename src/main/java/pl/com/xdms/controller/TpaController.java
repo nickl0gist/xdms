@@ -8,12 +8,17 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TPAEnum;
+import pl.com.xdms.domain.tpa.TpaDaysSetting;
+import pl.com.xdms.domain.tpa.WorkingDay;
 import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.domain.warehouse.WhCustomer;
 import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.WarehouseService;
 import pl.com.xdms.service.truck.TruckService;
 
 import javax.validation.Valid;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,9 +51,19 @@ public class TpaController {
      * @return List of TPAs
      */
     @GetMapping("{wh_url}/tpa/{tpaDepartureDatePlan:^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]?$}")
-    public List<TPA> getTpaForCertainWarehouseAccordingDate(@PathVariable String wh_url, @PathVariable String tpaDepartureDatePlan) {
+    public ResponseEntity<List<TPA>> getTpaForCertainWarehouseAccordingDate(@PathVariable String wh_url, @PathVariable String tpaDepartureDatePlan) {
         Warehouse warehouse = warehouseService.getWarehouseByUrl(wh_url);
-        return truckService.getTpaService().getTpaByWarehouseAndDay(warehouse, tpaDepartureDatePlan);
+        if (warehouse == null){
+            return ResponseEntity.notFound().header("Error:", String.format("The Warehouse with url-code:\"%s\" wasn't found", wh_url)).build();
+        }
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setLenient(false);
+        try {
+            dateFormat.parse(tpaDepartureDatePlan);
+        } catch (ParseException pe) {
+            return ResponseEntity.badRequest().header("Error:", String.format("Given Date is not correct %s", tpaDepartureDatePlan)).build();
+        }
+        return ResponseEntity.ok(truckService.getTpaService().getTpaByWarehouseAndDay(warehouse, tpaDepartureDatePlan));
     }
 
     /**
@@ -75,10 +90,10 @@ public class TpaController {
      * @param tpaUpdated    - The TPA from Request given by the User
      * @param bindingResult - BindingResult entity to catch if there any Errors in conditions of TPA parameters.
      * @return ResponseEntity - response codes with messages:
-     * - 200 - when the given TPA entity passed all the required conditions;
-     * - 404 - if the ID of the given Entity wasn't find in DB;
-     * - 412 - if given entity doesn't correspond conditions of parameters annotation in TPA class;
-     * - 422 - if Dates of The DeparturePlan or Real are in the Past.
+     *          - 200 - when the given TPA entity passed all the required conditions;
+     *          - 404 - if the ID of the given Entity wasn't find in DB;
+     *          - 412 - if given entity doesn't correspond conditions of parameters annotation in TPA class;
+     *          - 422 - if Dates of The DeparturePlan or Real are in the Past.
      */
     @PutMapping("tpa/update")
     public ResponseEntity<TPA> updateTpa(@RequestBody @Valid TPA tpaUpdated, BindingResult bindingResult) {
@@ -122,7 +137,7 @@ public class TpaController {
      *          - 200 - if provided Entity meets the conditions.
      * The Entity will get status IN_PROGRESS if the ETD has the same day as the current date. If the ETD in future, the
      * status will be BUFFER.
-     *  @param tpaToCreate - TPA entity received from the user
+     * @param tpaToCreate - TPA entity received from the user
      * @param bindingResult - BindingResult entity to catch if there any Errors in conditions of TPA parameters.
      * @return ResponseEntity with http header "Message" or "Error".
      */
@@ -149,4 +164,29 @@ public class TpaController {
         return ResponseEntity.status(200).headers(headers).body(tpaSaved);
     }
 
+    /**
+     * Endpoint dedicated for receiving List of schedule of outbound trucks from certain warehouse to particular Customer
+     * depending of WorkingDay.
+     * @param whCustomerId - Long Id of the WhCustomer
+     * @param workingDayId - Long Id of the Working Day
+     * @return List Of TpaDaySetting for given parameters. Response status:
+     *          - 200 - if given Parameters were given in accordance of conditions, and return if any TpaDaySettings
+     *                  were found;
+     *          - 404 - if WhCustomer id, or id of the WorkingDay were not found in DB;
+     *          - 422 - if received WhCustomer entity has status isActive = false.
+     */
+    @GetMapping("tpa_settings/{whCustomerId:^[0-9]*$}/{workingDayId:^[0-9]*$}")
+    public ResponseEntity<List<TpaDaysSetting>> getAllTpaDaysSettingsByWhCustomerIdAndWorkingDayId(@PathVariable Long whCustomerId, @PathVariable Long workingDayId){
+        WhCustomer whCustomer = warehouseService.getWhCustomerById(whCustomerId);
+        WorkingDay workingDay = warehouseService.getWorkingDayById(workingDayId);
+        if(whCustomer == null || workingDay == null){
+            log.info("The wrong parameters were passed to request whCustomerId={}, workingDayId={}; WhCustomer is null:{}", whCustomerId, workingDayId, whCustomer == null);
+            return ResponseEntity.notFound().header("Error:", "Wrong parameters passed to request").build();
+        }
+        if(!whCustomer.getIsActive()){
+            return ResponseEntity.unprocessableEntity().header("Warning:", String.format("The Connection of Warehouse=%s and Customer=%s is not active", whCustomer.getWarehouse().getName(), whCustomer.getCustomer().getName())).build();
+        }
+        List<TpaDaysSetting> tpaDaysSettings = truckService.getTpaDaysSettingsService().getTpaDaySettingsByWhCustomerAndWorkingDay(whCustomer, workingDay);
+        return ResponseEntity.ok(tpaDaysSettings);
+    }
 }

@@ -49,7 +49,7 @@ public class WhCustomerController {
     }
 
     @GetMapping("/{wh_url}/customers/active")
-    public ResponseEntity<List<WhCustomer>> getOnlyActiveCustomersForWarehouse(@PathVariable String wh_url){
+    public ResponseEntity<List<WhCustomer>> getOnlyActiveWhCustomersForWarehouse(@PathVariable String wh_url){
         Warehouse warehouse = warehouseService.getWarehouseByUrl(wh_url);
         if (warehouse == null){
             return ResponseEntity.status(404).build();
@@ -69,7 +69,7 @@ public class WhCustomerController {
     }
 
     @GetMapping("/{wh_url}/customer/{id}")
-    public ResponseEntity<WhCustomer> getAllCustomersForWarehouse(@PathVariable String wh_url, @PathVariable Long id){
+    public ResponseEntity<WhCustomer> getWhCustomerForWarehouse(@PathVariable String wh_url, @PathVariable Long id){
         Warehouse warehouse = warehouseService.getWarehouseByUrl(wh_url);
         if (warehouse == null){
             return ResponseEntity.status(404).build();

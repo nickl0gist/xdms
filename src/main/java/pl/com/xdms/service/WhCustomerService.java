@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.domain.customer.Customer;
+import pl.com.xdms.domain.tpa.WorkingDay;
 import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.domain.warehouse.WhCustomer;
 import pl.com.xdms.repository.WhCustomerRepository;
@@ -107,5 +108,9 @@ public class WhCustomerService {
         minutes += hours * 60 + days * 1440;
 
         return minutes;
+    }
+
+    public WorkingDay getWorkingDyById(Long workingDayId) {
+        return workingDayService.getWorkingDayByNumber(workingDayId);
     }
 }

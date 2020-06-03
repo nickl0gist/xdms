@@ -69,7 +69,7 @@ VALUES
   (6, 'Stadthagen', 'GE', 'udo@muller.ge', true, 'TXD STD', '20-212', 'Muller - 20', 2, 'txd_std', 'GMT+02');
 
 insert into warehouse_customer
-  (wh_customerid, warehouseid, customerid, is_active,transit_time)
+  (wh_customerid, warehouseid, customerid, is_active, transit_time)
 VALUES
   (1,  1, 1, true, 'P0DT1H0M'),
   (2,  1, 2, true, 'P0DT1H0M'),
@@ -194,7 +194,8 @@ values
     (74, '14:00', 'P1DT5H0M', 21, 2),
     (75, '14:00', 'P1DT5H0M', 21, 3),
     (76, '14:00', 'P1DT5H0M', 21, 4),
-    (77, '14:00', 'P1DT5H0M', 21, 5);
+    (77, '14:00', 'P1DT5H0M', 21, 5),
+    (78, '03:00', 'P1DT5H0M', 16, 4);
 
 insert into manifests
 (manifestid, manifest_code, pallet_qty_planned, box_qty_planned, totalldm_planned,

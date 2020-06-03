@@ -6,7 +6,6 @@ import pl.com.xdms.domain.tpa.WorkingDay;
 import pl.com.xdms.repository.WorkingDayRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created on 08.12.2019
@@ -27,7 +26,6 @@ public class WorkingDayService {
     }
 
     public WorkingDay getWorkingDayByNumber(Long id) {
-        Optional<WorkingDay> workingDay = workingDayRepository.findById(id);
-        return workingDay.orElse(null);
+        return workingDayRepository.findById(id).orElse(null);
     }
 }

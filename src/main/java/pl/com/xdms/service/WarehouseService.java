@@ -5,9 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.domain.customer.Customer;
+import pl.com.xdms.domain.tpa.WorkingDay;
 import pl.com.xdms.domain.warehouse.WHType;
 import pl.com.xdms.domain.warehouse.WHTypeEnum;
 import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.domain.warehouse.WhCustomer;
 import pl.com.xdms.repository.WHTypeRepository;
 import pl.com.xdms.repository.WarehouseRepository;
 
@@ -165,4 +167,11 @@ public class WarehouseService {
         return warehouse.orElse(null);
     }
 
+    public WhCustomer getWhCustomerById(Long whCustomerId) {
+        return whCustomerService.findWhCustomerById(whCustomerId);
+    }
+
+    public WorkingDay getWorkingDayById(Long workingDayId) {
+        return whCustomerService.getWorkingDyById(workingDayId);
+    }
 }
