@@ -60,7 +60,7 @@ public class TruckTimeTableController {
      * @param id of the TTT in Database
      * @return TruckTimeTable and status 200 if found. 404 if will not.
      */
-    @GetMapping("ttt/{id}")
+    @GetMapping("ttt/{id:^\\d+$}")
     public ResponseEntity<TruckTimeTable> getTruckTimeTableById(@PathVariable Long id) {
         TruckTimeTable truckTimeTable = truckService.getTttService().getTttById(id);
         if (truckTimeTable != null) {
@@ -112,25 +112,26 @@ public class TruckTimeTableController {
      * 200 - if TTT was successfully removed
      * 400 - if there were other reasons the TTT wasn't removed.
      */
-    @DeleteMapping("ttt/delete/{id}")
+    @DeleteMapping("ttt/delete/{id:^\\d+$}")
     public ResponseEntity<String> deleteTruckTimeTable(@PathVariable Long id) {
         TruckTimeTable truckTimeTable = truckService.getTttService().getTttById(id);
+        String message = "Message";
         HttpHeaders headers = new HttpHeaders();
         if (truckTimeTable == null) {
             log.info("TTT with id: {} not found, returning error", id);
-            headers.set("Message", "TTT Not Found");
+            headers.set(message, "TTT Not Found");
             return ResponseEntity.notFound().headers(headers).build();//404
         } else if (truckTimeTable.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED)) {
             log.info("The TTT {} has already arrived and cannot be removed", truckTimeTable.getTruckName());
-            headers.set("Message", String.format("TTT with id=%d has status Arrived", id));
+            headers.set(message, String.format("TTT with id=%d has status Arrived", id));
             return ResponseEntity.status(422).headers(headers).build();
         } else if (truckService.deleteTtt(truckTimeTable)) {
             log.info("TTT with id: {} was removed in Database in Warehouse {} (code {})", id,
                     truckTimeTable.getWarehouse().getName(), truckTimeTable.getWarehouse().getUrlCode());
-            headers.set("Message", String.format("TTT with id=%d was successfully removed.", id));
+            headers.set(message, String.format("TTT with id=%d was successfully removed.", id));
             return ResponseEntity.ok().headers(headers).build(); //200
         }
-        headers.set("Message", "TTT could not be deleted. Check Manifests from this TTT");
+        headers.set(message, "TTT could not be deleted. Check Manifests from this TTT");
         return ResponseEntity.badRequest().headers(headers).build(); // 400
     }
 

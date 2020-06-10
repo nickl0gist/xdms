@@ -41,4 +41,20 @@ public class ManifestService {
     public List<Manifest> getAllManifests(){
         return manifestRepository.findAll();
     }
+
+    public List<Manifest> getAllAbandonedManifests() {
+        return manifestRepository.findAllByTruckTimeTableSetIsNull();
+    }
+
+    public Manifest findManifestById(Long id) {
+        return manifestRepository.findById(id).orElse(null);
+    }
+
+    public Manifest save(Manifest manifestFromDb) {
+        return manifestRepository.save(manifestFromDb);
+    }
+
+    public void delete(Manifest manifest) {
+       manifestRepository.delete(manifest);
+    }
 }

@@ -79,7 +79,7 @@ public class Manifest {
     @NotNull
     private Supplier supplier;
 
-    @OneToMany(mappedBy = "manifest")
+    @OneToMany(mappedBy = "manifest", cascade = CascadeType.REMOVE)
     @JsonManagedReference
     @ToString.Exclude
     private Set<ManifestReference> manifestsReferenceSet;

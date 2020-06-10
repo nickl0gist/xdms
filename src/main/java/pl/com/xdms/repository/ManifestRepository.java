@@ -3,6 +3,7 @@ package pl.com.xdms.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import pl.com.xdms.domain.manifest.Manifest;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -14,4 +15,5 @@ public interface ManifestRepository extends JpaRepository<Manifest, Long> {
 
     Optional<Manifest> findByManifestCode(String manifestCode);
 
+    List<Manifest> findAllByTruckTimeTableSetIsNull();
 }

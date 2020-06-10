@@ -34,4 +34,8 @@ public class ManifestReferenceService {
     public ManifestReference save(ManifestReference manifestReference){
        return manifestReferenceRepository.save(manifestReference);
     }
+
+    public ManifestReference findById(Long id) {
+        return manifestReferenceRepository.findById(id).orElse(null);
+    }
 }

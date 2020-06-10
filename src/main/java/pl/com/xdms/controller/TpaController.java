@@ -121,10 +121,8 @@ public class TpaController {
             }
             tpaToUpdate.setDeparturePlan(tpaUpdated.getDeparturePlan());
             tpaToUpdate.setName(tpaUpdated.getName());
-            truckService.getTpaService().save(tpaToUpdate);
             log.info("TPA with ID={} was successfully updated", id);
-            headers.set(message, String.format("TPA with ID=%d was successfully updated", id));
-            return ResponseEntity.ok().headers(headers).build();
+            return ResponseEntity.ok().header(message, String.format("TPA with ID=%d was successfully updated", id)).body(truckService.getTpaService().save(tpaToUpdate));
         }
         return ResponseEntity.notFound().header("ERROR", "Not Existing").build();
     }
@@ -189,4 +187,6 @@ public class TpaController {
         List<TpaDaysSetting> tpaDaysSettings = truckService.getTpaDaysSettingsService().getTpaDaySettingsByWhCustomerAndWorkingDay(whCustomer, workingDay);
         return ResponseEntity.ok(tpaDaysSettings);
     }
+
+    //TODO DeleteMapping ????
 }
