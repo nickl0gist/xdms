@@ -17,8 +17,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
+import pl.com.xdms.service.CustomerService;
 import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.ManifestService;
+import pl.com.xdms.service.SupplierService;
 import pl.com.xdms.service.truck.TruckService;
 
 import javax.persistence.EntityManager;
@@ -59,6 +61,12 @@ public class ManifestControllerTest {
 
     @Autowired
     private ManifestReferenceService manifestReferenceService;
+
+    @Autowired
+    private CustomerService customerService;
+
+    @Autowired
+    private SupplierService supplierService;
 
     @Autowired
     private TruckService truckService;
@@ -261,4 +269,128 @@ public class ManifestControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(header().stringValues("Message:", "Manifest with id=100 Not Found"));
     }
+
+    /**
+     * Testcase of attempt to add new manifest in chosen TTT.
+     * The provided manifest meets to conditions and snd it would be saved in DB.
+     * Status response - 200 (Ok).
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void manualCreationOfManifestTestStatus200() throws Exception {
+        long tttId = 28L;
+        ObjectMapper om = new ObjectMapper();
+
+        newManifest.setManifestCode("NEW-MANIFEST-11");
+        newManifest.setTotalWeightPlanned(500.0);
+        newManifest.setTotalLdmPlanned(3.0);
+        newManifest.setPalletQtyPlanned(10);
+        newManifest.setBoxQtyPlanned(100);
+        newManifest.setCustomer(customerService.getCustomerById(1L));
+        newManifest.setSupplier(supplierService.getSupplierById(1L));
+
+        String json = om.writeValueAsString(newManifest);
+
+        mockMvc.perform(post("/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(header().stringValues("Message:", "The manifest NEW-MANIFEST-11 was successfully saved with id=20"));
+    }
+
+    /**
+     * Testcase of attempt to add new manifest in chosen TTT.
+     * The provided manifest has inactive Customer and Supplier
+     * and it wouldn't be persisted in DB.
+     * Response - 409 (Conflict).
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void manualCreationOfManifestTestStatus409SupplierCustomerNotActive() throws Exception {
+        long tttId = 28L;
+        ObjectMapper om = new ObjectMapper();
+
+        newManifest.setManifestCode("NEW-MANIFEST-11");
+        newManifest.setTotalWeightPlanned(500.0);
+        newManifest.setTotalLdmPlanned(3.0);
+        newManifest.setPalletQtyPlanned(10);
+        newManifest.setBoxQtyPlanned(100);
+        newManifest.setCustomer(customerService.getCustomerById(4L));
+        newManifest.setSupplier(supplierService.getSupplierById(4L));
+
+        String json = om.writeValueAsString(newManifest);
+
+        mockMvc.perform(post("/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(409))
+                .andExpect(header().stringValues("Error:", "Manifest with code=NEW-MANIFEST-11 has Given Supplier isActive = false, Customer isActive = false"));
+    }
+
+    /**
+     * Testcase of attempt to save the Manifest with break of Manifest.class annotation conditions.
+     * Response - 412 (Precondition Failed).
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void manualCreationOfManifestTestStatus412() throws Exception {
+        long tttId = 28L;
+        ObjectMapper om = new ObjectMapper();
+        newManifest.setBoxQtyPlanned(-10);
+
+        String json = om.writeValueAsString(newManifest);
+
+        mockMvc.perform(post("/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(412))
+                .andExpect(header().stringValues("manifest-supplier_NotNull", "must not be null"))
+                .andExpect(header().stringValues("manifest-customer_NotNull", "must not be null"))
+                .andExpect(header().stringValues("manifest-boxQtyPlanned_Min", "must be greater than or equal to 0"));
+    }
+
+    /**
+     * Test of attempt to add manifest within not existing TTT.
+     * Response - 404 (Not found).
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void manualCreationOfManifestTestStatus404() throws Exception {
+        long tttId = 280L;
+        ObjectMapper om = new ObjectMapper();
+        newManifest.setBoxQtyPlanned(-10);
+
+        String json = om.writeValueAsString(newManifest);
+
+        mockMvc.perform(post("/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(404))
+                .andExpect(header().stringValues("Error:", "The TTT with Id=280 wasn't found"));
+    }
+
+    /**
+     * Testcase of attempt to save Manifest with ManifestCode which already exists in DB
+     * Response - - 409 (Conflict).
+     * @throws Exception fro mockMvc.
+     */
+    @Test
+    public void manualCreationOfManifestTestStatus409() throws Exception {
+        long tttId = 28L;
+        ObjectMapper om = new ObjectMapper();
+        newManifest.setManifestCode("TEST-MAN-01"); // id=3 in DB
+        newManifest.setTotalWeightPlanned(500.0);
+        newManifest.setTotalLdmPlanned(3.0);
+        newManifest.setPalletQtyPlanned(10);
+        newManifest.setBoxQtyPlanned(100);
+        newManifest.setCustomer(customerService.getCustomerById(1L));
+        newManifest.setSupplier(supplierService.getSupplierById(1L));
+
+        String json = om.writeValueAsString(newManifest);
+
+        mockMvc.perform(post("/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(409))
+                .andExpect(header().stringValues("Error:", "Manifest with code=TEST-MAN-01 is existing in DB already"));
+    }
+
 }

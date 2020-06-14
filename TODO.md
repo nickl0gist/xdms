@@ -143,6 +143,8 @@ not done
 Not done
 -
 
+-. if defined by default TPA was changed, the changes should be implemented to TTT at the Warehouse where this TPA goes to. 
+
 -. Manifest Management page which shows all manifests with empty TTT and TPA list, this page allows to assign TPA or TTT
 
 -. Find Manifests with empty TTT set ot TPA set

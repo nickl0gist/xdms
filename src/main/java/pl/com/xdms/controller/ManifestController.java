@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.manifest.Manifest;
+import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.service.ManifestService;
 import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.WarehouseService;
@@ -132,5 +133,54 @@ public class ManifestController {
         return ResponseEntity.ok().headers(headers).build();//200
     }
 
-    //TODO CREATE -> creation only via ExcelManifestController
+    /**
+     * Endpoint dedicated to manual creation f Manifest in chosen TTT.
+     * The given manifest should correspond to all Annotation conditions declared in Manifest.class.
+     * @param tttId - Long Id of the TTT where tha manifest should be added.
+     * @param manifest - The Manifest Entity.
+     * @param bindingResult - BindingResult entity for validation the Manifest.
+     * @return Response Entity with http codes of response:
+     * - 200 - is the given Manifest meets the conditions;
+     * - 404 - if there no TTT was found by given Id;
+     * - 409 - if Code of the given manifest is already existing in DB;
+     * - 409 - if the Supplier or the Customer in given Manifest has status isActive = false;
+     * - 412 - is the given Manifest do not correspond to annotation conditions in Manifest.class.;
+     */
+    @PostMapping("ttt/{tttId:^\\d+$}")
+    public ResponseEntity<Manifest> addManifestInChosenTtt(@PathVariable Long tttId, @RequestBody @Valid Manifest manifest, BindingResult bindingResult) {
+        HttpHeaders headers = new HttpHeaders();
+        String message = "Message:";
+        String error = "Error:";
+        TruckTimeTable ttt = truckService.getTttService().getTttById(tttId);
+        if (ttt == null) {
+            log.info("The TTT with Id={} wasn't found", tttId);
+            headers.add(error, String.format("The TTT with Id=%d wasn't found", tttId));
+            return ResponseEntity.notFound().headers(headers).build(); // 404
+        } else if (bindingResult.hasErrors()){
+            headers = requestErrorService.getErrorHeaders(bindingResult);
+            return ResponseEntity.status(412).headers(headers).body(manifest);
+        } else if (manifestService.isManifestExisting(manifest)) {
+            log.info("Manifest with code={} is existing in DB already", manifest.getManifestCode());
+            headers.add(error, String.format("Manifest with code=%s is existing in DB already", manifest.getManifestCode()));
+            return ResponseEntity.status(409).headers(headers).body(manifest); //409 - Conflict
+        } else if (!manifest.getCustomer().getIsActive() || !manifest.getSupplier().getIsActive()) {
+            log.info("The manifest=\"{}\" has Given Supplier isActive = {}, Customer isActive = {}", manifest.getManifestCode(), manifest.getSupplier().getIsActive(), manifest.getCustomer().getIsActive());
+            headers.add(error, String.format("Manifest with code=%s has Given Supplier isActive = %b, Customer isActive = %b", manifest.getManifestCode(), manifest.getSupplier().getIsActive(), manifest.getCustomer().getIsActive()));
+            return ResponseEntity.status(409).headers(headers).body(manifest);
+        } else {
+            Manifest manifestToSave = new Manifest();
+            manifestToSave.setManifestCode(manifest.getManifestCode());
+            manifestToSave.setBoxQtyPlanned(manifest.getBoxQtyPlanned());
+            manifestToSave.setPalletQtyPlanned(manifest.getPalletQtyPlanned());
+            manifestToSave.setTotalLdmPlanned(manifest.getTotalLdmPlanned());
+            manifestToSave.setTotalWeightPlanned(manifest.getTotalWeightPlanned());
+            manifestToSave.setSupplier(manifest.getSupplier());
+            manifestToSave.setCustomer(manifest.getCustomer());
+            manifestToSave.getTruckTimeTableSet().add(ttt);
+            manifestToSave = manifestService.save(manifestToSave);
+            log.info("The manifest {} was successfully saved with id={}", manifestToSave.getManifestCode(), manifestToSave.getManifestID());
+            headers.add(message, String.format("The manifest %s was successfully saved with id=%d", manifestToSave.getManifestCode(), manifestToSave.getManifestID()));
+            return ResponseEntity.ok().headers(headers).body(manifestService.save(manifestToSave));
+        }
+    }
 }
