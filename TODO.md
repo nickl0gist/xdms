@@ -50,8 +50,8 @@ This column should represent TTT in certain warehouse
 +17. create mechanism to check if the manifest already existing in DB: check by manifest code;
 tpa, ttt : check by name and by planned date and if they hasn't status error.
  
-+18. Created DTO which will contain TPA-set ManifestSet TTT-set and ManifestReferenceSet to collect information from Loaded 
-file and give it back to validation.
++18. Created DTO which will contain TPA-set ManifestSet TTT-set and ManifestReferenceSet to collect information from 
+Loaded file and give it back to validation.
 
 +19. save received Manifest, ManifestReference, TTT, TPA after validation.
 
@@ -139,20 +139,18 @@ not done
  createNewTttWithNotExistingWarehouse
  createNewTttWithNullWarehouse
 
++24. Find Manifests with empty TTT set ot TPA set. Manifest Management page which shows all manifests with empty TTT and
+ TPA list, this page allows to assign TPA or TTT
 
 Not done
 -
 
 -. if defined by default TPA was changed, the changes should be implemented to TTT at the Warehouse where this TPA goes to. 
 
--. Manifest Management page which shows all manifests with empty TTT and TPA list, this page allows to assign TPA or TTT
-
--. Find Manifests with empty TTT set ot TPA set
-
 -. Create mechanism which will be responsible of checking TTT and TPA status each time when get requests for particular
 Warehouse and Date will be proceeded. 
 
--. TPA status before saving check the date . if day is the same change to In Progress 
+-. TPA status before saving check the date. if day is the same change to In Progress 
 if TPA is for next Day or later change to BuFFER
 
 -. What if user tries to delete TPA TTT Manifest Manifest-Reference by id for warehouse he doesn't have access? 

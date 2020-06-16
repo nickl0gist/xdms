@@ -229,6 +229,7 @@ public class TpaControllerTest {
     /**
      * Case when user tries to update TPA by providing the Departure Date Plan which is in the Past
      * Status 422 should be returned
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -265,6 +266,7 @@ public class TpaControllerTest {
     /**
      * Case when user tries to create TPA manually by passing TPA entity without provided
      * planned ETD time.
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -281,6 +283,7 @@ public class TpaControllerTest {
 
     /**
      * Case when user tries to create TPA manually by passing TPA entity with planned ETD time which is in the Past.
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -298,6 +301,7 @@ public class TpaControllerTest {
     /**
      * Case when user tries to create TPA manually by passing TPA entity with planned ETD time which is in the
      * very same day of creation. The status of TPA should be IN_PROGRESS
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -305,7 +309,7 @@ public class TpaControllerTest {
         ObjectMapper om = new ObjectMapper();
         newTpa.setTpaDaysSetting(truckService.getTpaDaysSettingsService().getTpaDaySettingsById(14L));
         log.info(LocalDateTime.now().toString());
-        newTpa.setDeparturePlan(LocalDateTime.now().plusHours(1L).toString().substring(0,16));
+        newTpa.setDeparturePlan(LocalDateTime.now().plusHours(1L).toString().substring(0, 16));
         String json = om.writeValueAsString(newTpa);
         mockMvc.perform(post("/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
@@ -317,6 +321,7 @@ public class TpaControllerTest {
     /**
      * Case when user tries to create TPA manually by passing TPA entity with planned ETD time which is in the
      * future and not at the same day of creation. The status of TPA should be BUFFER
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -324,7 +329,7 @@ public class TpaControllerTest {
         ObjectMapper om = new ObjectMapper();
         newTpa.setTpaDaysSetting(truckService.getTpaDaysSettingsService().getTpaDaySettingsById(14L));
         log.info(LocalDateTime.now().toString());
-        newTpa.setDeparturePlan(LocalDateTime.now().plusDays(1L).plusHours(1L).toString().substring(0,16));
+        newTpa.setDeparturePlan(LocalDateTime.now().plusDays(1L).plusHours(1L).toString().substring(0, 16));
         String json = om.writeValueAsString(newTpa);
         mockMvc.perform(post("/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
@@ -334,42 +339,8 @@ public class TpaControllerTest {
     }
 
     /**
-     * Test of attempt to get schedule of outbound trucks from Warehouse to particular CUstomer
-     * using Id WhCustomer and Id of workingDay
-     * @throws Exception for mockMvc
-     */
-    @Test
-    public void getTpaDaySettingsByWhCustomerAndWorkingDayTest200() throws Exception {
-        mockMvc.perform(get("/tpa_settings/16/4"))
-                .andDo(print())
-                .andExpect(status().is(200))
-                .andExpect(jsonPath("$", hasSize(2)));
-    }
-
-    /**
-     * Case when Id of given WorkingDay is out of range
-     * @throws Exception for mockMvc
-     */
-    @Test
-    public void getTpaDaySettingsByWhCustomerAndWorkingDayTest404() throws Exception {
-        mockMvc.perform(get("/tpa_settings/16/9"))
-                .andDo(print())
-                .andExpect(status().is(404));
-    }
-
-    /**
-     * Case when user tries to get Settings for the pare Warehouse Customer which is not active
-     * @throws Exception for mockMvc
-     */
-    @Test
-    public void getTpaDaySettingsByWhCustomerAndWorkingDayTest422() throws Exception {
-        mockMvc.perform(get("/tpa_settings/3/3"))
-                .andDo(print())
-                .andExpect(status().is(422));
-    }
-
-    /**
      * Case when given url-code of the Warehouse wasn't found in Database
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -382,6 +353,7 @@ public class TpaControllerTest {
 
     /**
      * Case when given url-code of the Warehouse wasn't found in Database
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -395,6 +367,7 @@ public class TpaControllerTest {
     /**
      * Case when given date has value which not corresponds to regex condition:
      * tpaDepartureDatePlan:^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]?$
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -407,6 +380,7 @@ public class TpaControllerTest {
     /**
      * Case when date formatter in TpaController throws Exception.
      * It could happen when month value is in range [13-19]
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -414,5 +388,71 @@ public class TpaControllerTest {
         mockMvc.perform(get("/cc_arad/tpa/2020-15-06"))
                 .andDo(print())
                 .andExpect(status().is(400));
+    }
+
+    /**
+     * Attempt to delete TPA by not existing Id. Response status 404
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteTpaByIdWhichNotExistsTestStatus404() throws Exception {
+        mockMvc.perform(delete("/tpa/100"))
+                .andDo(print())
+                .andExpect(status().is(404))
+                .andExpect(header().stringValues("Error:", "TPA with id=100 wasn't found"));
+    }
+
+    /**
+     * Attempt to delete TPA which has Manifests in ManifestSet. Response status 417
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteTpaByIdWithManifestsInSetTestStatus417() throws Exception {
+        mockMvc.perform(delete("/tpa/23"))
+                .andDo(print())
+                .andExpect(status().is(417))
+                .andExpect(header().stringValues("Error:", "TPA with id=23 has not empty set of Manifests or References and couldn't be deleted"));
+    }
+
+    /**
+     * Attempt to delete TPA which has References in Set. Response 417
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteTpaByIdWithReferencesInSetTestStatus417() throws Exception {
+        mockMvc.perform(delete("/tpa/25"))
+                .andDo(print())
+                .andExpect(status().is(417))
+                .andExpect(header().stringValues("Error:", "TPA with id=25 has not empty set of Manifests or References and couldn't be deleted"));
+    }
+
+    /**
+     * Attempt to delete CLOSED TPA. Response status 403
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteTpaByIdWithStatusClosedTestStatus403() throws Exception {
+        mockMvc.perform(delete("/tpa/26"))
+                .andDo(print())
+                .andExpect(status().is(403))
+                .andExpect(header().stringValues("Error:", "TPA with id=26 has status CLOSED and couldn't be deleted"));
+
+    }
+
+    /**
+     * Test of attempt to delete the Tpa
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteTpaByIdStatus200() throws Exception {
+        mockMvc.perform(delete("/tpa/1"))
+                .andDo(print())
+                .andExpect(status().is(204))
+                .andExpect(header().stringValues("Message:", "TPA with id=1 was successfully deleted"));
     }
 }
