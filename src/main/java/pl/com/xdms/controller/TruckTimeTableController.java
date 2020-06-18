@@ -106,11 +106,12 @@ public class TruckTimeTableController {
      * Endpoint for Delete request of the TTT. ID parameter will be used to find the TTT in DB.
      *
      * @param id - Long ID of the TTT in the Database.
-     * @return 200 - if the TTT was removed successfully;
-     * 404 - if TTT wasn't found by ID;
-     * 422 - If the TTT has status arrived;
-     * 200 - if TTT was successfully removed
-     * 400 - if there were other reasons the TTT wasn't removed.
+     * @return ResponseEntity with http status
+     * - 200 - if the TTT was removed successfully;
+     * - 404 - if TTT wasn't found by ID;
+     * - 422 - If the TTT has status ARRIVED;
+     * - 200 - if TTT was successfully removed
+     * - 400 - if there were other reasons the TTT wasn't removed.
      */
     @DeleteMapping("ttt/delete/{id:^\\d+$}")
     public ResponseEntity<String> deleteTruckTimeTable(@PathVariable Long id) {
@@ -172,4 +173,5 @@ public class TruckTimeTableController {
         }
         return ResponseEntity.notFound().header("ERROR", "Not Existing").build();
     }
+
 }
