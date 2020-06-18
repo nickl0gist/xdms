@@ -129,16 +129,16 @@ public class TpaController {
 
     /**
      * Endpoint dedicated to manual creation of The TPA by user using web form. The ETD date shouldn't in the Past.
-     * Response status:
-     * - 422 - If provided ETD date is in the Past;
-     * - 412 - if BindingResult has errors;
-     * - 200 - if provided Entity meets the conditions.
      * The Entity will get status IN_PROGRESS if the ETD has the same day as the current date. If the ETD in future, the
      * status will be BUFFER.
      *
      * @param tpaToCreate   - TPA entity received from the user
      * @param bindingResult - BindingResult entity to catch if there any Errors in conditions of TPA parameters.
      * @return ResponseEntity with http header "Message" or "Error".
+     * Response status:
+     * - 422 - If provided ETD date is in the Past;
+     * - 412 - if BindingResult has errors;
+     * - 200 - if provided Entity meets the conditions.
      */
     @PostMapping("tpa/create")
     public ResponseEntity<TPA> createTpa(@RequestBody @Valid TPA tpaToCreate, BindingResult bindingResult) {
@@ -163,7 +163,18 @@ public class TpaController {
         return ResponseEntity.status(200).headers(headers).body(tpaSaved);
     }
 
-    //TODO DeleteMapping ????
+    /**
+     * Endpoint for removing TPA from Database by given Id. Removing is only possible when the TPA doesn't have status
+     * CLOSED and the ManifestSet doesn't contain any Manifests or ManifestReferences inside.
+     *
+     * @param id - Long id of TPA
+     * @return Empty body with Status 204 if the removing was successful. Otherwise if the TPA will be found it will be
+     * included to body response. Response status:
+     * - 204 - if the removing was successful;
+     * - 417 - if TPA Manifest set or ManifestReference are not empty;
+     * - 403 - if TPA is CLOSED;
+     * - 404 - if TPA wasn't found.
+     */
     @DeleteMapping("tpa/{id:^\\d+$}")
     public ResponseEntity<TPA> deleteTpa(@PathVariable Long id) {
         TPA tpa = truckService.getTpaService().getTpaById(id);

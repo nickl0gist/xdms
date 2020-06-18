@@ -177,6 +177,16 @@ public class CustomerControllerTest {
     }
 
     @Test
+    public void updateCustomerNullTest() throws Exception {
+        newCustomer = null;
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(newCustomer);
+        this.mockMvc.perform(put("/admin/customers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(400));
+    }
+
+    @Test
     public void createCustomerTestStatusOK() throws Exception {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newCustomer);
@@ -211,6 +221,18 @@ public class CustomerControllerTest {
                 .andExpect(header().exists("customer-customerCode_NotBlank"))
                 .andExpect(header().exists("customer-customerCode_NotNull"))
                 .andExpect(header().exists("customer-name_Size"));
+    }
+
+    @Test
+    public void createCustomerTestNullTest() throws Exception {
+        newCustomer = null;
+
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(newCustomer);
+
+        this.mockMvc.perform(post("/admin/customers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(400));
     }
 
     private String jsonClean(String json) {
