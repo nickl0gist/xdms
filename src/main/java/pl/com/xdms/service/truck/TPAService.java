@@ -83,4 +83,8 @@ public class TPAService {
     public TPA getTpaById(Long id) {
         return tpaRepository.findById(id).orElse(null);
     }
+
+    public void removeTpaBiId(Long id) {
+        tpaRepository.deleteById(id);
+    }
 }

@@ -42,7 +42,7 @@ public class ManifestService {
         return manifestRepository.findAll();
     }
 
-    public List<Manifest> getAllAbandonedManifests() {
+    public List<Manifest> getAllTttAbandonedManifests() {
         return manifestRepository.findAllByTruckTimeTableSetIsNull();
     }
 

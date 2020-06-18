@@ -84,9 +84,9 @@ public class ManifestControllerTest {
      */
     @Test
     public void getAllAbandonedManifestsTest() throws Exception {
-        mockMvc.perform(get("/manifests/abandoned"))
+        mockMvc.perform(get("/ttt/manifests/abandoned"))
                 .andDo(print())
-                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(status().isOk());
     }
 
@@ -352,6 +352,7 @@ public class ManifestControllerTest {
     /**
      * Test of attempt to add manifest within not existing TTT.
      * Response - 404 (Not found).
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -371,6 +372,7 @@ public class ManifestControllerTest {
     /**
      * Testcase of attempt to save Manifest with ManifestCode which already exists in DB
      * Response - - 409 (Conflict).
+     *
      * @throws Exception fro mockMvc.
      */
     @Test
@@ -393,4 +395,107 @@ public class ManifestControllerTest {
                 .andExpect(header().stringValues("Error:", "Manifest with code=TEST-MAN-01 is existing in DB already"));
     }
 
+    /**
+     * Test of attempt to delete Manifest in TPA which does not exist.
+     *
+     * @throws Exception for mockNvc
+     */
+    @Test
+    public void deleteManifestFromGivenTpaTest404() throws Exception {
+        mockMvc.perform(delete("/tpa/200/manifest/3"))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(header().stringValues("Error:", "TPA with id=200 wasn't found"));
+    }
+
+    /**
+     * Attempt of removing particular Manifest from Set of given TPA by id.
+     * Response 200.
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteManifestFromGivenTpaTest200() throws Exception {
+
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+        entityManager.getTransaction().begin();
+        TPA tpa = entityManager.find(TPA.class, 4L);
+        Assert.assertEquals(2, tpa.getManifestSet().size());
+        entityManager.getTransaction().commit();
+
+        mockMvc.perform(delete("/tpa/4/manifest/6"))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(header().stringValues("Message:", "Manifest TEST-MAN-04 was removed from TPA with id=4"))
+                .andExpect(jsonPath("$.tpaID").value(4))
+                .andExpect(jsonPath("$.['manifestSet']", hasSize(1)));
+
+    }
+
+    /**
+     * Test of case when user tries to delete unknown manifest from existing TPA.
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteManifestFromGivenTpaTest405() throws Exception {
+        mockMvc.perform(delete("/tpa/2/manifest/300"))
+                .andDo(print())
+                .andExpect(status().is(405))
+                .andExpect(header().stringValues("Error:", "Manifest with id=300 wasn't found in DB"))
+                .andExpect(jsonPath("$.tpaID").value(2));
+    }
+
+    /**
+     * Test of attempt to delete Manifest in TTT which does not exist.
+     *
+     * @throws Exception for mockNvc
+     */
+    @Test
+    public void deleteManifestFromGivenTttTest404() throws Exception {
+        mockMvc.perform(delete("/ttt/200/manifest/3"))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(header().stringValues("Error:", "TTT with id=200 wasn't found"));
+    }
+
+    /**
+     * Test of case when user tries to delete unknown manifest from existing TTT.
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteManifestFromGivenTttTest405() throws Exception {
+        mockMvc.perform(delete("/ttt/2/manifest/300"))
+                .andDo(print())
+                .andExpect(status().is(405))
+                .andExpect(header().stringValues("Error:", "Manifest with id=300 wasn't found in DB"))
+                .andExpect(jsonPath("$.tttID").value(2));
+    }
+
+    /**
+     * Attempt of removing particular Manifest from Set of given TTT by id.
+     * Response 200.
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void deleteManifestFromGivenTttTest200() throws Exception {
+
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+        entityManager.getTransaction().begin();
+        TruckTimeTable ttt = entityManager.find(TruckTimeTable.class, 16L);
+        Assert.assertEquals(2, ttt.getManifestSet().size());
+        entityManager.getTransaction().commit();
+
+        mockMvc.perform(delete("/ttt/16/manifest/7"))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(header().stringValues("Message:", "Manifest MAN-X-01 was removed from TTT with id=16"))
+                .andExpect(jsonPath("$.tttID").value(16))
+                .andExpect(jsonPath("$.['manifestSet']", hasSize(1)));
+
+    }
 }
