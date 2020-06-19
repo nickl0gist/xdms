@@ -75,4 +75,8 @@ public class TpaDaysSettingsService {
     public TpaDaysSetting getTpaDaySettingsById(Long id) {
         return settingsRepository.findById(id).orElse(null);
     }
+
+    public TpaDaysSetting update(TpaDaysSetting tpaDaysSetting) {
+        return settingsRepository.save(tpaDaysSetting);
+    }
 }

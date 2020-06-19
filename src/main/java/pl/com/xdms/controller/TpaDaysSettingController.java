@@ -2,17 +2,18 @@ package pl.com.xdms.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.tpa.TpaDaysSetting;
 import pl.com.xdms.domain.tpa.WorkingDay;
 import pl.com.xdms.domain.warehouse.WhCustomer;
+import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.WarehouseService;
 import pl.com.xdms.service.truck.TruckService;
 
+import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -27,11 +28,13 @@ public class TpaDaysSettingController {
 
     private final TruckService truckService;
     private final WarehouseService warehouseService;
+    private final RequestErrorService requestErrorService;
 
     @Autowired
-    public TpaDaysSettingController(TruckService truckService, WarehouseService warehouseService) {
+    public TpaDaysSettingController(TruckService truckService, WarehouseService warehouseService, RequestErrorService requestErrorService) {
         this.truckService = truckService;
         this.warehouseService = warehouseService;
+        this.requestErrorService = requestErrorService;
     }
 
     /**
@@ -58,5 +61,42 @@ public class TpaDaysSettingController {
         }
         List<TpaDaysSetting> tpaDaysSettings = truckService.getTpaDaysSettingsService().getTpaDaySettingsByWhCustomerAndWorkingDay(whCustomer, workingDay);
         return ResponseEntity.ok(tpaDaysSettings);
+    }
+
+    /**
+     * Endpoint dedicated for updating particular TpaDaysSetting. Only the setLocalTime and The setTransitTime fields
+     * may be affected.
+     * @param tpaSetting - TpaDaysSetting Entity to be updated.
+     * @param bindingResult - for checking conditions
+     * @return TpaDaysSetting if was found and updated. Response statuses:
+     * - 200 - if TpaDaysSetting was updated;
+     * - 400 - if ID of the given entity is Null;
+     * - 404 - If Id of given entity wasn't found in DB;
+     * - 412 - If annotation conditions of TpaDaysSetting was violated.
+     */
+    @PutMapping("tpa_settings")
+    public ResponseEntity<TpaDaysSetting> updateTpaDaySetting(@RequestBody @Valid TpaDaysSetting tpaSetting, BindingResult bindingResult){
+        HttpHeaders headers = new HttpHeaders();
+        Long id = tpaSetting.getId();
+        log.info("Setting Id = {}", id);
+        if (id != null){
+            TpaDaysSetting tpaDaysSettingFromDb = truckService.getTpaDaysSettingsService().getTpaDaySettingsById(tpaSetting.getId());
+            if(tpaDaysSettingFromDb == null){
+                log.info("TpaDaysSetting with id={} wasn't found", id);
+                headers.add("Error:", String.format("TpaDaysSetting with id=%d wasn't found", id));
+                return ResponseEntity.notFound().headers(headers).build();
+            } else if (bindingResult.hasErrors()) {
+                //if given entity doesn't correspond conditions of parameters annotation in TpaDaysConditions class
+                headers = requestErrorService.getErrorHeaders(bindingResult);
+                return ResponseEntity.status(412).headers(headers).body(tpaSetting);
+            }
+            tpaDaysSettingFromDb.setLocalTime(tpaSetting.getLocalTime());
+            tpaDaysSettingFromDb.setTransitTime(tpaSetting.getTransitTime());
+            tpaDaysSettingFromDb = truckService.getTpaDaysSettingsService().update(tpaDaysSettingFromDb);
+            log.info("TpaDaysSetting with id={} was updated", id);
+            headers.add("Message:", String.format("TpaDaysSetting with id=%d was updated", id));
+            return ResponseEntity.ok().headers(headers).body(tpaDaysSettingFromDb);
+        }
+        return ResponseEntity.badRequest().build();
     }
 }
