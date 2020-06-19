@@ -217,7 +217,15 @@ public class ManifestController {
         }
     }
 
-    //TODO Delete Manifest From TTT
+    /**
+     * Endpoint enables removing particular Manifest from set of chosen TTT by given id of TTT and id of Manifest.
+     * @param tttId - Long Id of TTT.
+     * @param manifestId - Long Id of the Manifest.
+     * @return the same TTT with updated Manifest Set. Response status:
+     * - 200 - if the removing was successful;
+     * - 404 - if no TTT was found by given TTT id;
+     * - 405 - if no Manifest was found by given Manifest id.
+     */
     @DeleteMapping("ttt/{tttId:^\\d+$}/manifest/{manifestId:^\\d+$}")
     public ResponseEntity<TruckTimeTable> deleteManifestFromTtt(@PathVariable Long tttId, @PathVariable Long manifestId){
         TruckTimeTable ttt = truckService.getTttService().getTttById(tttId);
