@@ -142,12 +142,16 @@ not done
 +24. Find Manifests with empty TTT set ot TPA set. Manifest Management page which shows all manifests with empty TTT and
  TPA list, this page allows to assign TPA or TTT
 
++25. TPA status before saving check the date. if day is the same change to In Progress 
+    if TPA is for next Day or later change to BuFFER
+    
 Not done
 -
+-. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
+
+-. is it necessary to check either the TPA is closed before changing(splitting between different TPA)/deleting any manifest in it?
 
 -. if defined by default TPA was changed, the changes should be implemented to TTT at the Warehouse where this TPA goes to.
- 
--. is it necessary to check either the TPA is closed before changing/deleting any manifest in it?
 
 -. STOCK - implement STOCK entity as TPA which contain goods remained in Warehouse.
 
@@ -156,25 +160,15 @@ Warehouse and Date will be proceeded.
 
 -. generate TPS after the TPA was closed.
 
--. TPA status before saving check the date. if day is the same change to In Progress 
-if TPA is for next Day or later change to BuFFER
-
 -. What if user tries to delete TPA TTT Manifest Manifest-Reference by id for warehouse he doesn't have access? 
 
 -. check all saveAllEntities methods in controllers which implement ExcelController interface. The response entities 
-should have "isActive = false". Check again before saving? TO implement or not?
+should have "isActive = false". Check again before saving? To implement or not?
 
--. new tests to test ExcelManifestController actions:
-    ExcelManifestService Test?
-    
-
-   
 -. When customer is set to inactive all warehouses connections with it have to be switched to inActive.
     Customer with picked up and not delivered manifests cannot be switched to inActive. 
 
 -. Manifest View same as real manifest template and add to it weights gross and nett, dn, sap reception number
-
--. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
 
 -. manually added matrix. pick CC XD, if has references -> pick TXD, pick TTT TPA or create new according to warehouse 
 and date. Pick Customer and Supplier.
@@ -219,4 +213,4 @@ Attention!
 -
 
 - TTTService could find ambiguous TTTs in method getTttByTruckNameAndTttArrivalDatePlan if the Name and Date 
-are the same for different Warehouses
+are the same for different Warehouses - add Searching by Warehouse?
