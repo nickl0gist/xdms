@@ -145,10 +145,16 @@ not done
 Not done
 -
 
--. if defined by default TPA was changed, the changes should be implemented to TTT at the Warehouse where this TPA goes to. 
+-. if defined by default TPA was changed, the changes should be implemented to TTT at the Warehouse where this TPA goes to.
+ 
+-. is it necessary to check either the TPA is closed before changing/deleting any manifest in it?
+
+-. STOCK - implement STOCK entity as TPA which contain goods remained in Warehouse.
 
 -. Create mechanism which will be responsible of checking TTT and TPA status each time when get requests for particular
 Warehouse and Date will be proceeded. 
+
+-. generate TPS after the TPA was closed.
 
 -. TPA status before saving check the date. if day is the same change to In Progress 
 if TPA is for next Day or later change to BuFFER

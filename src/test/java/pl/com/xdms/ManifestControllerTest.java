@@ -16,6 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.tpa.TPA;
+import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.service.CustomerService;
 import pl.com.xdms.service.ManifestReferenceService;
@@ -150,7 +151,10 @@ public class ManifestControllerTest {
         Assert.assertNull(manifestToCheck.getPalletQtyReal());
         Assert.assertNull(manifestToCheck.getTotalLdmReal());
 
-        mockMvc.perform(put("/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        Assert.assertEquals(TTTEnum.PENDING, truckService.getTttService().getTttById(5L).getTttStatus().getTttStatusName());
+        Assert.assertNull(truckService.getTttService().getTttById(5L).getTttArrivalDateReal());
+
+        mockMvc.perform(put("/ttt/5/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(header().stringValues("Message:", "The Manifest with id=5 was successfully updated"));
@@ -161,6 +165,49 @@ public class ManifestControllerTest {
                 .andExpect(jsonPath("$.totalLdmReal").value(5.4))
                 .andExpect(jsonPath("$.palletQtyReal").value(10))
                 .andExpect(jsonPath("$.boxQtyReal").value(500));
+
+        Assert.assertEquals(TTTEnum.ARRIVED, truckService.getTttService().getTttById(5L).getTttStatus().getTttStatusName());
+        Assert.assertNotNull(truckService.getTttService().getTttById(5L).getTttArrivalDateReal());
+    }
+
+    /**
+     * Testcase of update manifest request within TTT which doesn't have the Manifest in it's set.
+     *
+     * @throws Exception for mockMvc.
+     */
+    @Test
+    public void updateManifestTestWithinTttWhichDoesntHaveThisManifestResponse200() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+        //Opening of Transaction
+        entityManager.getTransaction().begin();
+        Manifest manifestToUpdate = entityManager.find(Manifest.class, 10L);
+        manifestToUpdate.getManifestsReferenceSet().iterator();
+        manifestToUpdate.getTpaSet().iterator();
+        manifestToUpdate.getTruckTimeTableSet().iterator();
+
+        entityManager.detach(manifestToUpdate);
+
+        manifestToUpdate.setTotalWeightReal(5000.0);
+        manifestToUpdate.setTotalLdmReal(5.4);
+        manifestToUpdate.setPalletQtyReal(10);
+        manifestToUpdate.setBoxQtyReal(500);
+
+        String json = om.writeValueAsString(manifestToUpdate);
+        entityManager.getTransaction().commit();
+        entityManager.close();
+
+        Manifest manifestToCheck = manifestService.findManifestById(10L);
+        Assert.assertNull(manifestToCheck.getBoxQtyReal());
+        Assert.assertNull(manifestToCheck.getTotalLdmReal());
+        Assert.assertNull(manifestToCheck.getPalletQtyReal());
+        Assert.assertNull(manifestToCheck.getTotalLdmReal());
+
+        mockMvc.perform(put("/ttt/5/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(400))
+                .andExpect(header().string("ERROR", "Not Existing"));
     }
 
     /**
@@ -178,10 +225,43 @@ public class ManifestControllerTest {
 
         String json = om.writeValueAsString(newManifest);
 
-        mockMvc.perform(put("/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/ttt/5/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(400));
+    }
+
+    /**
+     * Testcase of request when there is an attempt to update manifest in not existing TTT
+     *
+     * @throws Exception for mockMvc
+     */
+    @Test
+    public void updateManifestWithinNotExistingTttTestResponse400() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+        //Opening of Transaction
+        entityManager.getTransaction().begin();
+        Manifest manifestToUpdate = entityManager.find(Manifest.class, 5L);// (5, 'TEST-MAN-03', 1, 3, 1.2, 1000.0, 3, 3),
+        manifestToUpdate.getManifestsReferenceSet().iterator();
+        manifestToUpdate.getTpaSet().iterator();
+        manifestToUpdate.getTruckTimeTableSet().iterator();
+
+        entityManager.detach(manifestToUpdate);
+
+        manifestToUpdate.setTotalWeightReal(5000.0);
+        manifestToUpdate.setTotalLdmReal(5.4);
+        manifestToUpdate.setPalletQtyReal(10);
+        manifestToUpdate.setBoxQtyReal(500);
+
+        String json = om.writeValueAsString(manifestToUpdate);
+        entityManager.getTransaction().commit();
+        entityManager.close();
+
+        mockMvc.perform(put("/ttt/1000/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(400))
-                .andExpect(header().stringValues("ERROR", "Not Existing"));
+                .andExpect(header().string("ERROR", "Not Existing"));
     }
 
     /**

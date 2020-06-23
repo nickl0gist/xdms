@@ -8,6 +8,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.tpa.TPA;
+import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.service.ManifestService;
 import pl.com.xdms.service.RequestErrorService;
@@ -80,28 +81,27 @@ public class ManifestController {
      * - 404 - if Manifest from Database wasn't found by Id of given manifest;
      * - 412 - if the given manifest does not correspond to annotation conditions of Manifest class
      */
-    @PutMapping("manifest/update")
-    public ResponseEntity<Manifest> updateManifestById(@RequestBody @Valid Manifest manifestUpdated, BindingResult bindingResult) {
-        log.info("Manifest from request: {}", manifestUpdated);
+    @PutMapping("ttt/{tttId:^\\d+$}/manifest/update")
+    public ResponseEntity<Manifest> updateManifest(@RequestBody @Valid Manifest manifestUpdated, @PathVariable Long tttId, BindingResult bindingResult) {
         Long id = manifestUpdated.getManifestID();
-        if (id != null) {
-            Manifest manifestFromDb = manifestService.findManifestById(manifestUpdated.getManifestID());
-            //If manifest wasn't found by Id
-            if (manifestFromDb == null) {
-                log.info("Given Manifest with id={} does not exist in DB and could not be updated", id);
-                return ResponseEntity.notFound().header("Error:", String.format("The manifest with id=%d is not existing", id)).build();
-            } else if (bindingResult.hasErrors()) {
-                //if given entity doesn't correspond conditions of parameters annotation in Manifest class
-                HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
-                return ResponseEntity.status(412).headers(headers).body(manifestUpdated);
+        TruckTimeTable ttt = truckService.getTttService().getTttById(tttId);
+        Manifest manifestFromDb = manifestService.findManifestById(manifestUpdated.getManifestID());
+        if (ttt != null && ttt.getManifestSet().contains(manifestFromDb)) {
+                //If manifest wasn't found by Id
+                if (manifestFromDb == null) {
+                    log.info("Given Manifest with id={} does not exist in DB and could not be updated", id);
+                    return ResponseEntity.notFound().header("Error:", String.format("The manifest with id=%d is not existing", id)).build();
+                } else if (bindingResult.hasErrors()) {
+                    //if given entity doesn't correspond conditions of parameters annotation in Manifest class
+                    HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
+                    return ResponseEntity.status(412).headers(headers).body(manifestUpdated);
+                }
+                //If all conditions are Ok Update manifest with given data
+                manifestFromDb = manifestService.updateManifest(manifestUpdated);
+                truckService.getTttService().setArrive(ttt);
+
+                return ResponseEntity.ok().header("Message:", String.format("The Manifest with id=%d was successfully updated", id)).body(manifestFromDb);
             }
-            //If all conditions are Ok Update manifest with given data
-            manifestFromDb.setBoxQtyReal(manifestUpdated.getBoxQtyReal());
-            manifestFromDb.setPalletQtyReal(manifestUpdated.getPalletQtyReal());
-            manifestFromDb.setTotalLdmReal(manifestUpdated.getTotalLdmReal());
-            manifestFromDb.setTotalWeightReal(manifestUpdated.getTotalWeightReal());
-            return ResponseEntity.ok().header("Message:", String.format("The Manifest with id=%d was successfully updated", id)).body(manifestService.save(manifestFromDb));
-        }
         return ResponseEntity.badRequest().header("ERROR", "Not Existing").build();
     }
 
@@ -188,12 +188,14 @@ public class ManifestController {
 
     /**
      * Endpoint enables removing particular Manifest from set of chosen TPA by given id of TPA and id of Manifest.
-     * @param tpaId - Long Id of TPA.
+     *
+     * @param tpaId      - Long Id of TPA.
      * @param manifestId - Long Id of the Manifest.
      * @return the same TPA with updated Manifest Set. Response status:
      * - 200 - if the removing was successful;
      * - 404 - if no TPA was found by given TPA id;
-     * - 405 - if no Manifest was found by given Manifest id.
+     * - 405 - if no Manifest was found by given Manifest id;
+     * - 400 - if TPA is already closed.
      */
     @DeleteMapping("tpa/{tpaId:^\\d+$}/manifest/{manifestId:^\\d+$}")
     public ResponseEntity<TPA> deleteManifestFromTpa(@PathVariable Long tpaId, @PathVariable Long manifestId) {
@@ -204,7 +206,11 @@ public class ManifestController {
             log.info("TPA with id={} wasn't found", tpaId);
             headers.add("Error:", String.format("TPA with id=%d wasn't found", tpaId));
             return ResponseEntity.notFound().headers(headers).build();
-        } else if (manifest != null){
+        } else if (tpa.getStatus().getStatusName().equals(TPAEnum.CLOSED)) {
+            log.info("TPA with id={} has bean CLOSED already", tpaId);
+            headers.add("Error:", String.format("TPA with id=%d has bean CLOSED already", tpaId));
+            return ResponseEntity.badRequest().headers(headers).build();
+        } else if (manifest != null) {
             tpa.getManifestSet().remove(manifest);
             truckService.getTpaService().save(tpa);
             log.info("Manifest {} was removed from TPA with id={}", manifest.getManifestCode(), tpaId);
@@ -219,7 +225,8 @@ public class ManifestController {
 
     /**
      * Endpoint enables removing particular Manifest from set of chosen TTT by given id of TTT and id of Manifest.
-     * @param tttId - Long Id of TTT.
+     *
+     * @param tttId      - Long Id of TTT.
      * @param manifestId - Long Id of the Manifest.
      * @return the same TTT with updated Manifest Set. Response status:
      * - 200 - if the removing was successful;
@@ -227,15 +234,15 @@ public class ManifestController {
      * - 405 - if no Manifest was found by given Manifest id.
      */
     @DeleteMapping("ttt/{tttId:^\\d+$}/manifest/{manifestId:^\\d+$}")
-    public ResponseEntity<TruckTimeTable> deleteManifestFromTtt(@PathVariable Long tttId, @PathVariable Long manifestId){
+    public ResponseEntity<TruckTimeTable> deleteManifestFromTtt(@PathVariable Long tttId, @PathVariable Long manifestId) {
         TruckTimeTable ttt = truckService.getTttService().getTttById(tttId);
         Manifest manifest = manifestService.findManifestById(manifestId);
         HttpHeaders headers = new HttpHeaders();
-        if(ttt == null){
+        if (ttt == null) {
             log.info("TTT with id={} wasn't found", tttId);
             headers.add("Error:", String.format("TTT with id=%d wasn't found", tttId));
             return ResponseEntity.notFound().headers(headers).build();
-        } else if (manifest != null){
+        } else if (manifest != null) {
             ttt.getManifestSet().remove(manifest);
             truckService.getTttService().save(ttt);
             log.info("Manifest {} was removed from TTT with id={}", manifest.getManifestCode(), tttId);

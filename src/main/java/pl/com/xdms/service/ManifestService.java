@@ -57,4 +57,13 @@ public class ManifestService {
     public void delete(Manifest manifest) {
        manifestRepository.delete(manifest);
     }
+
+    public Manifest updateManifest(Manifest manifestUpdated) {
+        Manifest manifestFromDb = findManifestById(manifestUpdated.getManifestID());
+        manifestFromDb.setBoxQtyReal(manifestUpdated.getBoxQtyReal());
+        manifestFromDb.setPalletQtyReal(manifestUpdated.getPalletQtyReal());
+        manifestFromDb.setTotalLdmReal(manifestUpdated.getTotalLdmReal());
+        manifestFromDb.setTotalWeightReal(manifestUpdated.getTotalWeightReal());
+        return save(manifestFromDb);
+    }
 }

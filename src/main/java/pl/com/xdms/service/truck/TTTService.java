@@ -10,6 +10,8 @@ import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.repository.TTTRepository;
 import pl.com.xdms.repository.TttStatusRepository;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,5 +70,12 @@ public class TTTService {
 
     public void deleteTtt(TruckTimeTable truckTimeTable) {
         tttRepository.delete(truckTimeTable);
+    }
+
+    public void setArrive(TruckTimeTable ttt) {
+        String time = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).toString();
+        ttt.getTttStatus().setTttStatusName(TTTEnum.ARRIVED);
+        ttt.setTttArrivalDateReal(time);
+        save(ttt);
     }
 }
