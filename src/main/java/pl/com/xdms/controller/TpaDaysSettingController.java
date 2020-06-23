@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping
+@RequestMapping("tpa_settings")
 public class TpaDaysSettingController {
 
     private final TruckService truckService;
@@ -48,7 +48,7 @@ public class TpaDaysSettingController {
      *          - 404 - if WhCustomer id, or id of the WorkingDay were not found in DB;
      *          - 422 - if received WhCustomer entity has status isActive = false.
      */
-    @GetMapping("tpa_settings/{whCustomerId:^[0-9]*$}/{workingDayId:^[0-9]*$}")
+    @GetMapping("/{whCustomerId:^[0-9]*$}/{workingDayId:^[0-9]*$}")
     public ResponseEntity<List<TpaDaysSetting>> getAllTpaDaysSettingsByWhCustomerIdAndWorkingDayId(@PathVariable Long whCustomerId, @PathVariable Long workingDayId){
         WhCustomer whCustomer = warehouseService.getWhCustomerById(whCustomerId);
         WorkingDay workingDay = warehouseService.getWorkingDayById(workingDayId);
@@ -74,7 +74,7 @@ public class TpaDaysSettingController {
      * - 404 - If Id of given entity wasn't found in DB;
      * - 412 - If annotation conditions of TpaDaysSetting was violated.
      */
-    @PutMapping("tpa_settings")
+    @PutMapping("")
     public ResponseEntity<TpaDaysSetting> updateTpaDaySetting(@RequestBody @Valid TpaDaysSetting tpaSetting, BindingResult bindingResult){
         HttpHeaders headers = new HttpHeaders();
         Long id = tpaSetting.getId();

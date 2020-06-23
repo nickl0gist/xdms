@@ -208,8 +208,8 @@ public class ManifestController {
             return ResponseEntity.notFound().headers(headers).build();
         } else if (tpa.getStatus().getStatusName().equals(TPAEnum.CLOSED)) {
             log.info("TPA with id={} has bean CLOSED already", tpaId);
-            headers.add("Error:", String.format("TPA with id=%d has bean CLOSED already", tpaId));
-            return ResponseEntity.badRequest().headers(headers).build();
+            headers.add("Error:", String.format("TPA with id=%d has bean already CLOSED", tpaId));
+            return ResponseEntity.badRequest().headers(headers).body(tpa);
         } else if (manifest != null) {
             tpa.getManifestSet().remove(manifest);
             truckService.getTpaService().save(tpa);

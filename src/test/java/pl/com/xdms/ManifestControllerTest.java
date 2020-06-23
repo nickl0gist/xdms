@@ -16,6 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.tpa.TPA;
+import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.service.CustomerService;
@@ -577,5 +578,25 @@ public class ManifestControllerTest {
                 .andExpect(jsonPath("$.tttID").value(16))
                 .andExpect(jsonPath("$.['manifestSet']", hasSize(1)));
 
+    }
+
+    /**
+     * TestCase of attempt to delete manifest from Closed TPA.
+     *
+     * @throws Exception mockMvc
+     */
+    @Test
+    public void deleteManifestFromGivenTpaTest400() throws Exception {
+        TPA tpa = truckService.getTpaService().getTpaById(4L);
+        tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.CLOSED));
+
+        log.info("TPA {}", truckService.getTpaService().save(tpa).getStatus());
+
+        mockMvc.perform(delete("/tpa/4/manifest/6"))
+                .andDo(print())
+                .andExpect(status().is(400))
+                .andExpect(header().stringValues("Error:", "TPA with id=4 has bean already CLOSED"))
+                .andExpect(jsonPath("$.tpaID").value(4))
+                .andExpect(jsonPath("$.['manifestSet']", hasSize(2)));
     }
 }
