@@ -143,10 +143,17 @@ not done
  TPA list, this page allows to assign TPA or TTT
 
 +25. TPA status before saving check the date. if day is the same change to In Progress 
-    if TPA is for next Day or later change to BuFFER
+    if TPA is for next Day or later change to BUFFER
     
 Not done
 -
+
+-. Create Entity WarehouseManifest to truck changes of the manifest when it go through the Warehouse
+
+-. Truck Types, LDM calculation
+
+-. add new Entity Warehouse_Manifest = connection between Warehouse And Manifest, check KPI in each warehouse. check Real qty?  
+
 -. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
 
 -. is it necessary to check either the TPA is closed before changing(splitting between different TPA)/deleting any manifest in it?

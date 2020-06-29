@@ -10,6 +10,7 @@ import pl.com.xdms.domain.tpa.TPA;
 import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 @Entity
 @Table(name = "manifest_reference")
@@ -73,6 +74,12 @@ public class ManifestReference {
     @Min(1)
     @Column(columnDefinition = "int default 1")
     private int stackability;
+
+    @Pattern(regexp = "^\\d+$")
+    private String receptionNumber;
+
+    @Pattern(regexp = "^[0-9A-Za-z\\-_]+")
+    private String deliveryNumber;
 
     @ManyToOne
     @JoinColumn(name = "manifestID", nullable = false)
