@@ -87,4 +87,39 @@ public class TPAService {
     public void removeTpaBiId(Long id) {
         tpaRepository.deleteById(id);
     }
+
+    public List<TPA> getAllDelayedForWarehouse(Warehouse warehouse) {
+        List<WhCustomer> whCustomerList = whCustomerService.getAllWhCustomerByWarehouse(warehouse);
+        List<TpaDaysSetting> tpaDaysSettingList = tpaDaysSettingsService.getAllTpaDaySettingsInWhCustomerList(whCustomerList);
+        TpaStatus tpaStatus = tpaStatusRepository.findByStatusName(TPAEnum.DELAYED).orElse(null);
+        return tpaRepository.findAllByStatusEqualsAndTpaDaysSettingIn(tpaStatus, tpaDaysSettingList);
+    }
+
+    public List<TPA> getAllBufferedForWarehouse(Warehouse warehouse) {
+        List<WhCustomer> whCustomerList = whCustomerService.getAllWhCustomerByWarehouse(warehouse);
+        List<TpaDaysSetting> tpaDaysSettingList = tpaDaysSettingsService.getAllTpaDaySettingsInWhCustomerList(whCustomerList);
+        TpaStatus tpaStatus = tpaStatusRepository.findByStatusName(TPAEnum.BUFFER).orElse(null);
+        return tpaRepository.findAllByStatusEqualsAndTpaDaysSettingIn(tpaStatus, tpaDaysSettingList);
+    }
+
+    public List<TPA> getAllClosedForWarehouse(Warehouse warehouse) {
+        List<WhCustomer> whCustomerList = whCustomerService.getAllWhCustomerByWarehouse(warehouse);
+        List<TpaDaysSetting> tpaDaysSettingList = tpaDaysSettingsService.getAllTpaDaySettingsInWhCustomerList(whCustomerList);
+        TpaStatus tpaStatus = tpaStatusRepository.findByStatusName(TPAEnum.CLOSED).orElse(null);
+        return tpaRepository.findAllByStatusEqualsAndTpaDaysSettingIn(tpaStatus, tpaDaysSettingList);
+    }
+
+    public List<TPA> getAllInProgressForWarehouse(Warehouse warehouse) {
+        List<WhCustomer> whCustomerList = whCustomerService.getAllWhCustomerByWarehouse(warehouse);
+        List<TpaDaysSetting> tpaDaysSettingList = tpaDaysSettingsService.getAllTpaDaySettingsInWhCustomerList(whCustomerList);
+        TpaStatus tpaStatus = tpaStatusRepository.findByStatusName(TPAEnum.IN_PROGRESS).orElse(null);
+        return tpaRepository.findAllByStatusEqualsAndTpaDaysSettingIn(tpaStatus, tpaDaysSettingList);
+    }
+    
+    public List<TPA> getAllNotClosedForWarehouse(Warehouse warehouse) {
+        List<WhCustomer> whCustomerList = whCustomerService.getAllWhCustomerByWarehouse(warehouse);
+        List<TpaDaysSetting> tpaDaysSettingList = tpaDaysSettingsService.getAllTpaDaySettingsInWhCustomerList(whCustomerList);
+        TpaStatus tpaStatus = tpaStatusRepository.findByStatusName(TPAEnum.CLOSED).orElse(null);
+        return tpaRepository.findAllByStatusIsNotInAndTpaDaysSettingIn(tpaStatus, tpaDaysSettingList);
+    }
 }

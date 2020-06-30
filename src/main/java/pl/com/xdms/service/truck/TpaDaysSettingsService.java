@@ -79,4 +79,8 @@ public class TpaDaysSettingsService {
     public TpaDaysSetting update(TpaDaysSetting tpaDaysSetting) {
         return settingsRepository.save(tpaDaysSetting);
     }
+
+    public List<TpaDaysSetting> getAllTpaDaySettingsInWhCustomerList(List<WhCustomer> whCustomerList) {
+        return settingsRepository.findAllByWhCustomerIn(whCustomerList);
+    }
 }

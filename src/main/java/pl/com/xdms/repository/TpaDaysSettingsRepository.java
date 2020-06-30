@@ -10,6 +10,7 @@ import java.util.Set;
 
 /**
  * Created on 08.12.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -18,5 +19,7 @@ public interface TpaDaysSettingsRepository extends JpaRepository<TpaDaysSetting,
     List<TpaDaysSetting> findAllByWhCustomerAndWorkingDay(WhCustomer whCustomer, WorkingDay workingDay);
 
     Set<TpaDaysSetting> findAllByWhCustomerInAndWorkingDay(List<WhCustomer> whCustomerList, WorkingDay workingDay);
+
+    List<TpaDaysSetting> findAllByWhCustomerIn(List<WhCustomer> whCustomerList);
 
 }
