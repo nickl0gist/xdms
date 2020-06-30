@@ -84,6 +84,57 @@ public class TpaController {
     }
 
     /**
+     * Get All Tpa with status DELAYED for Particular Warehouse
+     * @param wh_url - urlCode of the Warehouse
+     * @return - List of TPA (List<TPA>)
+     */
+    @GetMapping("{wh_url}/tpa/delayed")
+    public List<TPA> getListOfDelayedTpaForWarehouse(@PathVariable String wh_url){
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(wh_url);
+        return truckService.getTpaService().getAllDelayedForWarehouse(warehouse);
+    }
+
+    /**
+     * Get All Tpa with status BUFFER for Particular Warehouse
+     * @param wh_url - urlCode of the Warehouse
+     * @return - List of TPA (List<TPA>)
+     */
+    @GetMapping("{wh_url}/tpa/buffer")
+    public List<TPA> getListOfTpaInBufferForWarehouse(@PathVariable String wh_url){
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(wh_url);
+        return truckService.getTpaService().getAllBufferedForWarehouse(warehouse);
+    }
+
+    /**
+     * Get All Tpa with status CLOSED for Particular Warehouse
+     * @param wh_url - urlCode of the Warehouse
+     * @return - List of TPA (List<TPA>)
+     */
+    @GetMapping("{wh_url}/tpa/closed")
+    public List<TPA> getListOfClosedTpaForWarehouse(@PathVariable String wh_url){
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(wh_url);
+        return truckService.getTpaService().getAllClosedForWarehouse(warehouse);
+    }
+
+    //TODO
+    @GetMapping("{wh_url}/tpa/notClosed")
+    public List<TPA> getListOfNotClosedTpaForWarehouse(@PathVariable String wh_url){
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(wh_url);
+        return truckService.getTpaService().getAllNotClosedForWarehouse(warehouse);
+    }
+
+    /**
+     * Get All Tpa with status IN_PROGRESS for Particular Warehouse
+     * @param wh_url - urlCode of the Warehouse
+     * @return - List of TPA (List<TPA>)
+     */
+    @GetMapping("{wh_url}/tpa/in_progress")
+    public List<TPA> getListOfTpaInProgressForWarehouse(@PathVariable String wh_url){
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(wh_url);
+        return truckService.getTpaService().getAllInProgressForWarehouse(warehouse);
+    }
+
+    /**
      * Endpoint dedicated for updating of the TPA only if the TPA has't status CLOSED.
      * It is possible to update only next parameters: Name, DeparturePlan.
      *

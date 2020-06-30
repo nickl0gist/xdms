@@ -70,8 +70,6 @@ public class TpaControllerTest {
 
     /**
      * Check the attempt of updating the TPA. Status 200 should be returned.
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void updateTestOfTpaResponse200() throws Exception {
@@ -113,8 +111,6 @@ public class TpaControllerTest {
 
     /**
      * Check the attempt of updating the TPA with Name and DeparturePlan in wrong format. Status 412 should be returned.
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void updateTestOfTpaResponse412() throws Exception {
@@ -157,8 +153,6 @@ public class TpaControllerTest {
     /**
      * Case when given TPA has id which doesn't exist in DB.
      * Status 404 should be returned
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void updateTestOfTpaResponse404() throws Exception {
@@ -175,8 +169,6 @@ public class TpaControllerTest {
     /**
      * Case when given TPA has null value for ID
      * Status 404 should be returned
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void updateTestOfTpaResponse404NullGiven() throws Exception {
@@ -192,8 +184,6 @@ public class TpaControllerTest {
     /**
      * Case when user tries to update TPA which has status CLOSED.
      * Status 422 should be returned
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void updateTpaResponse422ClosedTest() throws Exception {
@@ -229,8 +219,6 @@ public class TpaControllerTest {
     /**
      * Case when user tries to update TPA by providing the Departure Date Plan which is in the Past
      * Status 422 should be returned
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void updateTpaResponseDateInThePast422Test() throws Exception {
@@ -266,8 +254,6 @@ public class TpaControllerTest {
     /**
      * Case when user tries to create TPA manually by passing TPA entity without provided
      * planned ETD time.
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void createNewTpaWrongConstraints412() throws Exception {
@@ -283,8 +269,6 @@ public class TpaControllerTest {
 
     /**
      * Case when user tries to create TPA manually by passing TPA entity with planned ETD time which is in the Past.
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void createNewTpaEtdInThePast() throws Exception {
@@ -301,8 +285,6 @@ public class TpaControllerTest {
     /**
      * Case when user tries to create TPA manually by passing TPA entity with planned ETD time which is in the
      * very same day of creation. The status of TPA should be IN_PROGRESS
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void createNewTpaEtdHasActualDate() throws Exception {
@@ -321,8 +303,6 @@ public class TpaControllerTest {
     /**
      * Case when user tries to create TPA manually by passing TPA entity with planned ETD time which is in the
      * future and not at the same day of creation. The status of TPA should be BUFFER
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void createNewTpaEtdHasDateInFuture() throws Exception {
@@ -340,8 +320,6 @@ public class TpaControllerTest {
 
     /**
      * Case when given url-code of the Warehouse wasn't found in Database
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void getListOfTpaByWarehouseAndDayTest200() throws Exception {
@@ -353,8 +331,6 @@ public class TpaControllerTest {
 
     /**
      * Case when given url-code of the Warehouse wasn't found in Database
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void getListOfTpaByWarehouseAndDayTest404() throws Exception {
@@ -367,8 +343,6 @@ public class TpaControllerTest {
     /**
      * Case when given date has value which not corresponds to regex condition:
      * tpaDepartureDatePlan:^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]?$
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void getListOfTpaByWarehouseAndDayTest404BadDate() throws Exception {
@@ -380,8 +354,6 @@ public class TpaControllerTest {
     /**
      * Case when date formatter in TpaController throws Exception.
      * It could happen when month value is in range [13-19]
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void getListOfTpaByWarehouseAndDayTest400BadDateWithException() throws Exception {
@@ -392,8 +364,6 @@ public class TpaControllerTest {
 
     /**
      * Attempt to delete TPA by not existing Id. Response status 404
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteTpaByIdWhichNotExistsTestStatus404() throws Exception {
@@ -405,8 +375,6 @@ public class TpaControllerTest {
 
     /**
      * Attempt to delete TPA which has Manifests in ManifestSet. Response status 417
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteTpaByIdWithManifestsInSetTestStatus417() throws Exception {
@@ -418,8 +386,6 @@ public class TpaControllerTest {
 
     /**
      * Attempt to delete TPA which has References in Set. Response 417
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteTpaByIdWithReferencesInSetTestStatus417() throws Exception {
@@ -431,8 +397,6 @@ public class TpaControllerTest {
 
     /**
      * Attempt to delete CLOSED TPA. Response status 403
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteTpaByIdWithStatusClosedTestStatus403() throws Exception {
@@ -445,8 +409,6 @@ public class TpaControllerTest {
 
     /**
      * Test of attempt to delete the Tpa
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteTpaByIdStatus200() throws Exception {
@@ -454,5 +416,70 @@ public class TpaControllerTest {
                 .andDo(print())
                 .andExpect(status().is(204))
                 .andExpect(header().stringValues("Message:", "TPA with id=1 was successfully deleted"));
+    }
+
+    /**
+     * Test of case when user tries to obtain all Delayed TPAs for particular Warehouse
+     */
+    @Test
+    public void getAllDelayedTpaForWarehouse() throws Exception {
+        mockMvc.perform(get("/xd_gro/tpa/delayed"))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[?(@.tpaID == 31 && @.['status'].statusName == \"DELAYED\")]").exists())
+                .andExpect(jsonPath("$[?(@.tpaID == 33 && @.['status'].statusName == \"DELAYED\")]").exists());
+    }
+
+    /**
+     * Test of case when user tries to obtain all In_Progress TPAs for particular Warehouse
+     */
+    @Test
+    public void getAllInProgressTpaForWarehouse() throws Exception {
+        mockMvc.perform(get("/xd_gro/tpa/in_progress"))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(jsonPath("$", hasSize(11)))
+                .andExpect(jsonPath("$[?(@.tpaID == 32 && @.['status'].statusName == \"IN_PROGRESS\")]").exists())
+                .andExpect(jsonPath("$[?(@.tpaID == 34 && @.['status'].statusName == \"IN_PROGRESS\")]").exists())
+                .andExpect(jsonPath("$[?(@.tpaID == 35 && @.['status'].statusName == \"IN_PROGRESS\")]").exists());
+    }
+
+    /**
+     * Test of case when user tries to obtain all Closed TPAs for particular Warehouse
+     */
+    @Test
+    public void getAllClosedTpaForWarehouse() throws Exception {
+        mockMvc.perform(get("/xd_gro/tpa/closed"))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[?(@.tpaID == 28 && @.['status'].statusName == \"CLOSED\")]").exists())
+                .andExpect(jsonPath("$[?(@.tpaID == 29 && @.['status'].statusName == \"CLOSED\")]").exists());
+    }
+
+    /**
+     * Test of case when user tries to obtain all BUFFER TPAs for particular Warehouse
+     */
+    @Test
+    public void getAllBufferTpaForWarehouse() throws Exception {
+        mockMvc.perform(get("/xd_gro/tpa/buffer"))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[?(@.tpaID == 36 && @.['status'].statusName == \"BUFFER\")]").exists())
+                .andExpect(jsonPath("$[?(@.tpaID == 37 && @.['status'].statusName == \"BUFFER\")]").exists())
+                .andExpect(jsonPath("$[?(@.tpaID == 38 && @.['status'].statusName == \"BUFFER\")]").exists());
+    }
+
+    /**
+     * Test of case when user tries to obtain all NOT CLOSED TPAs for particular Warehouse
+     */
+    @Test
+    public void getAllNotClosedTpaForWarehouse() throws Exception {
+        mockMvc.perform(get("/xd_gro/tpa/notClosed"))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(jsonPath("$", hasSize(16)));
     }
 }

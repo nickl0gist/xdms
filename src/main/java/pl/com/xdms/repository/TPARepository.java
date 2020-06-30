@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TpaDaysSetting;
+import pl.com.xdms.domain.tpa.TpaStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,5 +21,9 @@ public interface TPARepository extends JpaRepository<TPA, Long> {
     Optional<TPA> findByTpaNameAndTpaETDPlan(String tpaName, String tpaETDPlan);
 
     List<TPA> findByTpaDaysSettingInAndDeparturePlanStartsWith(Set<TpaDaysSetting> tpaDaysSettingSet, String tpaDepartureDatePlan);
+
+    List<TPA> findAllByStatusEqualsAndTpaDaysSettingIn(TpaStatus status, List<TpaDaysSetting> tpaDaysSettingList);
+
+    List<TPA> findAllByStatusIsNotInAndTpaDaysSettingIn(TpaStatus status, List<TpaDaysSetting> tpaDaysSettingList);
 
 }
