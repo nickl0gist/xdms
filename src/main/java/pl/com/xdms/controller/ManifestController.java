@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.manifest.Manifest;
+import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
@@ -67,6 +68,33 @@ public class ManifestController {
             return ResponseEntity.notFound().header("Error:", String.format("The manifest with id=%d is not existing", id)).build();
         }
         return ResponseEntity.ok(manifest);
+    }
+
+    /**
+     * THe endpoint dedicated to adding the the reference to particular manifest
+     * @param id - Long id of the manifest where the reference should be added
+     * @param manifestReference - the entity of ManifestReference with all required information
+     * @param bindingResult - BindingResult entity to check annotation conditions in given manifestReference
+     * @return Response with Manifest in the body. Possible statuses of response:
+     * - 200 - if updating of the manifest was successful;
+     * - 404 - if no manifests were found by the given id;
+     * - 422 - if any of the annotation conditions in ManifestReference class were violated.
+     */
+    @PutMapping("manifest/{id:^\\d+$}/addReference")
+    public ResponseEntity<Manifest> addReferenceToManifest(@PathVariable Long id, @RequestBody @Valid ManifestReference manifestReference, BindingResult bindingResult) {
+        Manifest manifest = manifestService.findManifestById(id);
+        if(manifest == null) {
+            log.info("Manifest with id={} wasn't found", id);
+            return ResponseEntity.notFound().header("Error:", String.format("Manifest with id=%d wasn't found", id)).build();
+        } else if (bindingResult.hasErrors()) {
+            //if given entity doesn't correspond conditions of parameters annotation in ManifestReference class
+            HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
+            return ResponseEntity.unprocessableEntity().headers(headers).body(manifest); //422
+        }
+        manifest.getManifestsReferenceSet().add(manifestReference);
+        manifest = manifestService.save(manifest);
+        log.info("Reference {} was added to Manifest {}", manifestReference.getReference().getNumber(), manifest.getManifestCode());
+        return ResponseEntity.ok().header("Message:", String.format("Reference %s was added to Manifest %s", manifestReference.getReference().getNumber(), manifest.getManifestCode())).body(manifest);
     }
 
     /**

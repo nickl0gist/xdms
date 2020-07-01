@@ -3,9 +3,12 @@ package pl.com.xdms.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.reference.Reference;
+import pl.com.xdms.domain.supplier.Supplier;
 import pl.com.xdms.repository.ReferenceRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,11 +21,15 @@ import java.util.Optional;
 @Service
 public class ReferenceService {
 
-    private ReferenceRepository referenceRepository;
+    private final ReferenceRepository referenceRepository;
+    private final CustomerService customerService;
+    private final SupplierService supplierService;
 
     @Autowired
-    public ReferenceService(ReferenceRepository referenceRepository) {
+    public ReferenceService(ReferenceRepository referenceRepository, CustomerService customerService, SupplierService supplierService) {
         this.referenceRepository = referenceRepository;
+        this.customerService = customerService;
+        this.supplierService = supplierService;
     }
 
     public List<Reference> getAllReferences() {
@@ -91,5 +98,15 @@ public class ReferenceService {
         log.info("Searching for agreement {}", agreement);
         Optional<Reference> refOpt = referenceRepository.findReferenceBySupplierAgreement(agreement);
         return refOpt.orElse(null);
+    }
+
+    public List<Reference> getAllReferencesBySupplierAndCustomer(Long supplierId, Long customerId) {
+        Supplier supplier = supplierService.getSupplierById(supplierId);
+        Customer customer = customerService.getCustomerById(customerId);
+
+        if(supplier == null || customer ==null)
+            return new ArrayList<>();
+
+        return referenceRepository.findAllByCustomerAndSupplier(customer, supplier);
     }
 }

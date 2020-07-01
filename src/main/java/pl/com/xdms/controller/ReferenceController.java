@@ -60,6 +60,11 @@ public class ReferenceController {
         return referenceService.getReferenceWhereIsActive(true);
     }
 
+    @GetMapping("/supplier/{supplierId}/customer/{customerId}")
+    public List<Reference> getReferencesBySupplierAndCustomer(@PathVariable Long supplierId, @PathVariable Long customerId){
+        return referenceService.getAllReferencesBySupplierAndCustomer(supplierId, customerId);
+    }
+
     @GetMapping("/not_active")
     public List<Reference> getNotActiveSuppliers(){
         return referenceService.getReferenceWhereIsActive(false);

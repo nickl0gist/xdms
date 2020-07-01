@@ -2,7 +2,9 @@ package pl.com.xdms.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.reference.Reference;
+import pl.com.xdms.domain.supplier.Supplier;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,5 +40,5 @@ public interface ReferenceRepository extends JpaRepository<Reference, Long> {
 
     Optional<Reference> findReferenceBySupplierAgreement(String agreement);
 
-
+    List<Reference> findAllByCustomerAndSupplier(Customer customer, Supplier supplier);
 }

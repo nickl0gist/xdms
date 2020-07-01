@@ -15,19 +15,19 @@ import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import pl.com.xdms.domain.manifest.Manifest;
+import pl.com.xdms.domain.manifest.ManifestReference;
+import pl.com.xdms.domain.reference.Reference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
-import pl.com.xdms.service.CustomerService;
-import pl.com.xdms.service.ManifestReferenceService;
-import pl.com.xdms.service.ManifestService;
-import pl.com.xdms.service.SupplierService;
+import pl.com.xdms.service.*;
 import pl.com.xdms.service.truck.TruckService;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
+import java.util.List;
 import java.util.Set;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -62,6 +62,9 @@ public class ManifestControllerTest {
     private ManifestService manifestService;
 
     @Autowired
+    private ReferenceService referenceService;
+
+    @Autowired
     private ManifestReferenceService manifestReferenceService;
 
     @Autowired
@@ -81,8 +84,6 @@ public class ManifestControllerTest {
 
     /**
      * Test of searching for Abandoned Manifest, which are not relied to any existing TTT
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void getAllAbandonedManifestsTest() throws Exception {
@@ -94,8 +95,6 @@ public class ManifestControllerTest {
 
     /**
      * Ok test for searching manifest by given id.
-     *
-     * @throws Exception mockMvc
      */
     @Test
     public void getManifestByIdTest200() throws Exception {
@@ -107,8 +106,6 @@ public class ManifestControllerTest {
 
     /**
      * NOK test for searching manifest by given id.
-     *
-     * @throws Exception mockMvc
      */
     @Test
     public void getManifestByIdTest404() throws Exception {
@@ -120,8 +117,6 @@ public class ManifestControllerTest {
 
     /**
      * Test of attempt to update manifest with Ok respond status
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void updateManifestTestResponse200() throws Exception {
@@ -173,8 +168,6 @@ public class ManifestControllerTest {
 
     /**
      * Testcase of update manifest request within TTT which doesn't have the Manifest in it's set.
-     *
-     * @throws Exception for mockMvc.
      */
     @Test
     public void updateManifestTestWithinTttWhichDoesntHaveThisManifestResponse200() throws Exception {
@@ -213,8 +206,6 @@ public class ManifestControllerTest {
 
     /**
      * Attempt to update the manifest which doesn't have id
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void updateManifestTestResponse400() throws Exception {
@@ -233,8 +224,6 @@ public class ManifestControllerTest {
 
     /**
      * Testcase of request when there is an attempt to update manifest in not existing TTT
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void updateManifestWithinNotExistingTttTestResponse400() throws Exception {
@@ -270,8 +259,6 @@ public class ManifestControllerTest {
      * IN this testcase the manifest doesn't have any References related.
      * Assertions check the size of the sets of Manifests in related TPA and TTT after
      * deletion was performed.
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteDirectManifestStatus200() throws Exception {
@@ -309,8 +296,6 @@ public class ManifestControllerTest {
     /**
      * Test of the case when user tries to delete manifest with References inside.
      * According to architecture the manifest_References entities should be deleted by cascade
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteManifestWithReferencesStatus200() throws Exception {
@@ -327,8 +312,6 @@ public class ManifestControllerTest {
 
     /**
      * Testcase of attempt to delete manifest with real quantities provided
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteManifestWithRealQuantitiesProvidedStatus422Test() throws Exception {
@@ -340,8 +323,6 @@ public class ManifestControllerTest {
 
     /**
      * Testcase when given id wasn't found while deleting the Manifest
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteManifestWithWrongId404Test() throws Exception {
@@ -355,8 +336,6 @@ public class ManifestControllerTest {
      * Testcase of attempt to add new manifest in chosen TTT.
      * The provided manifest meets to conditions and snd it would be saved in DB.
      * Status response - 200 (Ok).
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void manualCreationOfManifestTestStatus200() throws Exception {
@@ -384,8 +363,6 @@ public class ManifestControllerTest {
      * The provided manifest has inactive Customer and Supplier
      * and it wouldn't be persisted in DB.
      * Response - 409 (Conflict).
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void manualCreationOfManifestTestStatus409SupplierCustomerNotActive() throws Exception {
@@ -411,8 +388,6 @@ public class ManifestControllerTest {
     /**
      * Testcase of attempt to save the Manifest with break of Manifest.class annotation conditions.
      * Response - 412 (Precondition Failed).
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void manualCreationOfManifestTestStatus412() throws Exception {
@@ -433,8 +408,6 @@ public class ManifestControllerTest {
     /**
      * Test of attempt to add manifest within not existing TTT.
      * Response - 404 (Not found).
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void manualCreationOfManifestTestStatus404() throws Exception {
@@ -453,8 +426,6 @@ public class ManifestControllerTest {
     /**
      * Testcase of attempt to save Manifest with ManifestCode which already exists in DB
      * Response - - 409 (Conflict).
-     *
-     * @throws Exception fro mockMvc.
      */
     @Test
     public void manualCreationOfManifestTestStatus409() throws Exception {
@@ -478,8 +449,6 @@ public class ManifestControllerTest {
 
     /**
      * Test of attempt to delete Manifest in TPA which does not exist.
-     *
-     * @throws Exception for mockNvc
      */
     @Test
     public void deleteManifestFromGivenTpaTest404() throws Exception {
@@ -492,8 +461,6 @@ public class ManifestControllerTest {
     /**
      * Attempt of removing particular Manifest from Set of given TPA by id.
      * Response 200.
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteManifestFromGivenTpaTest200() throws Exception {
@@ -516,8 +483,6 @@ public class ManifestControllerTest {
 
     /**
      * Test of case when user tries to delete unknown manifest from existing TPA.
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteManifestFromGivenTpaTest405() throws Exception {
@@ -530,8 +495,6 @@ public class ManifestControllerTest {
 
     /**
      * Test of attempt to delete Manifest in TTT which does not exist.
-     *
-     * @throws Exception for mockNvc
      */
     @Test
     public void deleteManifestFromGivenTttTest404() throws Exception {
@@ -543,8 +506,6 @@ public class ManifestControllerTest {
 
     /**
      * Test of case when user tries to delete unknown manifest from existing TTT.
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteManifestFromGivenTttTest405() throws Exception {
@@ -558,8 +519,6 @@ public class ManifestControllerTest {
     /**
      * Attempt of removing particular Manifest from Set of given TTT by id.
      * Response 200.
-     *
-     * @throws Exception for mockMvc
      */
     @Test
     public void deleteManifestFromGivenTttTest200() throws Exception {
@@ -582,8 +541,6 @@ public class ManifestControllerTest {
 
     /**
      * TestCase of attempt to delete manifest from Closed TPA.
-     *
-     * @throws Exception mockMvc
      */
     @Test
     public void deleteManifestFromGivenTpaTest400() throws Exception {
@@ -598,5 +555,89 @@ public class ManifestControllerTest {
                 .andExpect(header().stringValues("Error:", "TPA with id=4 has bean already CLOSED"))
                 .andExpect(jsonPath("$.tpaID").value(4))
                 .andExpect(jsonPath("$.['manifestSet']", hasSize(2)));
+    }
+
+    /**
+     * Testcase of adding the Reference to the chosen manifest.
+     * Status response 200
+     */
+    @Test
+    public void addReferenceToManifestTest200() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+        Manifest manifest = manifestService.findManifestById(8L);
+        long customerId = manifest.getCustomer().getCustomerID();
+        long supplierId = manifest.getSupplier().getSupplierID();
+
+        List<Reference> referenceList = referenceService.getAllReferencesBySupplierAndCustomer(supplierId, customerId);
+        Assert.assertFalse(referenceList.isEmpty());
+
+        ManifestReference manifestReference = new ManifestReference();
+        manifestReference.setReference(referenceList.get(0));
+        manifestReference.setQtyPlanned(100);
+        manifestReference.setBoxQtyPlanned(1);
+        manifestReference.setGrossWeightPlanned(200);
+        manifestReference.setPalletQtyPlanned(1);
+        manifestReference.setPalletHeight(referenceList.get(0).getPalletHeight());
+        manifestReference.setPalletWeight(referenceList.get(0).getPalletWeight());
+        manifestReference.setPalletWidth(referenceList.get(0).getPalletWidth());
+        manifestReference.setPalletLength(referenceList.get(0).getPalletLength());
+        manifestReference.setStackability(referenceList.get(0).getStackability());
+
+        mockMvc.perform(put("/manifest/8/addReference").contentType(MediaType.APPLICATION_JSON_UTF8).content(om.writeValueAsString(manifestReference)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string("Message:", String.format("Reference %s was added to Manifest %s", referenceList.get(0).getNumber(), manifest.getManifestCode())));
+
+    }
+
+    /**
+     * Testcase of adding the Reference to manifest which id wasn't found in DB.
+     * Status response 404
+     */
+    @Test
+    public void addReferenceToManifestTest404() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        ManifestReference manifestReference = new ManifestReference();
+        manifestReference.setQtyPlanned(100);
+        manifestReference.setBoxQtyPlanned(1);
+        manifestReference.setGrossWeightPlanned(200);
+        manifestReference.setPalletQtyPlanned(1);
+
+        mockMvc.perform(put("/manifest/1000/addReference").contentType(MediaType.APPLICATION_JSON_UTF8).content(om.writeValueAsString(manifestReference)))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(header().string("Error:", "Manifest with id=1000 wasn't found"));
+
+    }
+
+    /**
+     * Testcase of adding the Reference to the chosen manifest.
+     * The given ManifestReference entity violates annotation conditions.
+     * Status response 422
+     */
+    @Test
+    public void addReferenceToManifestTest422() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+        Manifest manifest = manifestService.findManifestById(8L);
+        long customerId = manifest.getCustomer().getCustomerID();
+        long supplierId = manifest.getSupplier().getSupplierID();
+
+        List<Reference> referenceList = referenceService.getAllReferencesBySupplierAndCustomer(supplierId, customerId);
+        Assert.assertFalse(referenceList.isEmpty());
+
+        ManifestReference manifestReference = new ManifestReference();
+        manifestReference.setReference(referenceList.get(0));
+        manifestReference.setQtyPlanned(100);
+
+
+        mockMvc.perform(put("/manifest/8/addReference").contentType(MediaType.APPLICATION_JSON_UTF8).content(om.writeValueAsString(manifestReference)))
+                .andDo(print())
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(header().string("manifestReference-stackability_Min", "must be greater than or equal to 1"));
+
     }
 }
