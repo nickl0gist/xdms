@@ -6,9 +6,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.WarehouseService;
 import pl.com.xdms.service.truck.TruckService;
@@ -34,12 +36,15 @@ public class TpaController {
     private final TruckService truckService;
     private final WarehouseService warehouseService;
     private final RequestErrorService requestErrorService;
+    private final ManifestReferenceService manifestReferenceService;
 
     @Autowired
-    public TpaController(TruckService truckService, WarehouseService warehouseService, RequestErrorService requestErrorService) {
+    public TpaController(TruckService truckService, WarehouseService warehouseService,
+                         RequestErrorService requestErrorService, ManifestReferenceService manifestReferenceService) {
         this.truckService = truckService;
         this.warehouseService = warehouseService;
         this.requestErrorService = requestErrorService;
+        this.manifestReferenceService = manifestReferenceService;
     }
 
     /**
@@ -185,6 +190,48 @@ public class TpaController {
             return ResponseEntity.ok().header(message, String.format("TPA with ID=%d was successfully updated", id)).body(truckService.getTpaService().save(tpaToUpdate));
         }
         return ResponseEntity.notFound().header("ERROR", "Not Existing").build();
+    }
+
+    /**
+     * The endpoint dedicated for ManifestReference split.
+     * @param manRefId - Long Id of the ManifestReference which should be split.
+     * @param tpaToId - Long Id of the TPA where will be placed parts from divided manifest.
+     * @param manifestReference - ManifestReference entity which should be placed into TPA with id tpaToId.
+     * @return TPA were the changes were made, the source TPA.
+     */
+    @PutMapping("split/man_ref/{manRefId:^\\d+$}/tpa_to/{tpaToId:^\\d+$}")
+    public ResponseEntity<TPA> moveManifestReferenceToAnotherTpa(@PathVariable Long manRefId, @PathVariable Long tpaToId,
+                                                                 @RequestBody ManifestReference manifestReference) {
+
+        ManifestReference manifestReferenceToSplit = manifestReferenceService.findById(manRefId);
+        TPA tpaTo = truckService.getTpaService().getTpaById(tpaToId);
+        if(manifestReferenceToSplit == null){
+            log.info("The manifest which has to be split with id={} wasn't found", manRefId);
+            return ResponseEntity.notFound().header("Error:", String.format("The manifest which has to be split with id=%d wasn't found", manRefId)).build();
+        }
+        if(tpaTo == null){
+            log.info("The TPA with id={} where split part should be assigned is not existing", tpaToId);
+            return ResponseEntity.notFound().header("Error:", String.format("The TPA with id=%d where split part should be assigned is not existing", tpaToId)).build();
+        }
+        if (!checkIfSplitIsPossible(manifestReferenceToSplit, manifestReference)){
+            log.info("Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one!");
+            return ResponseEntity.badRequest().header("Error:", "Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one!").build();
+        }
+
+        ManifestReference manifestReferenceToSave = manifestReferenceService.split(manifestReferenceToSplit, manifestReference);
+        manifestReferenceToSplit = manifestReferenceService.update(manifestReferenceToSplit, manifestReferenceToSave);
+
+        tpaTo.getManifestReferenceSet().add(manifestReferenceToSave);
+        truckService.getTpaService().save(tpaTo);
+
+        log.info("ManifestReference with id={} was split to ManifestReference with id={}", manifestReferenceToSplit.getManifestReferenceId(), manifestReferenceToSave.getManifestReferenceId());
+        return ResponseEntity.ok().header("Message:", String.format("ManifestReference with id=%d was successfully placed in TPA id=%d", manifestReferenceToSave.getManifestReferenceId(), tpaToId)).body(manifestReferenceToSplit.getTpa());
+    }
+
+    private boolean checkIfSplitIsPossible(ManifestReference manifestReferenceToSplit, ManifestReference manifestReference) {
+        return manifestReferenceToSplit.getQtyReal() > manifestReference.getQtyReal() &&
+                manifestReferenceToSplit.getPalletQtyReal() > manifestReference.getPalletQtyReal() &&
+                manifestReferenceToSplit.getBoxQtyReal() > manifestReference.getBoxQtyReal();
     }
 
     /**

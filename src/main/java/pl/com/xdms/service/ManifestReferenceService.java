@@ -63,4 +63,47 @@ public class ManifestReferenceService {
         log.info("ManifestReference id={} is being Receipted", manifestReference.getManifestReferenceId());
         return save(manifestReference);
     }
+
+    public ManifestReference split(ManifestReference manifestReferenceToSplit, ManifestReference manifestReference) {
+        ManifestReference result = new ManifestReference();
+
+        //from manifestReferenceToSplit
+        result.setManifest(manifestReferenceToSplit.getManifest());
+        result.setStackability(manifestReferenceToSplit.getStackability());
+        result.setPalletQtyPlanned(manifestReferenceToSplit.getPalletQtyPlanned());
+        result.setQtyPlanned(manifestReferenceToSplit.getQtyPlanned());
+        result.setBoxQtyPlanned(manifestReferenceToSplit.getBoxQtyPlanned());
+        result.setGrossWeightPlanned(manifestReferenceToSplit.getGrossWeightPlanned());
+        result.setPalletHeight(manifestReferenceToSplit.getPalletHeight());
+        result.setPalletLength(manifestReferenceToSplit.getPalletLength());
+        result.setPalletWidth(manifestReferenceToSplit.getPalletWidth());
+        result.setPalletWeight(manifestReferenceToSplit.getPalletWeight());
+        result.setReference(manifestReferenceToSplit.getReference());
+        result.setReceptionNumber(manifestReferenceToSplit.getReceptionNumber());
+        result.setDeliveryNumber(manifestReferenceToSplit.getDeliveryNumber());
+
+
+        //from manifestReference
+        result.setPalletQtyReal(manifestReference.getPalletQtyReal());
+        result.setQtyReal(manifestReference.getQtyReal());
+        result.setBoxQtyReal(manifestReference.getBoxQtyReal());
+        result.setGrossWeightReal(manifestReferenceToSplit.getGrossWeightReal() * result.getQtyReal() / manifestReferenceToSplit.getQtyReal());
+        result.setNetWeight(manifestReferenceToSplit.getNetWeight() * result.getQtyReal() / manifestReferenceToSplit.getQtyReal());
+
+        return save(result);
+    }
+
+    public ManifestReference update(ManifestReference manifestReferenceToSplit, ManifestReference manifestReferenceToSave) {
+
+        double qtyRealOld = manifestReferenceToSplit.getQtyReal();
+        double weightRealOld = manifestReferenceToSplit.getGrossWeightReal();
+
+        manifestReferenceToSplit.setQtyReal(qtyRealOld - manifestReferenceToSave.getQtyReal());
+        manifestReferenceToSplit.setBoxQtyReal(manifestReferenceToSplit.getBoxQtyReal() - manifestReferenceToSave.getBoxQtyReal());
+        manifestReferenceToSplit.setPalletQtyReal(manifestReferenceToSplit.getPalletQtyReal() - manifestReferenceToSave.getPalletQtyReal());
+        manifestReferenceToSplit.setGrossWeightReal(weightRealOld - manifestReferenceToSave.getGrossWeightReal());
+        manifestReferenceToSplit.setNetWeight(manifestReferenceToSplit.getNetWeight() - manifestReferenceToSave.getNetWeight());
+
+        return save(manifestReferenceToSplit);
+    }
 }

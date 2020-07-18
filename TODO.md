@@ -150,7 +150,7 @@ Not done
 
 -. Create Entity WarehouseManifest to truck changes of the manifest when it go through the Warehouse
 
--. Truck Types, LDM calculation
+-. Truck Types, LDM calculation, Truck utilization 
 
 -. add new Entity Warehouse_Manifest = connection between Warehouse And Manifest, check KPI in each warehouse. check Real qty?  
 

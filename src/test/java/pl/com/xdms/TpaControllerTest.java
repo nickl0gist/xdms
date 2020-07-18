@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
-import pl.com.xdms.service.WarehouseService;
+import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.truck.TruckService;
 
 import javax.persistence.EntityManager;
@@ -55,7 +55,7 @@ public class TpaControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private WarehouseService warehouseService;
+    private ManifestReferenceService manifestReferenceService;
 
     @Autowired
     private TruckService truckService;
@@ -481,5 +481,173 @@ public class TpaControllerTest {
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(jsonPath("$", hasSize(16)));
+    }
+
+    /**
+     * The test for case of attempt to split manifestReference.
+     */
+    @Test
+    public void splitManifestReferenceTestOk() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        ManifestReference manifestReference = new ManifestReference();
+
+        ManifestReference manifestReferenceSource = manifestReferenceService.findById(11L);
+        manifestReferenceSource.setQtyReal(2500);
+        manifestReferenceSource.setPalletQtyReal(4);
+        manifestReferenceSource.setBoxQtyReal(150);
+        manifestReferenceSource.setGrossWeightReal(1500);
+        manifestReferenceSource.setNetWeight(1400);
+        manifestReferenceService.save(manifestReferenceSource);
+
+        manifestReference.setQtyReal(1000);
+        manifestReference.setPalletQtyReal(2);
+        manifestReference.setBoxQtyReal(70);
+
+        String json = om.writeValueAsString(manifestReference);
+
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+        TPA tpaSource = entityManager.find(TPA.class, 25L);
+        TPA tpaPlace = entityManager.find(TPA.class, 24L);
+
+        tpaSource.getManifestReferenceSet().iterator();
+        tpaPlace.getManifestReferenceSet().iterator();
+
+        //Check set of Both involved TPAs before controller performed
+        Assert.assertEquals(2, tpaSource.getManifestReferenceSet().size());
+        Assert.assertEquals(2, tpaPlace.getManifestReferenceSet().size());
+        entityManager.getTransaction().commit();
+        entityManager.close();
+
+        //Perform the controller call with ManifestReference 'manifestReference' attached
+        mockMvc.perform((put("/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(jsonPath("$.tpaID").value(25))
+                .andExpect(jsonPath("$.['manifestReferenceSet']", hasSize(2)))
+                .andExpect(jsonPath("$.['manifestReferenceSet'][?(@.manifestReferenceId == 11 " +
+                        "&& @.qtyReal == 1500.0 " +
+                        "&& @.palletQtyReal == 2 " +
+                        "&& @.grossWeightReal == 900.0 " +
+                        "&& @.netWeight == 840.0 " +
+                        "&& @.boxQtyReal == 80)]").exists())
+                .andExpect(header().string("Message:", "ManifestReference with id=13 was successfully placed in TPA id=24"));
+
+        //After the changes done, check if information in DB was changed
+        EntityManager entityManager2 = entityManagerFactory.createEntityManager();
+        entityManager2.getTransaction().begin();
+        TPA tpaSource2 = entityManager2.find(TPA.class, 25L);
+        TPA tpaPlace2 = entityManager2.find(TPA.class, 24L);
+        ManifestReference newManifestReference = entityManager2.find(ManifestReference.class, 13L);
+        tpaSource2.getManifestReferenceSet().iterator();
+        tpaPlace2.getManifestReferenceSet().iterator();
+
+        Assert.assertEquals(2, tpaSource2.getManifestReferenceSet().size());
+        Assert.assertEquals(3, tpaPlace2.getManifestReferenceSet().size());
+
+        entityManager2.getTransaction().commit();
+        entityManager2.close();
+
+        log.info(newManifestReference.toString());
+    }
+
+    /**
+     * The test for case of attempt to split manifestReference with not existing manifestReference id.
+     */
+    @Test
+    public void splitManifestReferenceTestNokManifestReferenceNotFound() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        ManifestReference manifestReference = new ManifestReference();
+
+        manifestReference.setQtyReal(1000);
+        manifestReference.setPalletQtyReal(2);
+        manifestReference.setBoxQtyReal(70);
+
+        String json = om.writeValueAsString(manifestReference);
+
+        //Perform the controller call with ManifestReference 'manifestReference' attached
+        mockMvc.perform((put("/split/man_ref/1111/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(404))
+                .andExpect(header().string("Error:", "The manifest which has to be split with id=1111 wasn't found"));
+    }
+
+    /**
+     * The test for case of attempt to split manifestReference within TPA with id which does not exist in DB.
+     */
+    @Test
+    public void splitManifestReferenceTestNokTpaNotFound() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        ManifestReference manifestReference = new ManifestReference();
+
+        manifestReference.setQtyReal(1000);
+        manifestReference.setPalletQtyReal(2);
+        manifestReference.setBoxQtyReal(70);
+
+        String json = om.writeValueAsString(manifestReference);
+
+        //Perform the controller call with ManifestReference 'manifestReference' attached
+        mockMvc.perform((put("/split/man_ref/11/tpa_to/2400")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(404))
+                .andExpect(header().string("Error:", "The TPA with id=2400 where split part should be assigned is not existing"));
+    }
+
+    /**
+     * The test for case of attempt to split manifestReference by providing greater quantities than in original ManifestReference
+     */
+    @Test
+    public void splitManifestReferenceTestGreaterQty() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        ManifestReference manifestReferenceSource = manifestReferenceService.findById(11L);
+        manifestReferenceSource.setQtyReal(2500);
+        manifestReferenceSource.setPalletQtyReal(4);
+        manifestReferenceSource.setBoxQtyReal(150);
+        manifestReferenceSource.setGrossWeightReal(1500);
+        manifestReferenceSource.setNetWeight(1400);
+        manifestReferenceService.save(manifestReferenceSource);
+
+        ManifestReference manifestReference = new ManifestReference();
+
+        manifestReference.setQtyReal(10000);
+        manifestReference.setPalletQtyReal(2);
+        manifestReference.setBoxQtyReal(70);
+
+        String json = om.writeValueAsString(manifestReference);
+
+        //Perform the controller call with ManifestReference 'manifestReference' attached
+        mockMvc.perform((put("/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(400))
+                .andExpect(header().string("Error:", "Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one!"));
+    }
+
+    /**
+     * The test for case of attempt to split manifestReference by providing same quantities as in original ManifestReference
+     */
+    @Test
+    public void splitManifestReferenceTestTheSameQty() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        ManifestReference manifestReferenceSource = manifestReferenceService.findById(11L);
+        manifestReferenceSource.setQtyReal(2500);
+        manifestReferenceSource.setPalletQtyReal(4);
+        manifestReferenceSource.setBoxQtyReal(150);
+        manifestReferenceSource.setGrossWeightReal(1500);
+        manifestReferenceSource.setNetWeight(1400);
+        manifestReferenceService.save(manifestReferenceSource);
+
+        ManifestReference manifestReference = new ManifestReference();
+
+        manifestReference.setQtyReal(1000);
+        manifestReference.setPalletQtyReal(4);
+        manifestReference.setBoxQtyReal(70);
+
+        String json = om.writeValueAsString(manifestReference);
+
+        //Perform the controller call with ManifestReference 'manifestReference' attached
+        mockMvc.perform((put("/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(400))
+                .andExpect(header().string("Error:", "Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one!"));
     }
 }

@@ -84,6 +84,7 @@ public class ManifestReference {
     @ManyToOne
     @JoinColumn(name = "manifestID", nullable = false)
     @JsonBackReference
+    @ToString.Exclude
     private Manifest manifest;
 
     @Transient
@@ -100,11 +101,8 @@ public class ManifestReference {
             name = "tpa_manifest_reference",
             joinColumns = @JoinColumn(name = "manifest_reference_id"),
             inverseJoinColumns = @JoinColumn(name = "tpaID"))
-//    @JsonIdentityInfo(
-//            generator = ObjectIdGenerators.PropertyGenerator.class,
-//            property = "name"
-//    )
     @JsonIgnore
+    @ToString.Exclude
     private TPA tpa;
 
     @Transient
