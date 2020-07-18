@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
+import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.truck.TruckService;
 
@@ -649,5 +650,37 @@ public class TpaControllerTest {
                 .andDo(print())
                 .andExpect(status().is(400))
                 .andExpect(header().string("Error:", "Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one!"));
+    }
+
+    /**
+     * The test for case of attempt to split manifestReference which already placed in CLOSED TPA.
+     */
+    @Test
+    public void splitManifestReferenceTestOriginTpaClosed() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        ManifestReference manifestReferenceSource = manifestReferenceService.findById(11L);
+        manifestReferenceSource.setQtyReal(2500);
+        manifestReferenceSource.setPalletQtyReal(4);
+        manifestReferenceSource.setBoxQtyReal(150);
+        manifestReferenceSource.setGrossWeightReal(1500);
+        manifestReferenceSource.setNetWeight(1400);
+        TPA tpa = manifestReferenceService.save(manifestReferenceSource).getTpa();
+        tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.CLOSED));
+        truckService.getTpaService().save(tpa);
+
+
+        ManifestReference manifestReference = new ManifestReference();
+
+        manifestReference.setQtyReal(1000);
+        manifestReference.setPalletQtyReal(4);
+        manifestReference.setBoxQtyReal(70);
+
+        String json = om.writeValueAsString(manifestReference);
+
+        //Perform the controller call with ManifestReference 'manifestReference' attached
+        mockMvc.perform((put("/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(403))
+                .andExpect(header().string("Error:", "The TPA with id=25 where split part should be taken from is CLOSED"));
     }
 }

@@ -197,10 +197,14 @@ public class TpaController {
      * @param manRefId - Long Id of the ManifestReference which should be split.
      * @param tpaToId - Long Id of the TPA where will be placed parts from divided manifest.
      * @param manifestReference - ManifestReference entity which should be placed into TPA with id tpaToId.
-     * @return TPA were the changes were made, the source TPA.
+     * @return TPA were the changes were made, if they were. Possible response statuses:
+     * - 404 - when any Entities of ManifestReference (which should be split) or TPA (where the split parts should be placed)
+     * - 403 - if TPA where split part should be taken from is CLOSED
+     * - 400 - if Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one.
+     * - 200 - when ManifestReference was split successfully.
      */
     @PutMapping("split/man_ref/{manRefId:^\\d+$}/tpa_to/{tpaToId:^\\d+$}")
-    public ResponseEntity<TPA> moveManifestReferenceToAnotherTpa(@PathVariable Long manRefId, @PathVariable Long tpaToId,
+    public ResponseEntity<TPA> splitManifestReferenceToAnotherTpa(@PathVariable Long manRefId, @PathVariable Long tpaToId,
                                                                  @RequestBody ManifestReference manifestReference) {
 
         ManifestReference manifestReferenceToSplit = manifestReferenceService.findById(manRefId);
@@ -212,6 +216,11 @@ public class TpaController {
         if(tpaTo == null){
             log.info("The TPA with id={} where split part should be assigned is not existing", tpaToId);
             return ResponseEntity.notFound().header("Error:", String.format("The TPA with id=%d where split part should be assigned is not existing", tpaToId)).build();
+        }
+        TPA tpaFrom = manifestReferenceToSplit.getTpa();
+        if(tpaFrom.getStatus().getStatusName().equals(TPAEnum.CLOSED)){
+            log.info("The TPA with id={} where split part should be taken from is CLOSED", tpaFrom.getTpaID());
+            return ResponseEntity.status(403).header("Error:", String.format("The TPA with id=%d where split part should be taken from is CLOSED", tpaFrom.getTpaID())).build();
         }
         if (!checkIfSplitIsPossible(manifestReferenceToSplit, manifestReference)){
             log.info("Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one!");

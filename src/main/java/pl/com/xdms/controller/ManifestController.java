@@ -139,7 +139,7 @@ public class ManifestController {
      * @param id - Long id of the Manifest to delete
      * @return ResponseEntity with headers of the result of request.
      * - 200 - if deletion was successful
-     * - 422 - if Manifest information about real quantities of pallets or boxes. The manifest would not be deleted
+     * - 422 - if Manifest has information about real quantities of pallets or boxes. The manifest would not be deleted
      * - 404 - if no manifest was found by given Id.
      */
     @DeleteMapping("manifest/{id:^\\d+$}")

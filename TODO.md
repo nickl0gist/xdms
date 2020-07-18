@@ -147,16 +147,13 @@ not done
     
 Not done
 -
-
--. Create Entity WarehouseManifest to truck changes of the manifest when it go through the Warehouse
-
--. Truck Types, LDM calculation, Truck utilization 
-
--. add new Entity Warehouse_Manifest = connection between Warehouse And Manifest, check KPI in each warehouse. check Real qty?  
+-. is it necessary to check either the TPA is closed before changing(splitting between different TPA)/deleting any manifest in it?
 
 -. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
 
--. is it necessary to check either the TPA is closed before changing(splitting between different TPA)/deleting any manifest in it?
+-. Create Entity WarehouseManifest to truck changes of the manifest when it goes through the Warehouse. connection between Warehouse And Manifest, check KPI in each warehouse. check Real qty?  
+
+-. Truck Types, LDM calculation, Truck utilization 
 
 -. if defined by default TPA was changed, the changes should be implemented to TTT at the Warehouse where this TPA goes to.
 
@@ -177,7 +174,7 @@ should have "isActive = false". Check again before saving? To implement or not?
 
 -. Manifest View same as real manifest template and add to it weights gross and nett, dn, sap reception number
 
--. manually added matrix. pick CC XD, if has references -> pick TXD, pick TTT TPA or create new according to warehouse 
+-. manually added Manifests. pick CC XD, if has references -> pick TXD, pick TTT TPA or create new according to warehouse 
 and date. Pick Customer and Supplier.
 
 -. Schedule Tasks to update TPA and TTT status from BUFFER to PENDING etc. Scheduled annotation 
