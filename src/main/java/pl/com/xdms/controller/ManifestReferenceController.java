@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
+import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.truck.TruckService;
 
@@ -66,10 +67,14 @@ public class ManifestReferenceController {
             } else if (tpa == null) {
                 log.info("The TPA with id={} was not found", tpaId);
                 return ResponseEntity.status(417).header("Error:", String.format("The TPA with ID=%d wasn't found", tpaId)).build();
+            } else if(manifestReferenceFromBase.getTpa().getStatus().getStatusName().equals(TPAEnum.CLOSED) ||
+            tpa.getStatus().getStatusName().equals(TPAEnum.CLOSED)){
+                log.info("The TPA where parts suppose to be taken from or TPA where the parts suppose to be placed are CLOSED");
+                return ResponseEntity.status(403).header("Error:", "The TPA where parts suppose to be taken from or TPA where the parts suppose to be placed are CLOSED").build();
             } else {
                 manifestReferenceFromBase.setTpa(tpa);
                 manifestReferenceFromBase = manifestReferenceService.save(manifestReferenceFromBase);
-                log.info("The TPA with id={} was not found", tpaId);
+                log.info("The ManifestReference with ID={} was moved to TPA ID={}", id, tpaId);
                 return ResponseEntity.ok().header("Message:", String.format("The ManifestReference with ID=%d was moved to TPA ID=%d", id, tpaId)).body(manifestReferenceFromBase);
             }
         }

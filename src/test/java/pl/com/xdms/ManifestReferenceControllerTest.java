@@ -16,7 +16,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import pl.com.xdms.domain.manifest.ManifestReference;
+import pl.com.xdms.domain.tpa.TPA;
+import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.service.ManifestReferenceService;
+import pl.com.xdms.service.truck.TruckService;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -54,6 +57,9 @@ public class ManifestReferenceControllerTest {
     @Autowired
     private ManifestReferenceService manifestReferenceService;
 
+    @Autowired
+    private TruckService truckService;
+
     private ManifestReference manifestReference;
 
     private ObjectMapper om;
@@ -90,6 +96,7 @@ public class ManifestReferenceControllerTest {
         entityManager.detach(manifestReferenceToUpdate);
         String json = om.writeValueAsString(manifestReferenceToUpdate);
 
+        //Close of Transaction
         entityManager.getTransaction().commit();
         entityManager.close();
 
@@ -153,6 +160,70 @@ public class ManifestReferenceControllerTest {
                 .andDo(print())
                 .andExpect(status().is(417))
                 .andExpect(header().string("Error:", "The ManifestReference with ID=1000 wasn't found"));
+    }
+
+    /**
+     * Testcase when user tries to move ManifestReference entity FROM TPA which is already CLOSED
+     */
+    @Test
+    public void moveManifestReferenceFromClosedTpaTest() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+        //Opening of Transaction
+        entityManager.getTransaction().begin();
+        ManifestReference manifestReferenceToUpdate = entityManager.find(ManifestReference.class, 11L);// (5, 'TEST-MAN-03', 1, 3, 1.2, 1000.0, 3, 3),
+        TPA tpa = manifestReferenceToUpdate.getTpa();
+
+        entityManager.detach(manifestReferenceToUpdate);
+        String json = om.writeValueAsString(manifestReferenceToUpdate);
+
+        //Close of Transaction
+        entityManager.getTransaction().commit();
+        entityManager.close();
+        tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.CLOSED));
+        truckService.getTpaService().save(tpa);
+
+        Assert.assertEquals(25, (long) manifestReferenceToUpdate.getTpa().getTpaID());
+
+        mockMvc.perform(put("/man_ref/move_to_tpa/24").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(403))
+                .andExpect(header().string("Error:", "The TPA where parts suppose to be taken from or TPA where the parts suppose to be placed are CLOSED"));
+
+        Assert.assertEquals(25, (long) manifestReferenceService.findById(11L).getTpa().getTpaID());
+    }
+
+    /**
+     * Testcase when user tries to move ManifestReference entity TO TPA which is already CLOSED
+     */
+    @Test
+    public void moveManifestReferenceToClosedTpaTest() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+        //Opening of Transaction
+        entityManager.getTransaction().begin();
+        ManifestReference manifestReferenceToUpdate = entityManager.find(ManifestReference.class, 11L);// (5, 'TEST-MAN-03', 1, 3, 1.2, 1000.0, 3, 3),
+        TPA tpa = entityManager.find(TPA.class, 24L);
+
+        entityManager.detach(manifestReferenceToUpdate);
+        String json = om.writeValueAsString(manifestReferenceToUpdate);
+
+        //Close of Transaction
+        entityManager.getTransaction().commit();
+        entityManager.close();
+        tpa.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.CLOSED));
+        truckService.getTpaService().save(tpa);
+
+        Assert.assertEquals(25, (long) manifestReferenceToUpdate.getTpa().getTpaID());
+
+        mockMvc.perform(put("/man_ref/move_to_tpa/24").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+                .andDo(print())
+                .andExpect(status().is(403))
+                .andExpect(header().string("Error:", "The TPA where parts suppose to be taken from or TPA where the parts suppose to be placed are CLOSED"));
+
+        Assert.assertEquals(25, (long) manifestReferenceService.findById(11L).getTpa().getTpaID());
     }
 
     /**
