@@ -199,7 +199,7 @@ public class TpaController {
      * @param manifestReference - ManifestReference entity which should be placed into TPA with id tpaToId.
      * @return TPA were the changes were made, if they were. Possible response statuses:
      * - 404 - when any Entities of ManifestReference (which should be split) or TPA (where the split parts should be placed)
-     * - 403 - if TPA where split part should be taken from is CLOSED
+     * - 403 - if TPA where split part should be taken from or placed tois CLOSED
      * - 400 - if Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one.
      * - 200 - when ManifestReference was split successfully.
      */
@@ -221,6 +221,10 @@ public class TpaController {
         if(tpaFrom.getStatus().getStatusName().equals(TPAEnum.CLOSED)){
             log.info("The TPA with id={} where split part should be taken from is CLOSED", tpaFrom.getTpaID());
             return ResponseEntity.status(403).header("Error:", String.format("The TPA with id=%d where split part should be taken from is CLOSED", tpaFrom.getTpaID())).build();
+        }
+        if(tpaTo.getStatus().getStatusName().equals(TPAEnum.CLOSED)){
+            log.info("The TPA with id={} where split part should be placed to is CLOSED", tpaTo.getTpaID());
+            return ResponseEntity.status(403).header("Error:", String.format("The TPA with id=%d where split part should be placed to is CLOSED", tpaTo.getTpaID())).build();
         }
         if (!checkIfSplitIsPossible(manifestReferenceToSplit, manifestReference)){
             log.info("Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one!");
