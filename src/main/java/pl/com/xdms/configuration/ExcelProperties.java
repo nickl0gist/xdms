@@ -53,5 +53,11 @@ public class ExcelProperties {
     @Value("${reference.forecast.sheet.name}")
     private String referenceForecastSheetName;
 
+    @Value("${ttt.download.template}")
+    private String tttDownloadTemplate;
+
+    @Value("${ttt.truck.sheet.name}")
+    private String tttTruckSheetName;
+
 
 }

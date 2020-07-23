@@ -145,11 +145,16 @@ not done
 +25. TPA status before saving check the date. if day is the same change to In Progress 
     if TPA is for next Day or later change to BUFFER
     
++26. is it necessary to check either the TPA is closed before changing(splitting between different TPA)/deleting any manifest in it?
+
++27. get file for receptions ~~with only not receipted references~~. Get file with all references from TTT receipted and not. 
+
+
+
 Not done
 -
--. is it necessary to check either the TPA is closed before changing(splitting between different TPA)/deleting any manifest in it?
 
--. get file for receptions with only not receipted references. Get file with all references from TTT receipted and not.
+-.Get file from TPA with placed References.
 
 -. Create Entity WarehouseManifest to truck changes of the manifest when it goes through the Warehouse. connection between Warehouse And Manifest, check KPI in each warehouse. check Real qty?  
 

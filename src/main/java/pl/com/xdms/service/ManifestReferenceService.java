@@ -7,6 +7,7 @@ import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.repository.ManifestReferenceRepository;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +47,10 @@ public class ManifestReferenceService {
 
     public List<ManifestReference> reception(List<ManifestReference> manifestReferenceList) {
         return manifestReferenceList.stream().map(this::receipt).collect(Collectors.toList());
+    }
+
+    public List<ManifestReference> getManRefListWithinIdSet(Set<Long> ids){
+        return manifestReferenceRepository.findAllByManifestReferenceIdIn(ids);
     }
 
     private ManifestReference receipt(ManifestReference mr) {

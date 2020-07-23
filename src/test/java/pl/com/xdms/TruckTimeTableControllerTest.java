@@ -11,20 +11,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import pl.com.xdms.domain.manifest.Manifest;
+import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
+import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.WarehouseService;
+import pl.com.xdms.service.excel.ExcelManifestReferenceService;
 import pl.com.xdms.service.truck.TruckService;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -58,6 +67,12 @@ public class TruckTimeTableControllerTest {
 
     @Autowired
     private TruckService truckService;
+
+    @Autowired
+    private ExcelManifestReferenceService excelManifestReferenceService;
+
+    @Autowired
+    private ManifestReferenceService manifestReferenceService;
 
     private TruckTimeTable newTtt;
 
@@ -693,4 +708,56 @@ public class TruckTimeTableControllerTest {
                 .andExpect(header().stringValues("truckTimeTable-tttArrivalDatePlan_Pattern", "must match \"^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9](:[0-5][0-9])?$\""));
     }
 
+    /**
+     * Test of creation .xlsx file with information about ManifestReferences in TTT for making reception.
+     */
+    @Test
+    public void getFileForReceptionTest() throws Exception{
+        MvcResult result = mockMvc.perform(get("/coordinator/ttt/10/reception.xlsx").contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        File tempFile = File.createTempFile("test", ".xlsx", null);
+        FileOutputStream fos = new FileOutputStream(tempFile);
+        fos.write(result.getResponse().getContentAsByteArray());
+        log.info("Result {}", tempFile.getAbsolutePath());
+
+        //Map of the ManifestReference from received file after get request.
+        Map<Long, ManifestReference> testFileMap = excelManifestReferenceService.readExcel(tempFile);
+        //List of the ManifestReference from received testFileMap.
+        List<ManifestReference> manifestReferenceList = new ArrayList<>(testFileMap.values());
+        //List of ManifestReference created with key set from testFileMap
+        List<ManifestReference> referenceList = manifestReferenceService.getManRefListWithinIdSet(testFileMap.keySet());
+        Comparator<ManifestReference> comparator = Comparator.comparing(ManifestReference::getManifestReferenceId);
+        referenceList.sort(comparator);
+        manifestReferenceList.sort(comparator);
+        Assert.assertEquals(referenceList.stream().map(ManifestReference::getManifestReferenceId).collect(Collectors.toList()),
+                manifestReferenceList.stream().map(ManifestReference::getManifestReferenceId).collect(Collectors.toList()));
+    }
+
+    /**
+     * upload file with reception information
+     */
+    @Test
+    public void uploadFileWithReceptionInformation() throws Exception {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource("excelTests/reception_test.xlsx").getFile());
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file.toPath()));
+
+        ManifestReference manifestReference3 = manifestReferenceService.findById(3L);
+        ManifestReference manifestReference2 = manifestReferenceService.findById(2L);
+
+        Assert.assertNull(manifestReference3.getReceptionNumber());
+        Assert.assertNull(manifestReference2.getReceptionNumber());
+
+        mockMvc.perform(multipart("/coordinator/ttt/uploadFile").file(mockMultipartFile))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        ManifestReference manifestReference3After = manifestReferenceService.findById(3L);
+        ManifestReference manifestReference2After = manifestReferenceService.findById(2L);
+
+        Assert.assertNotNull(manifestReference3After.getReceptionNumber());
+        Assert.assertNotNull(manifestReference2After.getReceptionNumber());
+    }
 }

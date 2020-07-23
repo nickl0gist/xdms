@@ -68,7 +68,7 @@ public class ExcelReferenceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        File tempFile = File.createTempFile("test", ".xlsx", null);
+        File tempFile = File.createTempFile("test", ".xlsx");
         FileOutputStream fos = new FileOutputStream(tempFile);
         fos.write(result.getResponse().getContentAsByteArray());
         Map<Long, Reference> testFileMap = excelReferenceService.readExcel(tempFile)
@@ -95,7 +95,6 @@ public class ExcelReferenceControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(6)));
-
     }
 
     @Test

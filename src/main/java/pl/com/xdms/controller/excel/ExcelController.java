@@ -56,7 +56,7 @@ public interface ExcelController<T> {
 
     /**
      * @param key    - index of Row in given Excel file
-     * @param entity - entity created from paticular row from Excel
+     * @param entity - entity created from particular row from Excel
      * @param log    - Logger given from controller
      * @return boolean result of validation, if Entity is not valid - false, if valid - true.
      */
