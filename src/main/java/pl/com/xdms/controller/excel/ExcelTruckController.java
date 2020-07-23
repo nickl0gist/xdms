@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.service.FileStorageService;
 import pl.com.xdms.service.excel.ExcelManifestReferenceService;
@@ -22,13 +23,14 @@ import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
 
 /**
  * Created on 21.07.2020
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
 @Slf4j
 @RestController
 @RequestMapping("coordinator/")
-public class ExcelTttController{
+public class ExcelTruckController {
 
     private final FileStorageService fileStorageService;
 
@@ -37,7 +39,7 @@ public class ExcelTttController{
     private final TruckService truckService;
 
     @Autowired
-    public ExcelTttController(FileStorageService fileStorageService, ExcelManifestReferenceService excelManifestReferenceService, TruckService truckService) {
+    public ExcelTruckController(FileStorageService fileStorageService, ExcelManifestReferenceService excelManifestReferenceService, TruckService truckService) {
         this.fileStorageService = fileStorageService;
         this.excelManifestReferenceService = excelManifestReferenceService;
         this.truckService = truckService;
@@ -45,18 +47,19 @@ public class ExcelTttController{
 
     /**
      * Endpoint dedicated to receiving Excel file with ManifestReferences in particular TTT.
+     *
      * @param id - Long TTT id
      * @return - ResponseEntity<InputStreamSource> with generated Excel file
      */
     @GetMapping("ttt/{id:^\\d+$}/reception.xlsx")
-    public ResponseEntity<InputStreamSource> getInputStreamSourceResponseEntity(@PathVariable Long id) throws IOException {
+    public ResponseEntity<InputStreamSource> getInputStreamTttForReception(@PathVariable Long id) throws IOException {
         TruckTimeTable ttt = truckService.getTttService().getTttById(id);
-        if (ttt == null){
+        if (ttt == null) {
             return ResponseEntity.notFound().build();
         }
         ByteArrayInputStream in = excelManifestReferenceService.instanceToExcelFromTemplate(ttt);
         LocalDateTime dateTime = LocalDateTime.now();
-        String filename = "reception_"+ dateTime.format(BASIC_ISO_DATE) + dateTime.getHour() + dateTime.getMinute();
+        String filename = "reception_" + dateTime.format(BASIC_ISO_DATE) + dateTime.getHour() + dateTime.getMinute();
         in.close();
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "attachment; filename=" + filename + ".xlsx");
@@ -69,6 +72,7 @@ public class ExcelTttController{
 
     /**
      * Used when user tries to upload excel file to system with reception information.
+     *
      * @param file - Excel File.
      */
     @PostMapping("ttt/uploadFile")
@@ -77,5 +81,24 @@ public class ExcelTttController{
         String extension = file.getContentType();
         log.info("extension {}", extension);
         excelManifestReferenceService.saveReceptions(filePath.toFile());
+    }
+
+    @GetMapping("tpa/{id:^\\d+$}/tpaPackingList.xlsx")
+    public ResponseEntity<InputStreamSource> getExcelPackingListOfTpa(@PathVariable Long id) throws IOException {
+        TPA tpa = truckService.getTpaService().getTpaById(id);
+        if (tpa == null) {
+            return ResponseEntity.notFound().build();
+        }
+        LocalDateTime dateTime = LocalDateTime.now();
+        ByteArrayInputStream in = excelManifestReferenceService.instanceToExcelFromTemplate(tpa);
+        String filename = "packingList_"+ tpa.getName()+ "_" + dateTime.format(BASIC_ISO_DATE) + dateTime.getHour() + dateTime.getMinute();
+        in.close();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=" + filename + ".xlsx");
+        headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .body(new InputStreamResource(in));
     }
 }

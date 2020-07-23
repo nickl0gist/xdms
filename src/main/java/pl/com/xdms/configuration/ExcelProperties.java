@@ -56,8 +56,12 @@ public class ExcelProperties {
     @Value("${ttt.download.template}")
     private String tttDownloadTemplate;
 
+    @Value("${tpa.download.template}")
+    private String tpaDownloadTemplate;
+
     @Value("${ttt.truck.sheet.name}")
     private String tttTruckSheetName;
 
-
+    @Value("${tpa.detail.sheet.name}")
+    private String tpaDetailSheetName;
 }

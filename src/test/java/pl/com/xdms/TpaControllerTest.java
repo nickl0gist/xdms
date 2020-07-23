@@ -15,6 +15,7 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
@@ -25,6 +26,8 @@ import pl.com.xdms.service.truck.TruckService;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -715,5 +718,33 @@ public class TpaControllerTest {
                 .andDo(print())
                 .andExpect(status().is(403))
                 .andExpect(header().string("Error:", "The TPA with id=24 where split part should be placed to is CLOSED"));
+    }
+
+    /**
+     * Test of creation .xlsx file with information about ManifestReferences in TTT for making reception.
+     */
+    @Test
+    public void gePackingListTest() throws Exception{
+        MvcResult result = mockMvc.perform(get("/coordinator/tpa/24/tpaPackingList.xlsx").contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andReturn();
+
+        File tempFile = File.createTempFile("test", ".xlsx", null);
+        FileOutputStream fos = new FileOutputStream(tempFile);
+        fos.write(result.getResponse().getContentAsByteArray());
+        log.info("Result {}", tempFile.getAbsolutePath());
+
+//        //Map of the ManifestReference from received file after get request.
+//        Map<Long, ManifestReference> testFileMap = excelManifestReferenceService.readExcel(tempFile);
+//        //List of the ManifestReference from received testFileMap.
+//        List<ManifestReference> manifestReferenceList = new ArrayList<>(testFileMap.values());
+//        //List of ManifestReference created with key set from testFileMap
+//        List<ManifestReference> referenceList = manifestReferenceService.getManRefListWithinIdSet(testFileMap.keySet());
+//        Comparator<ManifestReference> comparator = Comparator.comparing(ManifestReference::getManifestReferenceId);
+//        referenceList.sort(comparator);
+//        manifestReferenceList.sort(comparator);
+//        Assert.assertEquals(referenceList.stream().map(ManifestReference::getManifestReferenceId).collect(Collectors.toList()),
+//                manifestReferenceList.stream().map(ManifestReference::getManifestReferenceId).collect(Collectors.toList()));
     }
 }
