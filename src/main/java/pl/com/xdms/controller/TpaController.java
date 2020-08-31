@@ -199,7 +199,7 @@ public class TpaController {
      * @param manifestReference - ManifestReference entity which should be placed into TPA with id tpaToId.
      * @return TPA were the changes were made, if they were. Possible response statuses:
      * - 404 - when any Entities of ManifestReference (which should be split) or TPA (where the split parts should be placed)
-     * - 403 - if TPA where split part should be taken from or placed tois CLOSED
+     * - 403 - if TPA where split part should be taken from or placed to is CLOSED
      * - 400 - if Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one.
      * - 200 - when ManifestReference was split successfully.
      */

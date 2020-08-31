@@ -92,7 +92,6 @@ public class ManifestReference {
 
     @ManyToOne
     @JoinColumn(name = "referenceID", nullable = false)
-
     @NotNull
     private Reference reference;
 

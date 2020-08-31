@@ -10,6 +10,7 @@ import pl.com.xdms.configuration.ExcelProperties;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
+import pl.com.xdms.domain.warehouse.WHTypeEnum;
 import pl.com.xdms.service.ManifestReferenceService;
 
 import java.io.*;
@@ -72,9 +73,11 @@ public class ExcelManifestReferenceService implements ExcelService<ManifestRefer
         Cell deliveryNoteCell = row.createCell(5);
         deliveryNoteCell.setCellValue(manifestReference.getDeliveryNumber());
 
-        //TODO add Arrival Date
-/*        Cell cityCell = row.createCell(6);
-        cityCell.setCellValue(manifestReference.getManifest());*/
+        Cell cityCell = row.createCell(6);
+        TruckTimeTable ttt = manifestReference.getManifest().getTruckTimeTableSet().stream()
+                .filter(m -> m.getWarehouse().getWhType().getType().equals(WHTypeEnum.TXD))
+                .findFirst().orElse(null);
+        cityCell.setCellValue(ttt == null ? "no TXD warehouse" : ttt.getTttArrivalDateReal());
 
         Cell refNumCell = row.createCell(7);
         refNumCell.setCellValue(manifestReference.getReference().getNumber());
