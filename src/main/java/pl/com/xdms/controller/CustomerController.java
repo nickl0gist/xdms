@@ -3,16 +3,13 @@ package pl.com.xdms.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.service.CustomerService;
 import pl.com.xdms.service.RequestErrorService;
 
-import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -22,7 +19,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("admin/customers")
+@RequestMapping("coordinator/customers")
 public class CustomerController {
 
     private final CustomerService customerService;
@@ -34,11 +31,21 @@ public class CustomerController {
         this.requestErrorService = requestErrorService;
     }
 
+    /**
+     * The Endpoint used to obtain all the customers from DB
+     * @return List\<Customer\>
+     */
     @GetMapping
     public List<Customer> getAllCustomers(){
         return customerService.getAllCustomers();
     }
 
+    /**
+     * The Endpoint is for getting certain customer from DB
+     * @param id - Long Id given by user
+     * @return - Status 200 if Customer was found
+     * Status 404 - if Customer wasn't found
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Customer> getCustomerById(@PathVariable Long id){
         Customer customer = customerService.getCustomerById(id);
@@ -51,50 +58,43 @@ public class CustomerController {
         }
     }
 
+    /**
+     * Get only active customers
+     * @return List\<Customer\>
+     */
     @GetMapping("/active")
     public List<Customer> getActiveCustomers(){
         return customerService.getCustomersWhereIsActive(true);
     }
 
+    /**
+     * Get only not active customers
+     * @return List\<Customer\>
+     */
     @GetMapping("/not_active")
     public List<Customer> getNotActiveCustomers(){
         return customerService.getCustomersWhereIsActive(false);
     }
 
+    /**
+     * Get all customers ordered by parameters.
+     * @param orderBy : "customer_code, name, country, post_code, street"
+     * @param direction: asc, desc.
+     * @return List\<Customer\>
+     */
     @GetMapping({"/ordered_by/{orderBy}/{direction}", "/ordered_by/{orderBy}"})
     public List<Customer> getAllCustomersOrderedBy(@PathVariable String orderBy, @PathVariable String direction){
         return customerService.getAllCustomersOrderedBy(orderBy, direction);
     }
 
+    /**
+     * Searching for Customer within next parameters: customer_code, name, country, post_code, city, street, email
+     * @param searchString - string to be searched
+     * @return List\<Customer\>
+     */
     @GetMapping("/search/{searchString}")
     @ResponseStatus(HttpStatus.OK)
     public List<Customer> searchCustomerByString(@PathVariable String searchString){
         return customerService.search(searchString);
-    }
-
-    @SuppressWarnings("Duplicates")
-    @PutMapping
-    public ResponseEntity<Customer> updateCustomer(@RequestBody @Valid Customer customer, BindingResult bindingResult){
-        log.info("Try to update customer with Id:{}", customer.getCustomerID());
-        if (bindingResult.hasErrors()){
-            HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
-            return ResponseEntity.status(422).headers(headers).body(customer);
-        }
-        Customer repositoryCustomer = customerService.updateCustomer(customer);
-        return (repositoryCustomer != null)
-                ? ResponseEntity.ok(repositoryCustomer)
-                : ResponseEntity.notFound().build();
-    }
-
-    @SuppressWarnings("Duplicates")
-    @PostMapping
-    public ResponseEntity<Customer> createCustomer(@RequestBody @Valid Customer customer, BindingResult bindingResult){
-        log.info("Try to create customer with Name: {}, from: {}", customer.getName(), customer.getCountry());
-        if(bindingResult.hasErrors()){
-            HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
-            return ResponseEntity.status(422).headers(headers).body(customer);
-        }
-        customerService.save(customer);
-        return ResponseEntity.status(201).build();
     }
 }

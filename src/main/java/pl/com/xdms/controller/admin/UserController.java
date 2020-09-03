@@ -1,4 +1,4 @@
-package pl.com.xdms.controller;
+package pl.com.xdms.controller.admin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,16 +27,31 @@ public class UserController {
         this.requestErrorService = requestErrorService;
     }
 
+    /**
+     * Getting List of All Users in the System
+     * @return List\<User\>
+     */
     @GetMapping
     public List<User> getAllUsers(){
         return userService.getUsers("default", "default");
     }
 
+    /**
+     * Endpoint is for getting Ordered List of Users
+     * @param orderBy - "firstname", "lastname", "username", "role"
+     * @param direction - asc, desc
+     * @return ordered List\<User\>
+     */
     @GetMapping({"/orderby/{orderBy}/{direction}", "/ordered/{orderBy}"})
     public List<User> getAllUsers(@PathVariable String orderBy, @PathVariable String direction){
         return userService.getUsers(orderBy, direction);
     }
 
+    /**
+     * Endpoint is for getting particular User by his ID
+     * @param id - Long Id
+     * @return - User
+     */
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id){
         User user = userService.getUserById(id);
@@ -49,6 +64,14 @@ public class UserController {
         }
     }
 
+    /**
+     * Endpoint which is used for changing information about User by sending changed JSON entity.
+     * @param updatedUser - the updated User Entity.
+     * @param bindingResult - for checking conditions.
+     * @return Status 200 and the updated User entity if changing was successful.
+     * Status 422 if something was wrong.
+     * Status 404 if such User with given Id wasn't found.
+     */
     @SuppressWarnings("Duplicates")
     @PutMapping(headers="Accept=application/json")
     public ResponseEntity<User> updateUser(@RequestBody @Valid User updatedUser, BindingResult bindingResult){
@@ -62,7 +85,14 @@ public class UserController {
                 : ResponseEntity.notFound().build();
     }
 
-    @PostMapping
+    /**
+     * Endpoint is for persisting new User in DB.
+     * @param user - User entity received from User.
+     * @param bindingResult - for checking conditions.
+     * @return - Status 201 if User was successfully created.
+     * Status 422 if any condition was violated.
+     */
+    @PostMapping(headers="Accept=application/json")
     public ResponseEntity<User> addUser(@RequestBody @Valid User user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()){
             HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
@@ -73,6 +103,11 @@ public class UserController {
         return ResponseEntity.status(201).build();
     }
 
+    /**
+     * Endpoint is for removing existing user from DB.
+     * @param id Long Id of the User
+     * @return Status 200 if user was removed, status 404 if wasn't so.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUserById(@PathVariable Long id){
         boolean success = userService.deleteUser(id);
@@ -85,6 +120,10 @@ public class UserController {
         }
     }
 
+    /**
+     * is for getting List of existing User Roles in the system.
+     * @return List \<Role\>
+     */
     @GetMapping("/userroles")
     public List<Role> getAllRoles(){
         return userService.getAllRoles();

@@ -56,11 +56,11 @@ public class WarehouseService {
         return warehouseOptional.orElse(null);
     }
 
-    public List<Warehouse> getSuppliersWhereIsActive(Boolean isActive) {
+    public List<Warehouse> getWarehousesWhereIsActive(Boolean isActive) {
         return warehouseRepository.findAllByIsActiveEquals(isActive);
     }
 
-    public List<Warehouse> getAllSuppliersOrderedBy(String orderBy, String direction) {
+    public List<Warehouse> getAllWarehousesOrderedBy(String orderBy, String direction) {
         switch (orderBy) {
             case "city":
                 return "asc".equals(direction)

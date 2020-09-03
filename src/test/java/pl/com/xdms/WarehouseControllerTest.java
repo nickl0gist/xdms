@@ -70,14 +70,15 @@ public class WarehouseControllerTest {
 
     @Test
     public void getAllWarehousesTest() throws Exception {
-        mockMvc.perform(get("/admin/warehouses"))
+        mockMvc.perform(get("/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(6)));
+                .andExpect(jsonPath("$", hasSize(4)));
     }
 
     @Test
     public void getWarehouseByIdStatusOk() throws Exception {
-        mockMvc.perform(get("/admin/warehouses/1"))
+        mockMvc.perform(get("/warehouses/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.city").value("Swiebodzice"));
@@ -85,7 +86,7 @@ public class WarehouseControllerTest {
 
     @Test
     public void getWarehouseByIdStatusNotFound() throws Exception {
-        mockMvc.perform(get("/admin/warehouses/7"))
+        mockMvc.perform(get("/warehouses/7"))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(""));
@@ -94,6 +95,7 @@ public class WarehouseControllerTest {
     @Test
     public void getOnlyActiveWarehousesTest() throws Exception {
         mockMvc.perform(get("/admin/warehouses/active"))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(4)));
     }
@@ -101,6 +103,7 @@ public class WarehouseControllerTest {
     @Test
     public void getOnlyNotActiveWarehousesTest() throws Exception {
         mockMvc.perform(get("/admin/warehouses/not_active"))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)));
     }
