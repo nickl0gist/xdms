@@ -22,7 +22,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("admin/warehouses")
+@RequestMapping("admin/warehouse")
 public class AdminWarehouseController {
 
     private final WarehouseService warehouseService;
@@ -100,7 +100,7 @@ public class AdminWarehouseController {
     }
 
     /**
-     *
+     * Endpoint is for updating the Warehouse using it's Id. 
      * @param warehouse posted by Admin to be updated
      * @param bindingResult to check conditions
      * @return Updated Warehouse whether it was successfully updated with status 200.

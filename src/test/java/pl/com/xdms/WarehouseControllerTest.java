@@ -70,7 +70,7 @@ public class WarehouseControllerTest {
 
     @Test
     public void getAllWarehousesTest() throws Exception {
-        mockMvc.perform(get("/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8))
+        mockMvc.perform(get("/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(4)));
@@ -78,7 +78,7 @@ public class WarehouseControllerTest {
 
     @Test
     public void getWarehouseByIdStatusOk() throws Exception {
-        mockMvc.perform(get("/warehouses/1"))
+        mockMvc.perform(get("/warehouse/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.city").value("Swiebodzice"));
@@ -86,7 +86,7 @@ public class WarehouseControllerTest {
 
     @Test
     public void getWarehouseByIdStatusNotFound() throws Exception {
-        mockMvc.perform(get("/warehouses/7"))
+        mockMvc.perform(get("/warehouse/7"))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(""));
@@ -94,7 +94,7 @@ public class WarehouseControllerTest {
 
     @Test
     public void getOnlyActiveWarehousesTest() throws Exception {
-        mockMvc.perform(get("/admin/warehouses/active"))
+        mockMvc.perform(get("/admin/warehouse/active"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(4)));
@@ -102,7 +102,7 @@ public class WarehouseControllerTest {
 
     @Test
     public void getOnlyNotActiveWarehousesTest() throws Exception {
-        mockMvc.perform(get("/admin/warehouses/not_active"))
+        mockMvc.perform(get("/admin/warehouse/not_active"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)));
@@ -110,7 +110,7 @@ public class WarehouseControllerTest {
 
     @Test
     public void getAllWarehousesOrderedByName() throws Exception {
-        mockMvc.perform(get("/admin/warehouses/ordered_by/name/asc"))
+        mockMvc.perform(get("/admin/warehouse/ordered_by/name/asc"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(6)))
@@ -120,7 +120,7 @@ public class WarehouseControllerTest {
 
     @Test
     public void getAllWarehousesOrderedByCountry() throws Exception {
-        mockMvc.perform(get("/admin/warehouses/ordered_by/country/desc"))
+        mockMvc.perform(get("/admin/warehouse/ordered_by/country/desc"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(6)))
@@ -131,7 +131,7 @@ public class WarehouseControllerTest {
     @Test
     public void getWarehousesBySearch() throws Exception {
         String search = "PL";
-        mockMvc.perform(get("/admin/warehouses/search/" + search))
+        mockMvc.perform(get("/admin/warehouse/search/" + search))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -147,7 +147,7 @@ public class WarehouseControllerTest {
         warehouse.setName("namename");
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(warehouse);
-        this.mockMvc.perform(put("/admin/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(put("/admin/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isActive").value(false))
@@ -162,7 +162,7 @@ public class WarehouseControllerTest {
         warehouse.setName("");
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(warehouse);
-        this.mockMvc.perform(put("/admin/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(put("/admin/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(content().string(jsonClean(json)))
@@ -175,7 +175,7 @@ public class WarehouseControllerTest {
         newWarehouse.setWarehouseID(10L);
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newWarehouse);
-        this.mockMvc.perform(put("/admin/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(put("/admin/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(404));
     }
@@ -194,7 +194,7 @@ public class WarehouseControllerTest {
         String json = ow.writeValueAsString(newWarehouse);
         Warehouse firstWarehouse = warehouseService.getWarehouseById(1L);
 
-        this.mockMvc.perform(post("/admin/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(post("/admin/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(201));
         Warehouse persistedWarehouse = warehouseService.getWarehouseByUrl(newWarehouse.getUrlCode());
@@ -211,7 +211,7 @@ public class WarehouseControllerTest {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newWarehouse);
 
-        this.mockMvc.perform(post("/admin/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(post("/admin/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(header().exists("warehouse-country_NotBlank"))
@@ -225,7 +225,7 @@ public class WarehouseControllerTest {
         newWarehouse.setWhType(null);
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newWarehouse);
-        this.mockMvc.perform(post("/admin/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(post("/admin/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(header().exists("warehouse-whType_NotNull"));
@@ -236,7 +236,7 @@ public class WarehouseControllerTest {
         newWarehouse.setWhType(new WHType());
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newWarehouse);
-        this.mockMvc.perform(post("/admin/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(post("/admin/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(201));
 
@@ -252,7 +252,7 @@ public class WarehouseControllerTest {
 
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newWarehouse);
-        this.mockMvc.perform(post("/admin/warehouses").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(post("/admin/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(201));
 

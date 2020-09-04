@@ -40,7 +40,7 @@ public class WhCustomerControllerTest {
 
     @Test
     public void getAllWarehousesTest() throws Exception {
-        mockMvc.perform(get("/coordinator/warehouse/cc_swie/customers"))
+        mockMvc.perform(get("/warehouse/cc_swie/customers"))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$", hasSize(6)));
@@ -48,7 +48,7 @@ public class WhCustomerControllerTest {
 
     @Test
     public void getAllWarehousesTestNotFound() throws Exception {
-        mockMvc.perform(get("/coordinator/warehouse/bla_bla/customers"))
+        mockMvc.perform(get("/warehouse/bla_bla/customers"))
                 .andExpect(status().isNotFound())
                 .andDo(print());
     }
@@ -59,7 +59,7 @@ public class WhCustomerControllerTest {
      */
     @Test
     public void getOnlyActiveWarehousesTest() throws Exception {
-        mockMvc.perform(get("/coordinator/warehouse/cc_swie/customers/active"))
+        mockMvc.perform(get("/warehouse/cc_swie/customers/active"))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$", hasSize(5)));
@@ -67,7 +67,7 @@ public class WhCustomerControllerTest {
 
     @Test
     public void getOnlyInactiveWarehousesTest() throws Exception {
-        mockMvc.perform(get("/coordinator/warehouse/cc_swie/customers/inactive"))
+        mockMvc.perform(get("/warehouse/cc_swie/customers/inactive"))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$", hasSize(1)));
@@ -75,15 +75,15 @@ public class WhCustomerControllerTest {
 
     @Test
     public void updateWhCustomerTestOkStatus() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(get("/coordinator/warehouse/cc_swie/customer/2"))
+        MvcResult mvcResult = mockMvc.perform(get("/warehouse/cc_swie/customer/2"))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.isActive").value(true)).andReturn();
 
         String jsonString = mvcResult.getResponse().getContentAsString();
         jsonString = jsonString.replace("02\"},\"isActive\":true", "02\"},\"isActive\":false");
-
-        mockMvc.perform(put("/coordinator/warehouse").contentType(MediaType.APPLICATION_JSON_UTF8).content(jsonString))
+        log.info(jsonString);
+        mockMvc.perform(put("/warehouse/cc_swie").contentType(MediaType.APPLICATION_JSON_UTF8).content(jsonString))
                 .andDo(print())
                 .andExpect(jsonPath("$.isActive").value(false))
                 .andExpect(status().isOk());

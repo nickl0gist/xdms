@@ -6,7 +6,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.warehouse.Warehouse;
-import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.WarehouseService;
 
 import java.util.List;
@@ -19,17 +18,14 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("warehouses")
+@RequestMapping("warehouse")
 public class WarehouseController {
 
     private final WarehouseService warehouseService;
-    private final RequestErrorService requestErrorService;
 
     @Autowired
-    public WarehouseController(WarehouseService warehouseService,
-                               RequestErrorService requestErrorService) {
+    public WarehouseController(WarehouseService warehouseService) {
         this.warehouseService = warehouseService;
-        this.requestErrorService = requestErrorService;
     }
 
     /**

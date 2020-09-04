@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("tpa_settings")
+@RequestMapping("warehousestpa_settings")
 public class TpaDaysSettingController {
 
     private final TruckService truckService;

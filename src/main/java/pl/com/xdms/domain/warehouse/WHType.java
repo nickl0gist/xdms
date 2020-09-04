@@ -6,6 +6,7 @@ import lombok.ToString;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 @Entity
 @Table(name = "wh_type")
@@ -25,4 +26,19 @@ public class WHType {
     @Enumerated(EnumType.STRING)
     @Column(name = "name", unique = true)
     private WHTypeEnum type;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof WHType)) return false;
+        WHType whType = (WHType) o;
+        return getWhTypeID().equals(whType.getWhTypeID()) &&
+                getIsActive().equals(whType.getIsActive()) &&
+                getType() == whType.getType();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getWhTypeID(), getIsActive(), getType());
+    }
 }
