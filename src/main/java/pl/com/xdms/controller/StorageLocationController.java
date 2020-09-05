@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.com.xdms.domain.storloc.StorageLocation;
-import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.StorageLocationService;
 
 import java.util.List;
@@ -23,12 +22,10 @@ import java.util.List;
 @RequestMapping("coordinator/stor_loc")
 public class StorageLocationController {
     private StorageLocationService storageLocationService;
-    private RequestErrorService requestErrorService;
 
     @Autowired
-    public StorageLocationController(StorageLocationService storageLocationService, RequestErrorService requestErrorService) {
+    public StorageLocationController(StorageLocationService storageLocationService) {
         this.storageLocationService = storageLocationService;
-        this.requestErrorService = requestErrorService;
     }
 
     /**
@@ -57,6 +54,4 @@ public class StorageLocationController {
             return ResponseEntity.notFound().build();
         }
     }
-
-
 }

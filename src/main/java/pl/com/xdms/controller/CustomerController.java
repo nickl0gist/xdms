@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.service.CustomerService;
-import pl.com.xdms.service.RequestErrorService;
 
 import java.util.List;
 
@@ -23,12 +22,10 @@ import java.util.List;
 public class CustomerController {
 
     private final CustomerService customerService;
-    private final RequestErrorService requestErrorService;
 
     @Autowired
-    public CustomerController(@Lazy CustomerService customerService, RequestErrorService requestErrorService) {
+    public CustomerController(@Lazy CustomerService customerService) {
         this.customerService = customerService;
-        this.requestErrorService = requestErrorService;
     }
 
     /**

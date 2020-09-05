@@ -94,7 +94,7 @@ public class StorageLocationControllerTest {
         storageLocation.setName("EX-TEST");
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(storageLocation);
-        this.mockMvc.perform(put("/coordinator/stor_loc").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(put("/admin/stor_loc").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isOk());
     }
@@ -106,7 +106,7 @@ public class StorageLocationControllerTest {
         storageLocation.setName("");
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(storageLocation);
-        this.mockMvc.perform(put("/coordinator/stor_loc").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(put("/admin/stor_loc").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(content().string(jsonClean(json)))
@@ -119,7 +119,7 @@ public class StorageLocationControllerTest {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(storageLocation);
 
-        mockMvc.perform(post("/coordinator/stor_loc").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/admin/stor_loc").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(201));
     }
@@ -133,7 +133,7 @@ public class StorageLocationControllerTest {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(storageLocation);
 
-        mockMvc.perform(post("/coordinator/stor_loc").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/admin/stor_loc").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(content().string(jsonClean(json)))

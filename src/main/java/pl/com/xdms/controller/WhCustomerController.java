@@ -43,6 +43,11 @@ public class WhCustomerController {
         this.customerService = customerService;
     }
 
+    /**
+     * Endpoint dedicated to obtain List of all customers for current warehouse.
+     * @param urlCode - unique url of warehouse where changes should be done.
+     * @return List\<WhCustomer\> the request was successful.
+     */
     @GetMapping("/customers")
     public ResponseEntity<List<WhCustomer>> getAllCustomersForWarehouse(@PathVariable String urlCode){
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
@@ -53,6 +58,11 @@ public class WhCustomerController {
         return ResponseEntity.status(200).body(whCustomers);
     }
 
+    /**
+     * Endpoint dedicated to obtain List of only active customers for current warehouse.
+     * @param urlCode - unique url of warehouse where changes should be done.
+     * @return List\<WhCustomer\> the request was successful.
+     */
     @GetMapping("/customers/active")
     public ResponseEntity<List<WhCustomer>> getOnlyActiveWhCustomersForWarehouse(@PathVariable String urlCode){
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
@@ -63,6 +73,11 @@ public class WhCustomerController {
         return ResponseEntity.status(200).body(whCustomers);
     }
 
+    /**
+     * Endpoint dedicated to obtain List of not active customers for current warehouse.
+     * @param urlCode - unique url of warehouse where changes should be done.
+     * @return List\<WhCustomer\> the request was successful.
+     */
     @GetMapping("/customers/inactive")
     public ResponseEntity<List<WhCustomer>> getOnlyDeactivatedCustomersForWarehouse(@PathVariable String urlCode){
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
@@ -73,6 +88,11 @@ public class WhCustomerController {
         return ResponseEntity.status(200).body(whCustomers);
     }
 
+    /**
+     * Endpoint dedicated to obtain certain WhCustomer for certain Warehouse and Customer
+     * @param urlCode - unique url of warehouse where changes should be done.
+     * @return List\<WhCustomer\> the request was successful.
+     */
     @GetMapping("/customer/{id}")
     public ResponseEntity<WhCustomer> getWhCustomerForWarehouse(@PathVariable String urlCode, @PathVariable Long id){
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
@@ -87,7 +107,7 @@ public class WhCustomerController {
     }
 
     /**
-     * Could change only @code isActive parameter of existing WhCustomer connection.
+     * Could change only <b>isActive</b> parameter of existing WhCustomer connection.
      * @param whCustomer - existing connection warehouse with customer to be updated.
      * @param bindingResult - BindingResult
      * @return ResponseEntity\<WhCustomer\>

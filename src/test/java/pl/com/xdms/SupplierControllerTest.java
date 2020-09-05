@@ -135,7 +135,7 @@ public class SupplierControllerTest {
         supplier.setVendorCode("0000000");
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(supplier);
-        this.mockMvc.perform(put("/coordinator/suppliers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(put("/admin/suppliers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isActive").value(false))
@@ -150,7 +150,7 @@ public class SupplierControllerTest {
         supplier.setVendorCode("WE12344");
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(supplier);
-        this.mockMvc.perform(put("/coordinator/suppliers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(put("/admin/suppliers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(content().string(jsonClean(json)))
@@ -164,7 +164,7 @@ public class SupplierControllerTest {
         newSupplier.setSupplierID(10L);
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newSupplier);
-        this.mockMvc.perform(put("/coordinator/suppliers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(put("/admin/suppliers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(404));
     }
@@ -174,7 +174,7 @@ public class SupplierControllerTest {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newSupplier);
 
-        this.mockMvc.perform(post("/coordinator/suppliers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(post("/admin/suppliers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(201));
     }
@@ -187,7 +187,7 @@ public class SupplierControllerTest {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newSupplier);
 
-        this.mockMvc.perform(post("/coordinator/suppliers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        this.mockMvc.perform(post("/admin/suppliers").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(header().exists("supplier-vendorCode_NotBlank"))

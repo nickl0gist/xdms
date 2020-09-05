@@ -213,7 +213,7 @@ public class ReferenceControllerTest {
 
     @Test
     public void getAllReferencesSortedByNameAsc() throws Exception {
-        this.mockMvc.perform(get("/coordinator/references/orderby/name/asc"))
+        this.mockMvc.perform(get("/coordinator/references/ordered_by/name/asc"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(3)))
@@ -224,7 +224,7 @@ public class ReferenceControllerTest {
 
     @Test
     public void getAllReferencesSortedByNameDesc() throws Exception {
-        this.mockMvc.perform(get("/coordinator/references/orderby/name/desc"))
+        this.mockMvc.perform(get("/coordinator/references/ordered_by/name/desc"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(3)))

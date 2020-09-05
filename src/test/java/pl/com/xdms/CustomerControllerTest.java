@@ -65,7 +65,7 @@ public class CustomerControllerTest {
 
     @Test
     public void getAllCustomers() throws Exception{
-        mockMvc.perform(get("/admin/customers"))
+        mockMvc.perform(get("/coordinator/customers"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(9)));
@@ -73,7 +73,7 @@ public class CustomerControllerTest {
 
     @Test
     public void getCustomerById() throws Exception{
-        mockMvc.perform(get("/admin/customers/1"))
+        mockMvc.perform(get("/coordinator/customers/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.customerCode").value("123123"))
@@ -83,14 +83,14 @@ public class CustomerControllerTest {
     @Test
     public void getCustomerByIdNotFound() throws Exception {
         int id = 50;
-        mockMvc.perform(get("/admin/customers/" + id))
+        mockMvc.perform(get("/coordinator/customers/" + id))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(""));
     }
 
     @Test
     public void getOnlyActiveCustomers() throws Exception {
-        mockMvc.perform(get("/admin/customers/active"))
+        mockMvc.perform(get("/coordinator/customers/active"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(7)));
@@ -98,7 +98,7 @@ public class CustomerControllerTest {
 
     @Test
     public void getOnlyNotActiveCustomers() throws Exception {
-        mockMvc.perform(get("/admin/customers/not_active"))
+        mockMvc.perform(get("/coordinator/customers/not_active"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)));
@@ -106,7 +106,7 @@ public class CustomerControllerTest {
 
     @Test
     public void getCustomersOrderedByNameAsc() throws Exception {
-        mockMvc.perform(get("/admin/customers/ordered_by/name/asc"))
+        mockMvc.perform(get("/coordinator/customers/ordered_by/name/asc"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(9)))
@@ -116,7 +116,7 @@ public class CustomerControllerTest {
 
     @Test
     public void getCustomersOrderedByVendorCodeDesc() throws Exception {
-        mockMvc.perform(get("/admin/customers/ordered_by/customer_code/desc"))
+        mockMvc.perform(get("/coordinator/customers/ordered_by/customer_code/desc"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(9)))
@@ -127,7 +127,7 @@ public class CustomerControllerTest {
     @Test
     public void getCustomersBySearch() throws Exception {
         String search = "ArgentinaName";
-        mockMvc.perform(get("/admin/customers/search/" + search))
+        mockMvc.perform(get("/coordinator/customers/search/" + search))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
