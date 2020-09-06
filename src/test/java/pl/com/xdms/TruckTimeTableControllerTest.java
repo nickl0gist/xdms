@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
+import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.WarehouseService;
 import pl.com.xdms.service.excel.ExcelManifestReferenceService;
@@ -39,6 +40,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 /**
  * Created on 12.04.2020
@@ -84,7 +86,7 @@ public class TruckTimeTableControllerTest {
 
     @Test
     public void getAllTttByTheWarehouseAndCertainDate() throws Exception {
-        mockMvc.perform(get("/cc_swie/ttt/2020-05-20"))
+        mockMvc.perform(get("/warehouse/cc_swie/ttt/2020-05-20"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
@@ -92,14 +94,14 @@ public class TruckTimeTableControllerTest {
 
     @Test
     public void getAllTttByTheWarehouseAndCertainDateWrongRegex() throws Exception {
-        mockMvc.perform(get("/cc_swie/ttt/2020-04-233"))
+        mockMvc.perform(get("/warehouse/cc_swie/ttt/2020-04-233"))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
 
     @Test
     public void getTttByIdTest() throws Exception {
-        mockMvc.perform(get("/ttt/1"))
+        mockMvc.perform(get("/warehouse/cc_swie/ttt/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.truckName").value("TPA1"))
@@ -108,7 +110,7 @@ public class TruckTimeTableControllerTest {
 
     @Test
     public void getTttByIdNotFound() throws Exception {
-        mockMvc.perform(get("/ttt/101"))
+        mockMvc.perform(get("/warehouse/cc_swie/ttt/101"))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
@@ -121,12 +123,11 @@ public class TruckTimeTableControllerTest {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newTtt);
 
-        mockMvc.perform(post("/ttt/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/cc_swie/ttt/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.truckName").value("TPA_test"))
                 .andExpect(jsonPath("$.['tttStatus'].tttStatusName").value("PENDING"));
-        ;
     }
 
     @Test
@@ -137,26 +138,36 @@ public class TruckTimeTableControllerTest {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newTtt);
 
-        mockMvc.perform(post("/ttt/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/cc_swie/ttt/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.truckName").value("TPA_test"))
                 .andExpect(jsonPath("$.['tttStatus'].tttStatusName").value("DELAYED"));
     }
 
+    /**
+     * When user sends TTT with warehouse which Id is another then current warehouse.
+     * In this case Current warehouse will be added to this TTT and it will be saved if no other conditions are corrupted.
+     * @throws Exception for mockMvc
+     */
     @Test
     public void createNewTttWithNotExistingWarehouse() throws Exception {
-
-        newTtt.setWarehouse(warehouseService.getWarehouseById(100L));
+        Warehouse warehouse = new Warehouse();
+        warehouse.setWarehouseID(100L);
+        newTtt.setWarehouse(warehouse);
         newTtt.setTttArrivalDatePlan(LocalDateTime.now().plusDays(5).withSecond(0).withNano(0).toString());
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newTtt);
 
-        mockMvc.perform(post("/ttt/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/cc_swie/ttt/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.['warehouse'].warehouseID").value(1));
     }
 
+    /**
+     * Warehouse with url "cc_swieh" doesn't exist
+     */
     @Test
     public void createNewTttWithNullWarehouse() throws Exception {
         newTtt.setWarehouse(null);
@@ -164,7 +175,7 @@ public class TruckTimeTableControllerTest {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(newTtt);
 
-        mockMvc.perform(post("/ttt/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/cc_swieh/ttt/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isUnprocessableEntity());
     }
@@ -179,17 +190,17 @@ public class TruckTimeTableControllerTest {
 
         TTT_FOR_CC:
         {
-            mockMvc.perform(get("/cc_swie/ttt/2020-04-21"))
+            mockMvc.perform(get("/warehouse/cc_swie/ttt/2020-04-21"))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)));
 
-            mockMvc.perform(get("/cc_irun/ttt/2020-04-21"))
+            mockMvc.perform(get("/warehouse/cc_irun/ttt/2020-04-21"))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)));
 
-            mockMvc.perform(get("/cc_arad/ttt/2020-04-22"))
+            mockMvc.perform(get("/warehouse/cc_arad/ttt/2020-04-22"))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(2)));
@@ -197,12 +208,12 @@ public class TruckTimeTableControllerTest {
 
         TTT_FOR_XD:
         {
-            mockMvc.perform(get("/xd_std/ttt/2020-04-23"))
+            mockMvc.perform(get("/warehouse/xd_std/ttt/2020-04-23"))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)));
 
-            mockMvc.perform(get("/xd_std/ttt/2020-04-27"))
+            mockMvc.perform(get("/warehouse/xd_std/ttt/2020-04-27"))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)));
@@ -211,7 +222,7 @@ public class TruckTimeTableControllerTest {
 
         TTT_FOR_TXD:
         {
-            mockMvc.perform(get("/xd_gro/ttt/2020-04-28"))
+            mockMvc.perform(get("/warehouse/xd_gro/ttt/2020-04-28"))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(2)));
@@ -229,19 +240,19 @@ public class TruckTimeTableControllerTest {
     @Test
     public void deleteTttFromCcTestWithChangingTttSetInXD() throws Exception {
         //1.Check how many TTTs for warehouse in Arad on 22.04.2020
-        mockMvc.perform(get("/cc_arad/ttt/2020-04-22"))
+        mockMvc.perform(get("/warehouse/cc_arad/ttt/2020-04-22"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)));
 
-        //2.Check how many Manifests in TPA with ID 4 (TPA from ARAD on 15:00 27.04.2020)
+        //2.Check how many Manifests in TPA with ID 4 (TPA from ARAD on 15:00 27.04.2020) /cc_arad
         mockMvc.perform(get("/tpa/4"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestSet']", hasSize(2)));
 
         //3.Check how many TTT in XD STD Warehouse on 27.04.2020 before TTT in CC removed
-        mockMvc.perform(get("/xd_std/ttt/2020-04-27"))
+        mockMvc.perform(get("/warehouse/xd_std/ttt/2020-04-27"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
@@ -250,7 +261,7 @@ public class TruckTimeTableControllerTest {
         int qtyOfTttInDbBeforeRequest = truckService.getTttService().getAllTtt().size();
 
         //5.Perform deletion of one of the TTT with id 5 name: ABSD01
-        mockMvc.perform(delete("/ttt/delete/5"))
+        mockMvc.perform(delete("/warehouse/cc_arad/ttt/delete/5"))
                 .andDo(print())
                 .andExpect(status().isOk());
 
@@ -262,18 +273,18 @@ public class TruckTimeTableControllerTest {
         Assert.assertEquals(qtyOfTttInDbAfterRequest, qtyOfTttInDbBeforeRequest);
 
         //8.Check how many TTT remains in Arad Warehouse on 21.04.2020
-        mockMvc.perform(get("/cc_arad/ttt/2020-04-22"))
+        mockMvc.perform(get("/warehouse/cc_arad/ttt/2020-04-22"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
 
         //9.Check how many TTT in XD STD Warehouse on 27.04.2020 after TTT in CC removed
-        mockMvc.perform(get("/xd_std/ttt/2020-04-27"))
+        mockMvc.perform(get("/warehouse/xd_std/ttt/2020-04-27"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)));
 
-        //10.Check how many Manifests in TPA for warehouse in Arad on 21.04.2020 after TTT was removed
+        //10.Check how many Manifests in TPA for warehouse in Arad on 21.04.2020 after TTT was removed /cc_irun
         mockMvc.perform(get("/tpa/4"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -292,7 +303,7 @@ public class TruckTimeTableControllerTest {
     @Test
     public void deleteTttFromCcTestWithChangingTttSetInTXD() throws Exception {
         //1.Check how many TTTs for warehouse in Swiebodzice on 21.04.2020
-        mockMvc.perform(get("/cc_swie/ttt/2020-04-21"))
+        mockMvc.perform(get("/warehouse/cc_swie/ttt/2020-04-21"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
@@ -304,7 +315,7 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$['manifestSet']", hasSize(1)));
 
         //3.Check how many TTT in TXD GRO Warehouse on 28.04.2020 before TTT in CC removed
-        mockMvc.perform(get("/xd_gro/ttt/2020-04-28"))
+        mockMvc.perform(get("/warehouse/xd_gro/ttt/2020-04-28"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)));
@@ -312,7 +323,7 @@ public class TruckTimeTableControllerTest {
         int qtyOfTttInDbBeforeRequest = truckService.getTttService().getAllTtt().size();
 
         //5.Perform deletion of one of the TTT with id 3 name: BART01
-        mockMvc.perform(delete("/ttt/delete/3"))
+        mockMvc.perform(delete("/warehouse/cc_swie/ttt/delete/3"))
                 .andDo(print())
                 .andExpect(status().isOk());
 
@@ -323,13 +334,13 @@ public class TruckTimeTableControllerTest {
         Assert.assertEquals(qtyOfTttInDbAfterRequest, qtyOfTttInDbBeforeRequest);
 
         //8.Check how many TTT remains in Swiebodzice Warehouse on 21.04.2020
-        mockMvc.perform(get("/cc_swie/ttt/2020-04-22"))
+        mockMvc.perform(get("/warehouse/cc_swie/ttt/2020-04-22"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
 
         //9.Check how many TTT in TXD Gro Warehouse on 28.04.2020 after TTT in CC removed
-        mockMvc.perform(get("/xd_gro/ttt/2020-04-28"))
+        mockMvc.perform(get("/warehouse/xd_gro/ttt/2020-04-28"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(3)));
@@ -349,7 +360,7 @@ public class TruckTimeTableControllerTest {
      */
     @Test
     public void deleteTttFromXdTestCcXdCustomer() throws Exception {
-        mockMvc.perform(delete("/ttt/delete/15"))
+        mockMvc.perform(delete("/warehouse/xd_std/ttt/delete/15"))
                 .andDo(print())
                 .andExpect(status().is(400))
                 .andExpect(header().stringValues("Message", "TTT could not be deleted. Check Manifests from this TTT"));
@@ -363,14 +374,14 @@ public class TruckTimeTableControllerTest {
      * - TTT EXT1 should be deleted from XD;
      * - TTT with truckName EXT1 should be created in TXD for date 2020-05-14T13:13;
      * - TTT with truckName EXT1 should be created in TXD for date 2020-05-13T07:07;
-     * - The manifests feom old EXT1 TTT should be deleted from appropriate TPA's from the Same warehouse;
+     * - The manifests from old EXT1 TTT should be deleted from appropriate TPA's from the Same warehouse;
      *
      * @throws Exception for mockMvc
      */
     @Test
     public void deleteTttFromXdTestCcXdTxdAndXdTxd() throws Exception {
         //1. Check how many TTTs for warehouse in Stadthagen on 10.05.2020
-        mockMvc.perform(get("/xd_std/ttt/2020-05-10"))
+        mockMvc.perform(get("/warehouse/xd_std/ttt/2020-05-10"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(3)))
@@ -385,7 +396,7 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$['manifestSet']", hasSize(2)));
 
         //3.Check how many TTT in TXD GRO Warehouse on 14.05.2020 before TTT in CC removed
-        mockMvc.perform(get("/xd_gro/ttt/2020-05-14"))
+        mockMvc.perform(get("/warehouse/xd_gro/ttt/2020-05-14"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
@@ -393,7 +404,7 @@ public class TruckTimeTableControllerTest {
         int qtyOfTttInDbBeforeRequest = truckService.getTttService().getAllTtt().size();
 
         //5.Perform deletion of one of the TTT with id 16 name: EXT1
-        mockMvc.perform(delete("/ttt/delete/16"))
+        mockMvc.perform(delete("/warehouse/xd_std/ttt/delete/16"))
                 .andDo(print())
                 .andExpect(status().isOk());
 
@@ -404,7 +415,7 @@ public class TruckTimeTableControllerTest {
         Assert.assertEquals(qtyOfTttInDbAfterRequest, qtyOfTttInDbBeforeRequest + 1);
 
         //8.Check how many TTT remains in Stadthagen on 10.05.2020
-        mockMvc.perform(get("/xd_std/ttt/2020-05-10"))
+        mockMvc.perform(get("/warehouse/xd_std/ttt/2020-05-10"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -412,13 +423,14 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$[?(@.truckName == \"NN001\")]").exists());
 
         //9a.Check how many TTT in TXD GRO Warehouse on 14.05.2020 after TTT EXT1 removed in XD
-        mockMvc.perform(get("/xd_gro/ttt/2020-05-14"))
+        mockMvc.perform(get("/warehouse/xd_gro/ttt/2020-05-14"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[?(@.truckName == \"EXT1\" && @.tttArrivalDatePlan == \"2020-05-14T13:13\")]").exists());
+
         //9b.Check how many TTT in TXD GRO Warehouse on 13.05.2020 after TTT EXT1 removed in XD
-        mockMvc.perform(get("/xd_gro/ttt/2020-05-13"))
+        mockMvc.perform(get("/warehouse/xd_gro/ttt/2020-05-13"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -453,7 +465,7 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$['manifestReferenceSet']", hasSize(2)));
 
         //2. Removing TTT 24 from DB
-        mockMvc.perform(delete("/ttt/delete/21"))
+        mockMvc.perform(delete("/warehouse/xd_gro/ttt/delete/21"))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(header().stringValues("Message", "TTT with id=21 was successfully removed."));
@@ -473,7 +485,7 @@ public class TruckTimeTableControllerTest {
      */
     @Test
     public void deleteTttFromTxdResponse400() throws Exception {
-        mockMvc.perform(delete("/ttt/delete/27"))
+        mockMvc.perform(delete("/warehouse/xd_gro/ttt/delete/27"))
                 .andDo(print())
                 .andExpect(status().is(400))
                 .andExpect(header().stringValues("Message", "TTT could not be deleted. Check Manifests from this TTT"));
@@ -486,7 +498,7 @@ public class TruckTimeTableControllerTest {
      */
     @Test
     public void deleteTttFromTxdResponse404() throws Exception {
-        mockMvc.perform(delete("/ttt/delete/127"))
+        mockMvc.perform(delete("/warehouse/xd_gro/ttt/delete/127"))
                 .andDo(print())
                 .andExpect(status().is(404))
                 .andExpect(header().stringValues("Message", "TTT Not Found"));
@@ -499,7 +511,7 @@ public class TruckTimeTableControllerTest {
      */
     @Test
     public void deleteTttFromTxdResponse422() throws Exception {
-        mockMvc.perform(delete("/ttt/delete/28"))
+        mockMvc.perform(delete("/warehouse/xd_gro/ttt/delete/28"))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(header().stringValues("Message", "TTT with id=28 has status Arrived"));
@@ -512,8 +524,8 @@ public class TruckTimeTableControllerTest {
      */
     @Test
     public void deleteTttNotFoundCaseTest() throws Exception {
-        //Perform deletion of one of the TTT with id 1000 which not exists
-        mockMvc.perform(delete("/ttt/delete/1000"))
+        //Perform deletion of one of the TTT with id 1000 which does not exist
+        mockMvc.perform(delete("/warehouse/xd_gro/ttt/delete/1000"))
                 .andDo(print())
                 .andExpect(status().is(404));
     }
@@ -525,13 +537,14 @@ public class TruckTimeTableControllerTest {
      */
     @Test
     public void deleteTttUnprocessableEntityCaseTest() throws Exception {
-        mockMvc.perform(delete("/ttt/delete/1"))
+        mockMvc.perform(delete("/warehouse/cc_swie/ttt/delete/1"))
                 .andDo(print())
                 .andExpect(status().is(422));
     }
 
     /**
      * Check the Attempt of Updating the TTT. Status 200 should be returned.
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -558,12 +571,12 @@ public class TruckTimeTableControllerTest {
         //Check that Old Name of TTT remains in DB after the previous Transaction session committed.
         Assert.assertEquals("TPA3", truckService.getTttService().getTttById(2L).getTruckName());
 
-        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/cc_swie/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(header().stringValues("Message:", "TTT with id=2 was successfully updated"));
 
-        mockMvc.perform(get("/ttt/2"))
+        mockMvc.perform(get("/warehouse/cc_swie/ttt/2"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.truckName").value("New_Name"))
@@ -574,15 +587,16 @@ public class TruckTimeTableControllerTest {
     /**
      * Case when given TTT has id which doesn't exist in DB.
      * Status 404 should be returned
+     *
      * @throws Exception for mockMvc
      */
     @Test
-    public void updateTttStatus404WrongId() throws Exception{
+    public void updateTttStatus404WrongId() throws Exception {
         ObjectMapper om = new ObjectMapper();
         newTtt.setTttID(1000L);
         String json = om.writeValueAsString(newTtt);
 
-        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/cc_swie/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(404))
                 .andExpect(header().stringValues("Error:", "TTT with id=1000 not found, returning error"));
@@ -591,14 +605,15 @@ public class TruckTimeTableControllerTest {
     /**
      * Case when given TTT has null value for ID
      * Status 404 should be returned
+     *
      * @throws Exception for mockMvc
      */
     @Test
-    public void updateTttStatus404NullId() throws Exception{
+    public void updateTttStatus404NullId() throws Exception {
         ObjectMapper om = new ObjectMapper();
         String json = om.writeValueAsString(newTtt);
 
-        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/cc_swie/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(404))
                 .andExpect(header().stringValues("ERROR", "Not Existing"));
@@ -607,10 +622,11 @@ public class TruckTimeTableControllerTest {
     /**
      * Case when user tries to update TTT by providing the Arrival Date Plan which is in the Past
      * Status 422 should be returned
+     *
      * @throws Exception for mockMvc
      */
     @Test
-    public void updateTttStatus422EtaInThePast() throws Exception{
+    public void updateTttStatus422EtaInThePast() throws Exception {
         ObjectMapper om = new ObjectMapper();
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -633,7 +649,7 @@ public class TruckTimeTableControllerTest {
         //Check that Old Name of TTT remains in DB after the previous Transaction session committed.
         Assert.assertEquals("TPA3", truckService.getTttService().getTttById(2L).getTruckName());
 
-        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/cc_swie/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(header().stringValues("Error:", "TTT id=2 has status ARRIVED or ETA date is in the Past"));
@@ -642,10 +658,11 @@ public class TruckTimeTableControllerTest {
     /**
      * Case when user tries to update TTT which has status ARRIVED.
      * Status 422 should be returned
+     *
      * @throws Exception for mockMvc
      */
     @Test
-    public void updateTttStatus422TttArrived() throws Exception{
+    public void updateTttStatus422TttArrived() throws Exception {
         ObjectMapper om = new ObjectMapper();
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -668,7 +685,7 @@ public class TruckTimeTableControllerTest {
         //Check that Old Name of TTT remains in DB after the previous Transaction session committed.
         Assert.assertEquals("TPA3", truckService.getTttService().getTttById(2L).getTruckName());
 
-        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(header().stringValues("Error:", "TTT id=28 has status ARRIVED or ETA date is in the Past"));
@@ -676,10 +693,11 @@ public class TruckTimeTableControllerTest {
 
     /**
      * Check the attempt of updating the TTT with Name and ArrivalPlan in wrong format. Status 412 should be returned.
+     *
      * @throws Exception for mockMvc
      */
     @Test
-    public void updateTttStatus412() throws Exception{
+    public void updateTttStatus412() throws Exception {
         ObjectMapper om = new ObjectMapper();
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -702,7 +720,7 @@ public class TruckTimeTableControllerTest {
         //Check that Old Name of TTT remains in DB after the previous Transaction session committed.
         Assert.assertEquals("TPA3", truckService.getTttService().getTttById(2L).getTruckName());
 
-        mockMvc.perform(put("/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/cc_swie/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(412))
                 .andExpect(header().stringValues("truckTimeTable-tttArrivalDatePlan_Pattern", "must match \"^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9](:[0-5][0-9])?$\""));
@@ -712,8 +730,8 @@ public class TruckTimeTableControllerTest {
      * Test of creation .xlsx file with information about ManifestReferences in TTT for making reception.
      */
     @Test
-    public void getFileForReceptionTest() throws Exception{
-        MvcResult result = mockMvc.perform(get("/coordinator/ttt/10/reception.xlsx").contentType(MediaType.MULTIPART_FORM_DATA))
+    public void getFileForReceptionTest() throws Exception {
+        MvcResult result = mockMvc.perform(get("/warehouse/xd_gro/ttt/10/reception.xlsx").contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -750,7 +768,7 @@ public class TruckTimeTableControllerTest {
         Assert.assertNull(manifestReference3.getReceptionNumber());
         Assert.assertNull(manifestReference2.getReceptionNumber());
 
-        mockMvc.perform(multipart("/coordinator/ttt/uploadFile").file(mockMultipartFile))
+        mockMvc.perform(multipart("/warehouse/xd_gro/ttt/10/uploadFile").file(mockMultipartFile))///warehouse/xd_gro/ttt/10
                 .andDo(print())
                 .andExpect(status().isOk());
 

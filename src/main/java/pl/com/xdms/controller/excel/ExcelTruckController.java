@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
+import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.service.FileStorageService;
+import pl.com.xdms.service.WarehouseService;
 import pl.com.xdms.service.excel.ExcelManifestReferenceService;
 import pl.com.xdms.service.truck.TruckService;
 
@@ -29,7 +31,7 @@ import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
  */
 @Slf4j
 @RestController
-@RequestMapping("coordinator/")
+@RequestMapping("warehouse/{urlCode:^[a-z_]{5,8}$}")
 public class ExcelTruckController {
 
     private final FileStorageService fileStorageService;
@@ -38,11 +40,15 @@ public class ExcelTruckController {
 
     private final TruckService truckService;
 
+    private WarehouseService warehouseService;
+
     @Autowired
-    public ExcelTruckController(FileStorageService fileStorageService, ExcelManifestReferenceService excelManifestReferenceService, TruckService truckService) {
+    public ExcelTruckController(FileStorageService fileStorageService, ExcelManifestReferenceService excelManifestReferenceService,
+                                TruckService truckService, WarehouseService warehouseService) {
         this.fileStorageService = fileStorageService;
         this.excelManifestReferenceService = excelManifestReferenceService;
         this.truckService = truckService;
+        this.warehouseService = warehouseService;
     }
 
     /**
@@ -52,8 +58,9 @@ public class ExcelTruckController {
      * @return - ResponseEntity<InputStreamSource> with generated Excel file
      */
     @GetMapping("ttt/{id:^\\d+$}/reception.xlsx")
-    public ResponseEntity<InputStreamSource> getInputStreamTttForReception(@PathVariable Long id) throws IOException {
-        TruckTimeTable ttt = truckService.getTttService().getTttById(id);
+    public ResponseEntity<InputStreamSource> getInputStreamTttForReception(@PathVariable String urlCode, @PathVariable Long id) throws IOException {
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
+        TruckTimeTable ttt = truckService.getTttService().getTTTByWarehouseAndId(id, warehouse);
         if (ttt == null) {
             return ResponseEntity.notFound().build();
         }
@@ -75,12 +82,18 @@ public class ExcelTruckController {
      *
      * @param file - Excel File.
      */
-    @PostMapping("ttt/uploadFile")
-    public void uploadFile(MultipartFile file) {
+    @PostMapping("ttt/{tttId:^\\d+$}/uploadFile")
+    public ResponseEntity uploadFile(@PathVariable String urlCode,  @PathVariable Long tttId, MultipartFile file) {
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
+        TruckTimeTable truckTimeTable = truckService.getTttService().getTttById(tttId);
+        if(!truckTimeTable.getWarehouse().equals(warehouse)){
+            return ResponseEntity.badRequest().header("Error:", "Given TTT is not in scope of given Warehouse").build();
+        }
         Path filePath = fileStorageService.storeFile(file);
         String extension = file.getContentType();
         log.info("extension {}", extension);
-        excelManifestReferenceService.saveReceptions(filePath.toFile());
+        excelManifestReferenceService.saveReceptions(filePath.toFile(), warehouse);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("tpa/{id:^\\d+$}/tpaPackingList.xlsx")

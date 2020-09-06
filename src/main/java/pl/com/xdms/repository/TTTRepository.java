@@ -19,4 +19,6 @@ public interface TTTRepository extends JpaRepository <TruckTimeTable, Long> {
     Optional<TruckTimeTable> findByTruckNameAndTttETAPlan(String truckName, String tttArrivalDatePlan);
 
     List<TruckTimeTable> findByWarehouseAndTttArrivalDatePlanStartsWith(Warehouse warehouse, String tttArrivalDatePlan);
+
+    Optional<TruckTimeTable> findByTttIDAndWarehouse(Long tttId, Warehouse warehouse);
 }

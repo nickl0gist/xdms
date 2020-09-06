@@ -11,6 +11,7 @@ import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.domain.warehouse.WHTypeEnum;
+import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.service.ManifestReferenceService;
 
 import java.io.*;
@@ -95,44 +96,60 @@ public class ExcelManifestReferenceService implements ExcelService<ManifestRefer
         qtyRealCell.setCellValue(manifestReference.getQtyReal());
 
         Cell idCell = row.createCell(13);
-        idCell.setCellValue(manifestReference.getManifestReferenceId());
+        idCell.setCellValue(manifestReference.getManifestReferenceId() + "|" + manifestReference.getManifest().getTruckTimeTableSet().stream()
+                .filter(t -> t.getWarehouse().getWhType().getType().equals(WHTypeEnum.TXD))
+                .findFirst()
+                .orElse(new TruckTimeTable())
+                .getWarehouse().getWarehouseID());
     }
 
 
-    public void saveReceptions(File receptionFile) {
-        Map<Long, String> parsedValues = readReceptionExcel(receptionFile);
+    public void saveReceptions(File receptionFile, Warehouse warehouse) {
+        Map<Long, String> parsedValues = readReceptionExcel(receptionFile, warehouse);
         List<ManifestReference> manifestReferenceList = manifestReferenceService.getManRefListWithinIdSet(parsedValues.keySet());
         manifestReferenceList.iterator().forEachRemaining(m -> m.setReceptionNumber(parsedValues.get(m.getManifestReferenceId())));
         manifestReferenceService.saveAll(manifestReferenceList);
     }
 
-    private Map<Long, String> readReceptionExcel(File file) {
+    private Map<Long, String> readReceptionExcel(File file, Warehouse warehouse) {
         log.info("File with Receptions received {}", file.getPath());
-        Map<Long, String> map = readReceptionFile(file, excelProperties.getTttTruckSheetName());
+        Map<Long, String> map = readReceptionFile(file, excelProperties.getTttTruckSheetName(), warehouse);
         if (map.isEmpty()) {
             log.warn("Error occurred while reading the file with Receptions");
         }
         return map;
     }
 
-    private Map<Long, String> readReceptionFile(File file, String sheetName){
+    private Map<Long, String> readReceptionFile(File file, String sheetName, Warehouse warehouse){
         try(Workbook workbook = WorkbookFactory.create(file)) {
             Sheet sheet = workbook.getSheet(sheetName);
-            return readReceptionSheet(sheet);
+            return readReceptionSheet(sheet, warehouse);
         } catch (IOException e) {
             return new HashMap<>();
         }
     }
 
-    private Map<Long, String> readReceptionSheet(Sheet sheet) {
+    /**
+     *
+     * @param sheet
+     * @return Map<Long, String> - Long - id of the ManifestReference, String - SAP number
+     */
+    private Map<Long, String> readReceptionSheet(Sheet sheet, Warehouse warehouse) {
         Iterator<Row> rowIterator = sheet.rowIterator();
         Map<Long, String> longManifestReferenceHashMap = new HashMap<>();
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
+
             if (row.getRowNum() == 0 || row.getRowNum() == 1) continue;
 
             if (row.getCell(4) != null){
-                longManifestReferenceHashMap.put(Long.parseLong(getStringFromNumericCell(row.getCell(13))), getStringFromNumericCell(row.getCell(4)));
+                String manRefIdAndWhId = getStringFromCell(row.getCell(13));
+                String manRefId = manRefIdAndWhId.substring(0, manRefIdAndWhId.indexOf("|"));
+                String whId = manRefIdAndWhId.substring(manRefIdAndWhId.indexOf("|")+1);
+
+                if (!warehouse.getWarehouseID().equals(Long.parseLong(whId))) continue;
+
+                longManifestReferenceHashMap.put(Long.parseLong(manRefId), getStringFromNumericCell(row.getCell(4)));
             }
         }
         return longManifestReferenceHashMap;
@@ -220,7 +237,8 @@ public class ExcelManifestReferenceService implements ExcelService<ManifestRefer
             if (row.getRowNum() == 0 || row.getRowNum() == 1) continue;
 
             if (row.getCell(4) != null){
-                ManifestReference manifestReference = manifestReferenceService.findById(getLongFromCell(row.getCell(13)));
+                String code = getStringFromCell(row.getCell(13));
+                ManifestReference manifestReference = manifestReferenceService.findById(Long.parseLong(code.substring(0, code.indexOf("|"))));
                 manifestReference.setReceptionNumber(getStringFromCell(row.getCell(4)));
                 longManifestReferenceHashMap.put(manifestReference.getManifestReferenceId(), manifestReference);
             }

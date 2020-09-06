@@ -68,6 +68,10 @@ public class TTTService {
         return tttRepository.findById(id).orElse(null);
     }
 
+    public TruckTimeTable getTTTByWarehouseAndId(Long id, Warehouse warehouse){
+        return tttRepository.findByTttIDAndWarehouse(id, warehouse).orElse(null);
+    }
+
     public void deleteTtt(TruckTimeTable truckTimeTable) {
         tttRepository.delete(truckTimeTable);
     }

@@ -27,7 +27,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping
+@RequestMapping("warehouse/{urlCode:^[a-z_]{5,8}$}")
 public class TruckTimeTableController {
 
     private final TruckService truckService;
@@ -44,25 +44,26 @@ public class TruckTimeTableController {
     /**
      * Endpoint for getting all TTT for certain warehouse and particular day
      *
-     * @param wh_url             - wh-code of the warehouse
+     * @param urlCode             - url code of the warehouse
      * @param tttArrivalDatePlan - date when the TTT should arrive to this warehouse
      * @return List of TruckTimeTable entities.
      */
-    @GetMapping("{wh_url}/ttt/{tttArrivalDatePlan:^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]?$}")
-    public List<TruckTimeTable> getTttForCertainWarehouseAccordingDate(@PathVariable String wh_url, @PathVariable String tttArrivalDatePlan) {
-        Warehouse warehouse = warehouseService.getWarehouseByUrl(wh_url);
+    @GetMapping("/ttt/{tttArrivalDatePlan:^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]?$}")
+    public List<TruckTimeTable> getTttForCertainWarehouseAccordingDate(@PathVariable String urlCode, @PathVariable String tttArrivalDatePlan) {
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         return truckService.getTttService().getTttByWarehouseAndDay(warehouse, tttArrivalDatePlan);
     }
 
     /**
-     * Endpoint of get request for the certaing TTT entity which is being searched by its ID.
+     * Endpoint of get request for the certain TTT entity which is being searched by its ID.
      *
      * @param id of the TTT in Database
      * @return TruckTimeTable and status 200 if found. 404 if will not.
      */
     @GetMapping("ttt/{id:^\\d+$}")
-    public ResponseEntity<TruckTimeTable> getTruckTimeTableById(@PathVariable Long id) {
-        TruckTimeTable truckTimeTable = truckService.getTttService().getTttById(id);
+    public ResponseEntity<TruckTimeTable> getTruckTimeTableById(@PathVariable String urlCode, @PathVariable Long id) {
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
+        TruckTimeTable truckTimeTable = truckService.getTttService().getTTTByWarehouseAndId(id, warehouse);
         if (truckTimeTable != null) {
             log.info("TruckTimeTable was found {}", truckTimeTable);
             return ResponseEntity.ok(truckTimeTable);
@@ -81,11 +82,12 @@ public class TruckTimeTableController {
      * error will be found.
      */
     @PostMapping("ttt/create")
-    public ResponseEntity<TruckTimeTable> createTruckTimeTable(@RequestBody @Valid TruckTimeTable truckTimeTable, BindingResult bindingResult) {
-
-        if (truckTimeTable.getWarehouse() == null) {
+    public ResponseEntity<TruckTimeTable> createTruckTimeTable(@PathVariable String urlCode, @RequestBody @Valid TruckTimeTable truckTimeTable, BindingResult bindingResult) {
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
+        if (warehouse == null) {
             return ResponseEntity.unprocessableEntity().body(truckTimeTable);
         }
+        truckTimeTable.setWarehouse(warehouse);
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
         LocalDateTime dateTime = LocalDateTime.parse(truckTimeTable.getTttArrivalDatePlan(), formatter);
         TTTStatus tttStatus = truckService.getTttService().getTttStatusByEnum(TTTEnum.PENDING);
@@ -98,7 +100,7 @@ public class TruckTimeTableController {
             return ResponseEntity.status(412).headers(headers).body(truckTimeTable);
         }
         truckTimeTable.setTttStatus(tttStatus);
-        log.info("Try to create TruckTimeTable with TruckName: {}, for Warehouse: {}", truckTimeTable.getTruckName(), truckTimeTable.getWarehouse().getName());
+        log.info("Try to create TruckTimeTable with TruckName: {}, for Warehouse: {}", truckTimeTable.getTruckName(), warehouse.getName());
         return ResponseEntity.status(201).body(truckService.getTttService().save(truckTimeTable));
     }
 
@@ -114,8 +116,9 @@ public class TruckTimeTableController {
      * - 400 - if there were other reasons the TTT wasn't removed.
      */
     @DeleteMapping("ttt/delete/{id:^\\d+$}")
-    public ResponseEntity<String> deleteTruckTimeTable(@PathVariable Long id) {
-        TruckTimeTable truckTimeTable = truckService.getTttService().getTttById(id);
+    public ResponseEntity<String> deleteTruckTimeTable(@PathVariable String urlCode, @PathVariable Long id) {
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
+        TruckTimeTable truckTimeTable = truckService.getTttService().getTTTByWarehouseAndId(id, warehouse);
         String message = "Message";
         HttpHeaders headers = new HttpHeaders();
         if (truckTimeTable == null) {
@@ -147,13 +150,14 @@ public class TruckTimeTableController {
      * - 200 - if TTT was updated successfully.
      */
     @PutMapping("ttt/update")
-    public ResponseEntity<TruckTimeTable> updateTruckTimeTable(@RequestBody @Valid TruckTimeTable truckTimeTable, BindingResult bindingResult) {
+    public ResponseEntity<TruckTimeTable> updateTruckTimeTable(@PathVariable String urlCode, @RequestBody @Valid TruckTimeTable truckTimeTable, BindingResult bindingResult) {
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         HttpHeaders headers = new HttpHeaders();
         Long id = truckTimeTable.getTttID();
         if (id != null) {
-            TruckTimeTable tttFromDataBase = truckService.getTttService().getTttById(truckTimeTable.getTttID());
+            TruckTimeTable tttFromDataBase = truckService.getTttService().getTTTByWarehouseAndId(id, warehouse);
             if (tttFromDataBase == null) {
-                log.warn("TTT with id: {} not found, returning error", truckTimeTable.getTttID());
+                log.warn("TTT with id: {} not found, returning error", id);
                 headers.set("Error:", String.format("TTT with id=%d not found, returning error", id));
                 return ResponseEntity.notFound().headers(headers).build(); // 404
             } else if (bindingResult.hasErrors()){
@@ -162,7 +166,7 @@ public class TruckTimeTableController {
                 return ResponseEntity.status(412).headers(headers).body(truckTimeTable); //PRECONDITION_FAILED
             } else if (tttFromDataBase.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED) ||
                     LocalDateTime.parse(truckTimeTable.getTttArrivalDatePlan()).isBefore(LocalDateTime.now())) {
-                log.info("TTT with id: {} has status ARRIVED and couldn't be changed: {}", tttFromDataBase.getTttID(), tttFromDataBase.getTttStatus().getTttStatusName());
+                log.info("TTT with id: {} has status ARRIVED and couldn't be changed: {}", id, tttFromDataBase.getTttStatus().getTttStatusName());
                 log.info("Also check the ETA in given TTT, the Date couldn't be in the past. Is in the Past? : {}", LocalDateTime.parse(truckTimeTable.getTttArrivalDatePlan()).isBefore(LocalDateTime.now()));
                 return ResponseEntity.status(422).header("Error:", String.format("TTT id=%d has status ARRIVED or ETA date is in the Past", id)).build(); //UNPROCESSABLE_ENTITY
             }
