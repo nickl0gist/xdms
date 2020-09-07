@@ -97,9 +97,10 @@ public class ExcelTruckController {
     }
 
     @GetMapping("tpa/{id:^\\d+$}/tpaPackingList.xlsx")
-    public ResponseEntity<InputStreamSource> getExcelPackingListOfTpa(@PathVariable Long id) throws IOException {
-        TPA tpa = truckService.getTpaService().getTpaById(id);
-        if (tpa == null) {
+    public ResponseEntity<InputStreamSource> getExcelPackingListOfTpa(@PathVariable String urlCode, @PathVariable Long id) throws IOException {
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
+        TPA tpa = truckService.getTpaService().getTpaByWarehouseAndId(id, warehouse);
+        if (tpa == null || !tpa.getTpaDaysSetting().getWhCustomer().getWarehouse().equals(warehouse)) {
             return ResponseEntity.notFound().build();
         }
         LocalDateTime dateTime = LocalDateTime.now();

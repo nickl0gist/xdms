@@ -100,12 +100,12 @@ public class TpaControllerTest {
         entityManager.close();
 
         Assert.assertEquals("TEST_TPA", truckService.getTpaService().getTpaById(27L).getName());
-        mockMvc.perform(put("/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(header().stringValues("Message:", "TPA with ID=27 was successfully updated"));
 
-        mockMvc.perform(get("/tpa/27"))
+        mockMvc.perform(get("/warehouse/xd_gro/tpa/27"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("New_Name"))
@@ -141,13 +141,13 @@ public class TpaControllerTest {
         entityManager.close();
 
         Assert.assertEquals("TEST_TPA", truckService.getTpaService().getTpaById(27L).getName());
-        mockMvc.perform(put("/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(412))
                 .andExpect(header().stringValues("TPA-name_Pattern", "must match \"^[0-9A-Za-z\\-_]+\""))
                 .andExpect(header().stringValues("TPA-departurePlan_Pattern", "must match \"^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9](:[0-5][0-9])?$\""));
 
-        mockMvc.perform(get("/tpa/27"))
+        mockMvc.perform(get("/warehouse/xd_gro/tpa/27"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("TEST_TPA"))
@@ -164,7 +164,7 @@ public class TpaControllerTest {
         newTpa.setTpaID(10000L);
         String json = om.writeValueAsString(newTpa);
 
-        mockMvc.perform(put("/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(404))
                 .andExpect(header().stringValues("Message:", "Given TPA does not exist in DB and could not be updated"));
@@ -179,7 +179,7 @@ public class TpaControllerTest {
         ObjectMapper om = new ObjectMapper();
         String json = om.writeValueAsString(newTpa);
 
-        mockMvc.perform(put("/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(404))
                 .andExpect(header().stringValues("ERROR", "Not Existing"));
@@ -214,7 +214,7 @@ public class TpaControllerTest {
         entityManager.close();
 
         Assert.assertEquals("CLOSED_TPA", truckService.getTpaService().getTpaById(26L).getName());
-        mockMvc.perform(put("/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(header().stringValues("Message:", "Given Dates are in the Past or The TPA id=26 is CLOSED"));
@@ -249,7 +249,7 @@ public class TpaControllerTest {
         entityManager.close();
 
         Assert.assertEquals("TEST_TPA", truckService.getTpaService().getTpaById(27L).getName());
-        mockMvc.perform(put("/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/tpa/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(header().stringValues("Message:", "Given Dates are in the Past or The TPA id=27 is CLOSED"));
@@ -264,7 +264,7 @@ public class TpaControllerTest {
         ObjectMapper om = new ObjectMapper();
         newTpa.setTpaDaysSetting(truckService.getTpaDaysSettingsService().getTpaDaySettingsById(14L));
         String json = om.writeValueAsString(newTpa);
-        mockMvc.perform(post("/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/xd_gro/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(412))
                 .andExpect(header().stringValues("TPA-departurePlan_NotBlank", "must not be blank"))
@@ -280,7 +280,7 @@ public class TpaControllerTest {
         newTpa.setTpaDaysSetting(truckService.getTpaDaysSettingsService().getTpaDaySettingsById(14L));
         newTpa.setDeparturePlan("2020-05-25T10:00");
         String json = om.writeValueAsString(newTpa);
-        mockMvc.perform(post("/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/xd_gro/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(422))
                 .andExpect(header().stringValues("Error:", "The ETD of the TPA is in the Past."));
@@ -297,7 +297,7 @@ public class TpaControllerTest {
         log.info(LocalDateTime.now().toString());
         newTpa.setDeparturePlan(LocalDateTime.now().plusHours(1L).toString().substring(0, 16));
         String json = om.writeValueAsString(newTpa);
-        mockMvc.perform(post("/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/xd_gro/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(header().stringValues("Message:", "The TPA name=TPA_test was successfully saved in Warehouse XD Gro"))
@@ -315,7 +315,7 @@ public class TpaControllerTest {
         log.info(LocalDateTime.now().toString());
         newTpa.setDeparturePlan(LocalDateTime.now().plusDays(1L).plusHours(1L).toString().substring(0, 16));
         String json = om.writeValueAsString(newTpa);
-        mockMvc.perform(post("/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/xd_gro/tpa/create").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(header().stringValues("Message:", "The TPA name=TPA_test was successfully saved in Warehouse XD Gro"))
@@ -327,7 +327,7 @@ public class TpaControllerTest {
      */
     @Test
     public void getListOfTpaByWarehouseAndDayTest200() throws Exception {
-        mockMvc.perform(get("/cc_arad/tpa/2020-05-06"))
+        mockMvc.perform(get("/warehouse/cc_arad/tpa/2020-05-06"))
                 .andDo(print())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(status().is(200));
@@ -338,9 +338,9 @@ public class TpaControllerTest {
      */
     @Test
     public void getListOfTpaByWarehouseAndDayTest404() throws Exception {
-        mockMvc.perform(get("/not_exist/tpa/2020-05-06"))
+        mockMvc.perform(get("/warehouse/not_ex/tpa/2020-05-06"))
                 .andDo(print())
-                .andExpect(header().stringValues("Error:", "The Warehouse with url-code:\"not_exist\" wasn't found"))
+                .andExpect(header().stringValues("Error:", "The Warehouse with url-code:\"not_ex\" wasn't found"))
                 .andExpect(status().is(404));
     }
 
@@ -350,7 +350,7 @@ public class TpaControllerTest {
      */
     @Test
     public void getListOfTpaByWarehouseAndDayTest404BadDate() throws Exception {
-        mockMvc.perform(get("/cc_arad/tpa/2020-25-06"))
+        mockMvc.perform(get("/warehouse/cc_arad/tpa/2020-25-06"))
                 .andDo(print())
                 .andExpect(status().is(404));
     }
@@ -361,7 +361,7 @@ public class TpaControllerTest {
      */
     @Test
     public void getListOfTpaByWarehouseAndDayTest400BadDateWithException() throws Exception {
-        mockMvc.perform(get("/cc_arad/tpa/2020-15-06"))
+        mockMvc.perform(get("/warehouse/cc_arad/tpa/2020-15-06"))
                 .andDo(print())
                 .andExpect(status().is(400));
     }
@@ -371,10 +371,10 @@ public class TpaControllerTest {
      */
     @Test
     public void deleteTpaByIdWhichNotExistsTestStatus404() throws Exception {
-        mockMvc.perform(delete("/tpa/100"))
+        mockMvc.perform(delete("/warehouse/cc_arad/tpa/100"))
                 .andDo(print())
                 .andExpect(status().is(404))
-                .andExpect(header().stringValues("Error:", "TPA with id=100 wasn't found"));
+                .andExpect(header().stringValues("Error:", "TPA with id=100 wasn't found in scope of Warehouse cc_arad"));
     }
 
     /**
@@ -382,7 +382,7 @@ public class TpaControllerTest {
      */
     @Test
     public void deleteTpaByIdWithManifestsInSetTestStatus417() throws Exception {
-        mockMvc.perform(delete("/tpa/23"))
+        mockMvc.perform(delete("/warehouse/xd_std/tpa/23"))
                 .andDo(print())
                 .andExpect(status().is(417))
                 .andExpect(header().stringValues("Error:", "TPA with id=23 has not empty set of Manifests or References and couldn't be deleted"));
@@ -393,7 +393,7 @@ public class TpaControllerTest {
      */
     @Test
     public void deleteTpaByIdWithReferencesInSetTestStatus417() throws Exception {
-        mockMvc.perform(delete("/tpa/25"))
+        mockMvc.perform(delete("/warehouse/xd_gro/tpa/25"))
                 .andDo(print())
                 .andExpect(status().is(417))
                 .andExpect(header().stringValues("Error:", "TPA with id=25 has not empty set of Manifests or References and couldn't be deleted"));
@@ -404,7 +404,7 @@ public class TpaControllerTest {
      */
     @Test
     public void deleteTpaByIdWithStatusClosedTestStatus403() throws Exception {
-        mockMvc.perform(delete("/tpa/26"))
+        mockMvc.perform(delete("/warehouse/xd_gro/tpa/26"))
                 .andDo(print())
                 .andExpect(status().is(403))
                 .andExpect(header().stringValues("Error:", "TPA with id=26 has status CLOSED and couldn't be deleted"));
@@ -416,7 +416,7 @@ public class TpaControllerTest {
      */
     @Test
     public void deleteTpaByIdStatus200() throws Exception {
-        mockMvc.perform(delete("/tpa/1"))
+        mockMvc.perform(delete("/warehouse/cc_swie/tpa/1"))
                 .andDo(print())
                 .andExpect(status().is(204))
                 .andExpect(header().stringValues("Message:", "TPA with id=1 was successfully deleted"));
@@ -427,7 +427,7 @@ public class TpaControllerTest {
      */
     @Test
     public void getAllDelayedTpaForWarehouse() throws Exception {
-        mockMvc.perform(get("/xd_gro/tpa/delayed"))
+        mockMvc.perform(get("/warehouse/xd_gro/tpa/delayed"))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -440,7 +440,7 @@ public class TpaControllerTest {
      */
     @Test
     public void getAllInProgressTpaForWarehouse() throws Exception {
-        mockMvc.perform(get("/xd_gro/tpa/in_progress"))
+        mockMvc.perform(get("/warehouse/xd_gro/tpa/in_progress"))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(jsonPath("$", hasSize(11)))
@@ -454,7 +454,7 @@ public class TpaControllerTest {
      */
     @Test
     public void getAllClosedTpaForWarehouse() throws Exception {
-        mockMvc.perform(get("/xd_gro/tpa/closed"))
+        mockMvc.perform(get("/warehouse/xd_gro/tpa/closed"))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(jsonPath("$", hasSize(3)))
@@ -467,7 +467,7 @@ public class TpaControllerTest {
      */
     @Test
     public void getAllBufferTpaForWarehouse() throws Exception {
-        mockMvc.perform(get("/xd_gro/tpa/buffer"))
+        mockMvc.perform(get("/warehouse/xd_gro/tpa/buffer"))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(jsonPath("$", hasSize(3)))
@@ -481,7 +481,7 @@ public class TpaControllerTest {
      */
     @Test
     public void getAllNotClosedTpaForWarehouse() throws Exception {
-        mockMvc.perform(get("/xd_gro/tpa/notClosed"))
+        mockMvc.perform(get("/warehouse/xd_gro/tpa/notClosed"))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(jsonPath("$", hasSize(16)));
@@ -524,7 +524,7 @@ public class TpaControllerTest {
         entityManager.close();
 
         //Perform the controller call with ManifestReference 'manifestReference' attached
-        mockMvc.perform((put("/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform((put("/warehouse/xd_gro/tpa/25/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(jsonPath("$.tpaID").value(25))
@@ -570,7 +570,7 @@ public class TpaControllerTest {
         String json = om.writeValueAsString(manifestReference);
 
         //Perform the controller call with ManifestReference 'manifestReference' attached
-        mockMvc.perform((put("/split/man_ref/1111/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform((put("/warehouse/xd_gro/tpa/25/split/man_ref/1111/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(404))
                 .andExpect(header().string("Error:", "The manifest which has to be split with id=1111 wasn't found"));
@@ -591,10 +591,10 @@ public class TpaControllerTest {
         String json = om.writeValueAsString(manifestReference);
 
         //Perform the controller call with ManifestReference 'manifestReference' attached
-        mockMvc.perform((put("/split/man_ref/11/tpa_to/2400")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform((put("/warehouse/xd_gro/tpa/25/split/man_ref/11/tpa_to/2400")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(404))
-                .andExpect(header().string("Error:", "The TPA with id=2400 where split part should be assigned is not existing"));
+                .andExpect(header().string("Error:", "The TPA with id=2400 where split part should be assigned does not exist. Or the TPA with id=25 where part has to be taken from doesn't exist in scope of Warehouse xd_gro"));
     }
 
     /**
@@ -620,7 +620,7 @@ public class TpaControllerTest {
         String json = om.writeValueAsString(manifestReference);
 
         //Perform the controller call with ManifestReference 'manifestReference' attached
-        mockMvc.perform((put("/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform((put("/warehouse/xd_gro/tpa/25/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(400))
                 .andExpect(header().string("Error:", "Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one!"));
@@ -649,7 +649,7 @@ public class TpaControllerTest {
         String json = om.writeValueAsString(manifestReference);
 
         //Perform the controller call with ManifestReference 'manifestReference' attached
-        mockMvc.perform((put("/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform((put("/warehouse/xd_gro/tpa/25/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(400))
                 .andExpect(header().string("Error:", "Qty of pcs, pallets or boxes of split manifestReference cannot be greater than origin one!"));
@@ -681,7 +681,7 @@ public class TpaControllerTest {
         String json = om.writeValueAsString(manifestReference);
 
         //Perform the controller call with ManifestReference 'manifestReference' attached
-        mockMvc.perform((put("/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform((put("/warehouse/xd_gro/tpa/25/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(403))
                 .andExpect(header().string("Error:", "The TPA with id=25 where split part should be taken from is CLOSED"));
@@ -714,7 +714,7 @@ public class TpaControllerTest {
         String json = om.writeValueAsString(manifestReference);
 
         //Perform the controller call with ManifestReference 'manifestReference' attached
-        mockMvc.perform((put("/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform((put("/warehouse/xd_gro/tpa/25/split/man_ref/11/tpa_to/24")).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(403))
                 .andExpect(header().string("Error:", "The TPA with id=24 where split part should be placed to is CLOSED"));
@@ -724,8 +724,8 @@ public class TpaControllerTest {
      * Test of creation .xlsx file with information about ManifestReferences in TTT for making reception.
      */
     @Test
-    public void gePackingListTest() throws Exception{
-        MvcResult result = mockMvc.perform(get("/coordinator/tpa/24/tpaPackingList.xlsx").contentType(MediaType.MULTIPART_FORM_DATA))
+    public void getPackingListTest() throws Exception{
+        MvcResult result = mockMvc.perform(get("/warehouse/xd_gro/tpa/24/tpaPackingList.xlsx").contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andReturn();
@@ -745,6 +745,6 @@ public class TpaControllerTest {
 //        referenceList.sort(comparator);
 //        manifestReferenceList.sort(comparator);
 //        Assert.assertEquals(referenceList.stream().map(ManifestReference::getManifestReferenceId).collect(Collectors.toList()),
-//                manifestReferenceList.stream().map(ManifestReference::getManifestReferenceId).collect(Collectors.toList()));
+//        manifestReferenceList.stream().map(ManifestReference::getManifestReferenceId).collect(Collectors.toList()));
     }
 }

@@ -246,7 +246,7 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$", hasSize(2)));
 
         //2.Check how many Manifests in TPA with ID 4 (TPA from ARAD on 15:00 27.04.2020) /cc_arad
-        mockMvc.perform(get("/tpa/4"))
+        mockMvc.perform(get("/warehouse/cc_arad/tpa/4"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestSet']", hasSize(2)));
@@ -285,7 +285,7 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$", hasSize(2)));
 
         //10.Check how many Manifests in TPA for warehouse in Arad on 21.04.2020 after TTT was removed /cc_irun
-        mockMvc.perform(get("/tpa/4"))
+        mockMvc.perform(get("/warehouse/cc_arad/tpa/4"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestSet']", hasSize(1)));
@@ -309,7 +309,7 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$", hasSize(1)));
 
         //2.Check how many Manifests in TPA with ID 2 (TPA from Swiebodzice on 2020-04-22 05:00)
-        mockMvc.perform(get("/tpa/2"))
+        mockMvc.perform(get("/warehouse/cc_swie/tpa/2"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestSet']", hasSize(1)));
@@ -346,7 +346,7 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$", hasSize(3)));
 
         //10.Check how many Manifests in TPA for warehouse Swiebodzice on 2020-04-22 after TTT was removed
-        mockMvc.perform(get("/tpa/2"))
+        mockMvc.perform(get("/warehouse/cc_swie/tpa/2"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestSet']").doesNotExist());
@@ -390,7 +390,7 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$[?(@.truckName == \"NN001\")]").exists());
 
         //2. Check how many Manifests in TPA with ID 12=GRO-X (TPA from Stadthagen on 2020-05-11T14:30)
-        mockMvc.perform(get("/tpa/12"))
+        mockMvc.perform(get("/warehouse/xd_std/tpa/12"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestSet']", hasSize(2)));
@@ -437,13 +437,13 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$[?(@.truckName == \"EXT1\" && @.tttArrivalDatePlan == \"2020-05-13T07:07\")]").exists());
 
         //10a. Check how many Manifests in TPA with ID 12=GRO-X after TTT was deleted (TPA from Stadthagen on 2020-05-11T14:30)
-        mockMvc.perform(get("/tpa/12"))
+        mockMvc.perform(get("/warehouse/xd_std/tpa/12"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestSet']", hasSize(1)));
 
         //10b. Check how many Manifests in TPA with ID 17=GRO-X after TTT was deleted (TPA from Stadthagen on 2020-05-11T14:30)
-        mockMvc.perform(get("/tpa/17"))
+        mockMvc.perform(get("/warehouse/xd_std/tpa/17"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestSet']").doesNotExist());
@@ -459,7 +459,7 @@ public class TruckTimeTableControllerTest {
     @Test
     public void deleteTttFromTxdStatus200() throws Exception {
         //1. Check the size of manifestReferenceSet in TPA 24 before TTT 21 removing
-        mockMvc.perform(get("/tpa/24"))
+        mockMvc.perform(get("/warehouse/xd_gro/tpa/24"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestReferenceSet']", hasSize(2)));
@@ -471,7 +471,7 @@ public class TruckTimeTableControllerTest {
                 .andExpect(header().stringValues("Message", "TTT with id=21 was successfully removed."));
 
         //3. Check the size of manifestReferenceSet in TPA 24 after TTT 21 removing
-        mockMvc.perform(get("/tpa/24"))
+        mockMvc.perform(get("/warehouse/xd_gro/tpa/24"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestReferenceSet']", hasSize(1)));

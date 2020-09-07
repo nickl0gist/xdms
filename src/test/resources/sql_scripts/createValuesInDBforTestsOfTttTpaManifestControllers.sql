@@ -323,7 +323,7 @@ values
 (24, 'LUGA1',   3, '2020-05-21T10:00', 51),/* Wh Cust 6*/
 (25, 'BRA-II',  3, '2020-05-13T20:00', 35),/* Wh Cust 8*/
 (26, 'CLOSED_TPA',  1, '2020-05-20T20:00', 35),
-(27, 'TEST_TPA',   3, '2020-05-25T10:00', 51),/* Wh Cust 8*/
+(27, 'TEST_TPA',   3, '2020-05-25T10:00', 51),/* Wh Cust 8 warehouse = xd_gro*/
 /*(1,'CLOSED'),(2,'DELAYED'),(3,'IN_PROGRESS'),(4,'BUFFER'),(5,'ERROR');*/
 (28, 'TEST_TPA1',   1, '2020-06-04T10:00', 51), /*xd_gro*/
 (29, 'TEST_TPA2',   1, '2020-06-03T12:00', 14),

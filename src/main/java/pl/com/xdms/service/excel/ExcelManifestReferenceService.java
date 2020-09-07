@@ -5,6 +5,8 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.configuration.ExcelProperties;
 import pl.com.xdms.domain.manifest.ManifestReference;
@@ -25,7 +27,11 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@PropertySource("classpath:messages.properties")
 public class ExcelManifestReferenceService implements ExcelService<ManifestReference> {
+
+    @Value("${ttt.warehouse.divider}")
+    String tttWarehouseDivider;
 
     private final ExcelProperties excelProperties;
     private final ManifestReferenceService manifestReferenceService;
@@ -35,7 +41,6 @@ public class ExcelManifestReferenceService implements ExcelService<ManifestRefer
         this.excelProperties = excelProperties;
         this.manifestReferenceService = manifestReferenceService;
     }
-
 
     public ByteArrayInputStream instanceToExcelFromTemplate(TruckTimeTable ttt) {
         try (XSSFWorkbook workbook = (XSSFWorkbook) WorkbookFactory.create(
@@ -96,13 +101,12 @@ public class ExcelManifestReferenceService implements ExcelService<ManifestRefer
         qtyRealCell.setCellValue(manifestReference.getQtyReal());
 
         Cell idCell = row.createCell(13);
-        idCell.setCellValue(manifestReference.getManifestReferenceId() + "|" + manifestReference.getManifest().getTruckTimeTableSet().stream()
+        idCell.setCellValue(manifestReference.getManifestReferenceId() + tttWarehouseDivider + manifestReference.getManifest().getTruckTimeTableSet().stream()
                 .filter(t -> t.getWarehouse().getWhType().getType().equals(WHTypeEnum.TXD))
                 .findFirst()
                 .orElse(new TruckTimeTable())
                 .getWarehouse().getWarehouseID());
     }
-
 
     public void saveReceptions(File receptionFile, Warehouse warehouse) {
         Map<Long, String> parsedValues = readReceptionExcel(receptionFile, warehouse);
@@ -130,8 +134,9 @@ public class ExcelManifestReferenceService implements ExcelService<ManifestRefer
     }
 
     /**
-     *
-     * @param sheet
+     * Map<Long, String> - Long - id of the ManifestReference, String - SAP number
+     * @param sheet - Sheet Entity from given Excel file
+     * @param warehouse- Warehouse entity where the reception was done.
      * @return Map<Long, String> - Long - id of the ManifestReference, String - SAP number
      */
     private Map<Long, String> readReceptionSheet(Sheet sheet, Warehouse warehouse) {
@@ -144,8 +149,8 @@ public class ExcelManifestReferenceService implements ExcelService<ManifestRefer
 
             if (row.getCell(4) != null){
                 String manRefIdAndWhId = getStringFromCell(row.getCell(13));
-                String manRefId = manRefIdAndWhId.substring(0, manRefIdAndWhId.indexOf("|"));
-                String whId = manRefIdAndWhId.substring(manRefIdAndWhId.indexOf("|")+1);
+                String manRefId = manRefIdAndWhId.substring(0, manRefIdAndWhId.indexOf(tttWarehouseDivider));
+                String whId = manRefIdAndWhId.substring(manRefIdAndWhId.indexOf(tttWarehouseDivider)+1);
 
                 if (!warehouse.getWarehouseID().equals(Long.parseLong(whId))) continue;
 
@@ -226,7 +231,6 @@ public class ExcelManifestReferenceService implements ExcelService<ManifestRefer
         Cell supplierName = row.createCell(15);
         supplierName.setCellValue(manifestReference.getReference().getSupplier().getName());
     }
-
 
     @Override
     public Map<Long, ManifestReference> readSheet(Sheet sheet) {

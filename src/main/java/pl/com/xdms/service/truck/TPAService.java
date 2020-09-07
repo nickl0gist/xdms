@@ -80,6 +80,14 @@ public class TPAService {
         return tpaRepository.findByTpaDaysSettingInAndDeparturePlanStartsWith(tpaDaysSettingSet, tpaDepartureDatePlan);
     }
 
+    public TPA getTpaByWarehouseAndId(Long tpaId, Warehouse warehouse){
+        TPA tpa = getTpaById(tpaId);
+        if(tpa != null && !tpa.getTpaDaysSetting().getWhCustomer().getWarehouse().equals(warehouse)){
+            return null;
+        }
+        return tpa;
+    }
+
     public TPA getTpaById(Long id) {
         return tpaRepository.findById(id).orElse(null);
     }
