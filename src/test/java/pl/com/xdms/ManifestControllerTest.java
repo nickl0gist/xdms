@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -87,7 +88,7 @@ public class ManifestControllerTest {
      */
     @Test
     public void getAllAbandonedManifestsTest() throws Exception {
-        mockMvc.perform(get("/ttt/manifests/abandoned"))
+        mockMvc.perform(get("/warehouse/xd_gro/ttt/manifests/abandoned"))
                 .andDo(print())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(status().isOk());
@@ -98,7 +99,7 @@ public class ManifestControllerTest {
      */
     @Test
     public void getManifestByIdTest200() throws Exception {
-        mockMvc.perform(get("/manifest/10"))
+        mockMvc.perform(get("/warehouse/xd_std/ttt/14/manifest/10").header("truck","ttt"))
                 .andDo(print())
                 .andExpect(jsonPath("$.manifestID").value(10))
                 .andExpect((status().isOk()));
@@ -109,7 +110,7 @@ public class ManifestControllerTest {
      */
     @Test
     public void getManifestByIdTest404() throws Exception {
-        mockMvc.perform(get("/manifest/250"))
+        mockMvc.perform(get("/warehouse/xd_std/ttt/14/manifest/250").header("truck","ttt"))
                 .andDo(print())
                 .andExpect(header().stringValues("Error:", "The manifest with id=250 is not existing"))
                 .andExpect((status().isNotFound()));
@@ -150,12 +151,12 @@ public class ManifestControllerTest {
         Assert.assertEquals(TTTEnum.PENDING, truckService.getTttService().getTttById(5L).getTttStatus().getTttStatusName());
         Assert.assertNull(truckService.getTttService().getTttById(5L).getTttArrivalDateReal());
 
-        mockMvc.perform(put("/ttt/5/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/cc_arad/ttt/5/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(header().stringValues("Message:", "The Manifest with id=5 was successfully updated"));
 
-        mockMvc.perform(get("/manifest/5"))
+        mockMvc.perform(get("/warehouse/cc_arad/ttt/5/manifest/5").header("truck","ttt"))
                 .andDo(print())
                 .andExpect(jsonPath("$.totalWeightReal").value(5000.0))
                 .andExpect(jsonPath("$.totalLdmReal").value(5.4))
@@ -198,10 +199,10 @@ public class ManifestControllerTest {
         Assert.assertNull(manifestToCheck.getPalletQtyReal());
         Assert.assertNull(manifestToCheck.getTotalLdmReal());
 
-        mockMvc.perform(put("/ttt/5/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/cc_arad/ttt/5/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(400))
-                .andExpect(header().string("ERROR", "Not Existing"));
+                .andExpect(header().string("Error:", "Does not Exist"));
     }
 
     /**
@@ -217,7 +218,7 @@ public class ManifestControllerTest {
 
         String json = om.writeValueAsString(newManifest);
 
-        mockMvc.perform(put("/ttt/5/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/cc_arad/ttt/5/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(400));
     }
@@ -248,10 +249,10 @@ public class ManifestControllerTest {
         entityManager.getTransaction().commit();
         entityManager.close();
 
-        mockMvc.perform(put("/ttt/1000/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/cc_arad/ttt/1000/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(400))
-                .andExpect(header().string("ERROR", "Not Existing"));
+                .andExpect(header().string("Error:", "Does not Exist"));
     }
 
     /**
@@ -275,10 +276,10 @@ public class ManifestControllerTest {
         entityManager.getTransaction().commit();
         entityManager.close();
 
-        mockMvc.perform(delete("/manifest/10"))
+        mockMvc.perform(delete("/warehouse/xd_std/ttt/14/manifest/10").header("truck", "ttt"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(header().stringValues("Message:", "Manifest with id=10 deleted"));
+                .andExpect(header().stringValues("Message:", "Manifest MAN-X-04 was removed from TTT with id=14"));
 
         EntityManager entityManager2 = entityManagerFactory.createEntityManager();
         entityManager2.getTransaction().begin();
@@ -294,7 +295,7 @@ public class ManifestControllerTest {
     }
 
     /**
-     * Test of the case when user tries to delete manifest with References inside.
+     * Test of the case when user tries to delete manifest from DB with References inside.
      * According to architecture the manifest_References entities should be deleted by cascade
      */
     @Test
@@ -302,34 +303,38 @@ public class ManifestControllerTest {
 
         Assert.assertNotNull(manifestReferenceService.findById(7L));
 
-        mockMvc.perform(delete("/manifest/13"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().stringValues("Message:", "Manifest with id=13 deleted"));
+        try {
+            mockMvc.perform(delete("/warehouse/xd_std/ttt/16/remove_manifest/13"))//.header("truck", "remove"))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(header().stringValues("Message:", "Manifest MAN-X-05 was removed from TTT with id=16"));
 
-        Assert.assertNull(manifestReferenceService.findById(7L));
+            Assert.assertNull(manifestReferenceService.findById(7L));
+        } catch (HttpMessageNotWritableException h) {
+            log.info(h.getStackTrace().toString());
+        }
     }
 
     /**
-     * Testcase of attempt to delete manifest with real quantities provided
+     * Testcase of attempt to delete manifest from DB with real quantities provided
      */
     @Test
     public void deleteManifestWithRealQuantitiesProvidedStatus422Test() throws Exception {
-        mockMvc.perform(delete("/manifest/1"))
+        mockMvc.perform(delete("/warehouse/cc_swie/ttt/1/remove_manifest/1"))//.header("truck", "remove"))
                 .andDo(print())
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(header().stringValues("Message:", "Manifest with id=1 arrived already and couldn't be deleted"));
     }
 
     /**
-     * Testcase when given id wasn't found while deleting the Manifest
+     * Testcase when given id wasn't found while deleting the Manifest from DB
      */
     @Test
     public void deleteManifestWithWrongId404Test() throws Exception {
-        mockMvc.perform(delete("/manifest/100"))
+        mockMvc.perform(delete("/warehouse/cc_swie/ttt/1/remove_manifest/100"))
                 .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(header().stringValues("Message:", "Manifest with id=100 Not Found"));
+                .andExpect(status().is(404))
+                .andExpect(header().stringValues("Error:", "Manifest with id=100 wasn't found in DB"));
     }
 
     /**
@@ -352,7 +357,7 @@ public class ManifestControllerTest {
 
         String json = om.writeValueAsString(newManifest);
 
-        mockMvc.perform(post("/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/xd_gro/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(header().stringValues("Message:", "The manifest NEW-MANIFEST-11 was successfully saved with id=20"));
@@ -379,7 +384,7 @@ public class ManifestControllerTest {
 
         String json = om.writeValueAsString(newManifest);
 
-        mockMvc.perform(post("/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/xd_gro/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(409))
                 .andExpect(header().stringValues("Error:", "Manifest with code=NEW-MANIFEST-11 has Given Supplier isActive = false, Customer isActive = false"));
@@ -397,7 +402,7 @@ public class ManifestControllerTest {
 
         String json = om.writeValueAsString(newManifest);
 
-        mockMvc.perform(post("/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/xd_gro/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(412))
                 .andExpect(header().stringValues("manifest-supplier_NotNull", "must not be null"))
@@ -417,10 +422,10 @@ public class ManifestControllerTest {
 
         String json = om.writeValueAsString(newManifest);
 
-        mockMvc.perform(post("/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/xd_gro/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(404))
-                .andExpect(header().stringValues("Error:", "The TTT with Id=280 wasn't found"));
+                .andExpect(header().stringValues("Error:", "The TTT with Id=280 wasn't found in Warehouse xd_gro"));
     }
 
     /**
@@ -441,7 +446,7 @@ public class ManifestControllerTest {
 
         String json = om.writeValueAsString(newManifest);
 
-        mockMvc.perform(post("/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(post("/warehouse/xd_gro/ttt/" + tttId).contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(409))
                 .andExpect(header().stringValues("Error:", "Manifest with code=TEST-MAN-01 is existing in DB already"));
@@ -452,10 +457,10 @@ public class ManifestControllerTest {
      */
     @Test
     public void deleteManifestFromGivenTpaTest404() throws Exception {
-        mockMvc.perform(delete("/tpa/200/manifest/3"))
+        mockMvc.perform(delete("/warehouse/xd_gro/tpa/200/manifest/3").header("truck", "tpa"))
                 .andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(header().stringValues("Error:", "TPA with id=200 wasn't found"));
+                .andExpect(header().stringValues("Error:", "TPA with id=200 wasn't found in Warehouse xd_gro"));
     }
 
     /**
@@ -472,7 +477,7 @@ public class ManifestControllerTest {
         Assert.assertEquals(2, tpa.getManifestSet().size());
         entityManager.getTransaction().commit();
 
-        mockMvc.perform(delete("/tpa/4/manifest/6"))
+        mockMvc.perform(delete("/warehouse/cc_arad/tpa/4/manifest/6").header("truck", "tpa"))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(header().stringValues("Message:", "Manifest TEST-MAN-04 was removed from TPA with id=4"))
@@ -486,10 +491,10 @@ public class ManifestControllerTest {
      */
     @Test
     public void deleteManifestFromGivenTpaTest405() throws Exception {
-        mockMvc.perform(delete("/tpa/2/manifest/300"))
+        mockMvc.perform(delete("/warehouse/cc_swie/tpa/2/manifest/300").header("truck", "tpa"))
                 .andDo(print())
                 .andExpect(status().is(405))
-                .andExpect(header().stringValues("Error:", "Manifest with id=300 wasn't found in DB"))
+                .andExpect(header().stringValues("Error:", "Manifest with id=300 wasn't found in TPA GRO1"))
                 .andExpect(jsonPath("$.tpaID").value(2));
     }
 
@@ -497,23 +502,23 @@ public class ManifestControllerTest {
      * Test of attempt to delete Manifest in TTT which does not exist.
      */
     @Test
-    public void deleteManifestFromGivenTttTest404() throws Exception {
-        mockMvc.perform(delete("/ttt/200/manifest/3"))
+    public void deleteManifestFromGivenTttTestTNotfound404() throws Exception {
+        mockMvc.perform(delete("/warehouse/cc_swie/ttt/200/manifest/3").header("truck", "ttt"))
                 .andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(header().stringValues("Error:", "TTT with id=200 wasn't found"));
+                .andExpect(header().stringValues("Error:", "TTT with id=200 wasn't found in Warehouse cc_swie"));
     }
 
     /**
      * Test of case when user tries to delete unknown manifest from existing TTT.
      */
     @Test
-    public void deleteManifestFromGivenTttTest405() throws Exception {
-        mockMvc.perform(delete("/ttt/2/manifest/300"))
+    public void deleteManifestFromGivenTttTestManifestNotFound404() throws Exception {
+        mockMvc.perform(delete("/warehouse/cc_swie/ttt/2/manifest/300").header("truck", "ttt"))
                 .andDo(print())
-                .andExpect(status().is(405))
-                .andExpect(header().stringValues("Error:", "Manifest with id=300 wasn't found in DB"))
-                .andExpect(jsonPath("$.tttID").value(2));
+                .andExpect(status().is(404))
+                .andExpect(header().stringValues("Error:", "Manifest with id=300 wasn't found in TTT TPA3"))
+                .andExpect(jsonPath("$.tttID").value(2));;
     }
 
     /**
@@ -530,13 +535,12 @@ public class ManifestControllerTest {
         Assert.assertEquals(2, ttt.getManifestSet().size());
         entityManager.getTransaction().commit();
 
-        mockMvc.perform(delete("/ttt/16/manifest/7"))
+        mockMvc.perform(delete("/warehouse/xd_std/ttt/16/manifest/7").header("truck", "ttt"))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(header().stringValues("Message:", "Manifest MAN-X-01 was removed from TTT with id=16"))
-                .andExpect(jsonPath("$.tttID").value(16))
-                .andExpect(jsonPath("$.['manifestSet']", hasSize(1)));
-
+                .andExpect(jsonPath("$.['manifestSet']", hasSize(1)))
+                .andExpect(jsonPath("$.tttID").value(16));
     }
 
     /**
@@ -549,7 +553,7 @@ public class ManifestControllerTest {
 
         log.info("TPA {}", truckService.getTpaService().save(tpa).getStatus());
 
-        mockMvc.perform(delete("/tpa/4/manifest/6"))
+        mockMvc.perform(delete("/warehouse/cc_arad/tpa/4/manifest/6").header("truck", "tpa"))
                 .andDo(print())
                 .andExpect(status().is(400))
                 .andExpect(header().stringValues("Error:", "TPA with id=4 has bean already CLOSED"))
