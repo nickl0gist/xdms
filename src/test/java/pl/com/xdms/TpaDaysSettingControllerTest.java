@@ -52,7 +52,7 @@ public class TpaDaysSettingControllerTest {
      */
     @Test
     public void getTpaDaySettingsByWhCustomerAndWorkingDayTest200() throws Exception {
-        mockMvc.perform(get("/tpa_settings/16/4"))
+        mockMvc.perform(get("/warehouse/xd_std/tpa_settings/16/4"))
                 .andDo(print())
                 .andExpect(status().is(200))
                 .andExpect(jsonPath("$", hasSize(2)));
@@ -64,7 +64,7 @@ public class TpaDaysSettingControllerTest {
      */
     @Test
     public void getTpaDaySettingsByWhCustomerAndWorkingDayTest404() throws Exception {
-        mockMvc.perform(get("/tpa_settings/16/9"))
+        mockMvc.perform(get("/warehouse/xd_std/tpa_settings/16/9"))
                 .andDo(print())
                 .andExpect(status().is(404));
     }
@@ -75,7 +75,7 @@ public class TpaDaysSettingControllerTest {
      */
     @Test
     public void getTpaDaySettingsByWhCustomerAndWorkingDayTest422() throws Exception {
-        mockMvc.perform(get("/tpa_settings/3/3"))
+        mockMvc.perform(get("/warehouse/cc_swie/tpa_settings/3/3"))
                 .andDo(print())
                 .andExpect(status().is(422));
     }
@@ -97,10 +97,11 @@ public class TpaDaysSettingControllerTest {
 
         tpaDaysSetting.setTransitTime("P0DT10H20M");
         tpaDaysSetting.setLocalTime("13:20");
+        entityManager.close();
 
         String json = om.writeValueAsString(tpaDaysSetting);
 
-        mockMvc.perform(put("/tpa_settings").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/txd_std/tpa_settings").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transitTime").value("P0DT10H20M"))
@@ -122,7 +123,7 @@ public class TpaDaysSettingControllerTest {
         ObjectMapper om = new ObjectMapper();
         String json = om.writeValueAsString(tpaDaysSetting);
 
-        mockMvc.perform(put("/tpa_settings").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/txd_std/tpa_settings").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(404))
                 .andExpect(header().stringValues("Error:","TpaDaysSetting with id=5550 wasn't found"));
@@ -142,7 +143,7 @@ public class TpaDaysSettingControllerTest {
         ObjectMapper om = new ObjectMapper();
         String json = om.writeValueAsString(tpaDaysSetting);
 
-        mockMvc.perform(put("/tpa_settings").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/tpa_settings").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(412))
                 .andExpect(header().stringValues("tpaDaysSetting-localTime_NotEmpty","must not be empty"))
@@ -160,7 +161,7 @@ public class TpaDaysSettingControllerTest {
         ObjectMapper om = new ObjectMapper();
         String json = om.writeValueAsString(tpaDaysSetting);
 
-        mockMvc.perform(put("/tpa_settings").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/tpa_settings").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(400));
     }

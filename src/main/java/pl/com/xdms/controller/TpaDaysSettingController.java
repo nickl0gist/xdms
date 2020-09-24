@@ -2,12 +2,15 @@ package pl.com.xdms.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import pl.com.xdms.domain.tpa.TpaDaysSetting;
 import pl.com.xdms.domain.tpa.WorkingDay;
+import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.domain.warehouse.WhCustomer;
 import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.WarehouseService;
@@ -23,8 +26,15 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("warehousestpa_settings")
+@PropertySource("classpath:messages.properties")
+@RequestMapping("warehouse/{urlCode:^[a-z_]{5,8}$}/tpa_settings")
 public class TpaDaysSettingController {
+
+    @Value("${error.http.message}")
+    String errorMessage;
+
+    @Value("${message.http.message}")
+    String messageMessage;
 
     private final TruckService truckService;
     private final WarehouseService warehouseService;
@@ -48,16 +58,18 @@ public class TpaDaysSettingController {
      *          - 404 - if WhCustomer id, or id of the WorkingDay were not found in DB;
      *          - 422 - if received WhCustomer entity has status isActive = false.
      */
-    @GetMapping("/{whCustomerId:^[0-9]*$}/{workingDayId:^[0-9]*$}")
-    public ResponseEntity<List<TpaDaysSetting>> getAllTpaDaysSettingsByWhCustomerIdAndWorkingDayId(@PathVariable Long whCustomerId, @PathVariable Long workingDayId){
+    @GetMapping("/{whCustomerId:^[0-9]*$}/{workingDayId:^[1-7]$}")
+    public ResponseEntity<List<TpaDaysSetting>> getAllTpaDaysSettingsByWhCustomerIdAndWorkingDayId(@PathVariable String urlCode, @PathVariable Long whCustomerId, @PathVariable Long workingDayId){
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         WhCustomer whCustomer = warehouseService.getWhCustomerById(whCustomerId);
         WorkingDay workingDay = warehouseService.getWorkingDayById(workingDayId);
-        if(whCustomer == null || workingDay == null){
-            log.info("The wrong parameters were passed to request whCustomerId={}, workingDayId={}; WhCustomer is null:{}", whCustomerId, workingDayId, whCustomer == null);
-            return ResponseEntity.notFound().header("Error:", "Wrong parameters passed to request").build();
+
+        if(whCustomer == null || workingDay == null || !whCustomer.getWarehouse().equals(warehouse)){
+            log.info("The wrong parameters were passed to request Warehouse {}, whCustomerId={}, workingDayId={}; WhCustomer is null:{}", urlCode, whCustomerId, workingDayId, whCustomer == null);
+            return ResponseEntity.notFound().header(errorMessage, "Wrong parameters passed to request").build();
         }
         if(!whCustomer.getIsActive()){
-            return ResponseEntity.unprocessableEntity().header("Warning:", String.format("The Connection of Warehouse=%s and Customer=%s is not active", whCustomer.getWarehouse().getName(), whCustomer.getCustomer().getName())).build();
+            return ResponseEntity.unprocessableEntity().header(errorMessage, String.format("The Connection of Warehouse=%s and Customer=%s is not active", whCustomer.getWarehouse().getName(), whCustomer.getCustomer().getName())).build();
         }
         List<TpaDaysSetting> tpaDaysSettings = truckService.getTpaDaysSettingsService().getTpaDaySettingsByWhCustomerAndWorkingDay(whCustomer, workingDay);
         return ResponseEntity.ok(tpaDaysSettings);
@@ -75,15 +87,16 @@ public class TpaDaysSettingController {
      * - 412 - If annotation conditions of TpaDaysSetting was violated.
      */
     @PutMapping("")
-    public ResponseEntity<TpaDaysSetting> updateTpaDaySetting(@RequestBody @Valid TpaDaysSetting tpaSetting, BindingResult bindingResult){
+    public ResponseEntity<TpaDaysSetting> updateTpaDaySetting(@PathVariable String urlCode, @RequestBody @Valid TpaDaysSetting tpaSetting, BindingResult bindingResult){
         HttpHeaders headers = new HttpHeaders();
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         Long id = tpaSetting.getId();
-        log.info("Setting Id = {}", id);
         if (id != null){
             TpaDaysSetting tpaDaysSettingFromDb = truckService.getTpaDaysSettingsService().getTpaDaySettingsById(tpaSetting.getId());
-            if(tpaDaysSettingFromDb == null){
+
+            if(tpaDaysSettingFromDb == null || !tpaDaysSettingFromDb.getWhCustomer().getWarehouse().equals(warehouse)){
                 log.info("TpaDaysSetting with id={} wasn't found", id);
-                headers.add("Error:", String.format("TpaDaysSetting with id=%d wasn't found", id));
+                headers.add(errorMessage, String.format("TpaDaysSetting with id=%d wasn't found", id));
                 return ResponseEntity.notFound().headers(headers).build();
             } else if (bindingResult.hasErrors()) {
                 //if given entity doesn't correspond conditions of parameters annotation in TpaDaysConditions class
@@ -94,7 +107,7 @@ public class TpaDaysSettingController {
             tpaDaysSettingFromDb.setTransitTime(tpaSetting.getTransitTime());
             tpaDaysSettingFromDb = truckService.getTpaDaysSettingsService().update(tpaDaysSettingFromDb);
             log.info("TpaDaysSetting with id={} was updated", id);
-            headers.add("Message:", String.format("TpaDaysSetting with id=%d was updated", id));
+            headers.add(messageMessage, String.format("TpaDaysSetting with id=%d was updated", id));
             return ResponseEntity.ok().headers(headers).body(tpaDaysSettingFromDb);
         }
         return ResponseEntity.badRequest().build();

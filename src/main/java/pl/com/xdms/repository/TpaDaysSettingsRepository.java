@@ -10,7 +10,6 @@ import java.util.Set;
 
 /**
  * Created on 08.12.2019
- *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
