@@ -1,6 +1,7 @@
 
 delete from users;
 delete from roles;
+delete from warehouse_manifest;
 delete from tpa_manifest;
 delete from tpa_manifest_reference;
 delete from ttt_manifest;

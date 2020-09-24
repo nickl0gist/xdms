@@ -92,7 +92,7 @@ public class TPAService {
         return tpaRepository.findById(id).orElse(null);
     }
 
-    public void removeTpaBiId(Long id) {
+    public void removeTpaById(Long id) {
         tpaRepository.deleteById(id);
     }
 

@@ -22,6 +22,9 @@ import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
+import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.domain.warehouse.WarehouseManifest;
+import pl.com.xdms.domain.warehouse.WarehouseManifestId;
 import pl.com.xdms.service.*;
 import pl.com.xdms.service.truck.TruckService;
 
@@ -101,7 +104,8 @@ public class ManifestControllerTest {
     public void getManifestByIdTest200() throws Exception {
         mockMvc.perform(get("/warehouse/xd_std/ttt/14/manifest/10").header("truck","ttt"))
                 .andDo(print())
-                .andExpect(jsonPath("$.manifestID").value(10))
+                .andExpect(jsonPath("$.['warehouseManifestId'].warehouseId").value(4))
+                .andExpect(jsonPath("$.['warehouseManifestId'].manifestId").value(10))
                 .andExpect((status().isOk()));
     }
 
@@ -138,7 +142,16 @@ public class ManifestControllerTest {
         manifestToUpdate.setPalletQtyReal(10);
         manifestToUpdate.setBoxQtyReal(500);
 
-        String json = om.writeValueAsString(manifestToUpdate);
+        WarehouseManifest warehouseManifest = new WarehouseManifest();
+        warehouseManifest.setManifest(manifestToUpdate);
+        warehouseManifest.setWarehouse(entityManager.find(Warehouse.class, 5L));
+        warehouseManifest.setTtt(entityManager.find(TruckTimeTable.class, 5L));
+
+        warehouseManifest.setBoxQtyReal(500);
+        warehouseManifest.setPalletQty(10);
+        warehouseManifest.setGrossWeight(5000.0);
+
+        String json = om.writeValueAsString(warehouseManifest);
         entityManager.getTransaction().commit();
         entityManager.close();
 
@@ -146,10 +159,10 @@ public class ManifestControllerTest {
         Assert.assertNull(manifestToCheck.getBoxQtyReal());
         Assert.assertNull(manifestToCheck.getTotalLdmReal());
         Assert.assertNull(manifestToCheck.getPalletQtyReal());
-        Assert.assertNull(manifestToCheck.getTotalLdmReal());
 
         Assert.assertEquals(TTTEnum.PENDING, truckService.getTttService().getTttById(5L).getTttStatus().getTttStatusName());
         Assert.assertNull(truckService.getTttService().getTttById(5L).getTttArrivalDateReal());
+
 
         mockMvc.perform(put("/warehouse/cc_arad/ttt/5/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
@@ -158,9 +171,8 @@ public class ManifestControllerTest {
 
         mockMvc.perform(get("/warehouse/cc_arad/ttt/5/manifest/5").header("truck","ttt"))
                 .andDo(print())
-                .andExpect(jsonPath("$.totalWeightReal").value(5000.0))
-                .andExpect(jsonPath("$.totalLdmReal").value(5.4))
-                .andExpect(jsonPath("$.palletQtyReal").value(10))
+                .andExpect(jsonPath("$.grossWeight").value(5000.0))
+                .andExpect(jsonPath("$.palletQty").value(10))
                 .andExpect(jsonPath("$.boxQtyReal").value(500));
 
         Assert.assertEquals(TTTEnum.ARRIVED, truckService.getTttService().getTttById(5L).getTttStatus().getTttStatusName());
@@ -171,7 +183,7 @@ public class ManifestControllerTest {
      * Testcase of update manifest request within TTT which doesn't have the Manifest in it's set.
      */
     @Test
-    public void updateManifestTestWithinTttWhichDoesntHaveThisManifestResponse200() throws Exception {
+    public void updateManifestTestWithinTttWhichDoesntHaveThisManifestResponse400() throws Exception {
         ObjectMapper om = new ObjectMapper();
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -189,7 +201,12 @@ public class ManifestControllerTest {
         manifestToUpdate.setPalletQtyReal(10);
         manifestToUpdate.setBoxQtyReal(500);
 
-        String json = om.writeValueAsString(manifestToUpdate);
+        WarehouseManifest warehouseManifest = new WarehouseManifest();
+        warehouseManifest.setManifest(manifestToUpdate);
+        warehouseManifest.setWarehouse(entityManager.find(Warehouse.class, 5L));
+        warehouseManifest.setTtt(entityManager.find(TruckTimeTable.class, 14L));
+
+        String json = om.writeValueAsString(warehouseManifest);
         entityManager.getTransaction().commit();
         entityManager.close();
 
@@ -210,13 +227,21 @@ public class ManifestControllerTest {
      */
     @Test
     public void updateManifestTestResponse400() throws Exception {
+
         ObjectMapper om = new ObjectMapper();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
         newManifest.setTotalWeightReal(5000.0);
         newManifest.setTotalLdmReal(5.4);
         newManifest.setPalletQtyReal(10);
         newManifest.setBoxQtyReal(500);
 
-        String json = om.writeValueAsString(newManifest);
+        WarehouseManifest warehouseManifest = new WarehouseManifest();
+        warehouseManifest.setManifest(newManifest);
+        warehouseManifest.setWarehouse(entityManager.find(Warehouse.class, 5L));
+        warehouseManifest.setTtt(entityManager.find(TruckTimeTable.class, 5L));
+
+        String json = om.writeValueAsString(warehouseManifest);
 
         mockMvc.perform(put("/warehouse/cc_arad/ttt/5/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
@@ -245,9 +270,16 @@ public class ManifestControllerTest {
         manifestToUpdate.setPalletQtyReal(10);
         manifestToUpdate.setBoxQtyReal(500);
 
-        String json = om.writeValueAsString(manifestToUpdate);
+        WarehouseManifest warehouseManifest = new WarehouseManifest();
+        warehouseManifest.setManifest(manifestToUpdate);
+        warehouseManifest.setWarehouse(entityManager.find(Warehouse.class, 5L));
+        warehouseManifest.setTtt(entityManager.find(TruckTimeTable.class, 5L));
+
+        String json = om.writeValueAsString(warehouseManifest);
         entityManager.getTransaction().commit();
         entityManager.close();
+
+
 
         mockMvc.perform(put("/warehouse/cc_arad/ttt/1000/manifest/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
@@ -334,7 +366,7 @@ public class ManifestControllerTest {
         mockMvc.perform(delete("/warehouse/cc_swie/ttt/1/remove_manifest/100"))
                 .andDo(print())
                 .andExpect(status().is(404))
-                .andExpect(header().stringValues("Error:", "Manifest with id=100 wasn't found in DB"));
+                .andExpect(header().stringValues("Error:", "Manifest with id=100 Not Found in DB"));
     }
 
     /**
@@ -477,6 +509,15 @@ public class ManifestControllerTest {
         Assert.assertEquals(2, tpa.getManifestSet().size());
         entityManager.getTransaction().commit();
 
+        WarehouseManifestId warehouseManifestId = new WarehouseManifestId();
+        warehouseManifestId.setManifestId(6L);
+        warehouseManifestId.setWarehouseId(5L);
+
+        WarehouseManifest warehouseManifest = entityManager.find(WarehouseManifest.class, warehouseManifestId);
+
+        Assert.assertEquals(4L, warehouseManifest.getTpa().getTpaID().longValue());
+        entityManager.close();
+
         mockMvc.perform(delete("/warehouse/cc_arad/tpa/4/manifest/6").header("truck", "tpa"))
                 .andDo(print())
                 .andExpect(status().is(200))
@@ -484,6 +525,11 @@ public class ManifestControllerTest {
                 .andExpect(jsonPath("$.tpaID").value(4))
                 .andExpect(jsonPath("$.['manifestSet']", hasSize(1)));
 
+        EntityManager entityManager2 = entityManagerFactory.createEntityManager();
+        WarehouseManifest warehouseManifestAfter = entityManager2.find(WarehouseManifest.class, warehouseManifestId);
+
+        Assert.assertNull(warehouseManifestAfter.getTpa());
+        entityManager2.close();
     }
 
     /**
@@ -516,7 +562,7 @@ public class ManifestControllerTest {
     public void deleteManifestFromGivenTttTestManifestNotFound404() throws Exception {
         mockMvc.perform(delete("/warehouse/cc_swie/ttt/2/manifest/300").header("truck", "ttt"))
                 .andDo(print())
-                .andExpect(status().is(404))
+                .andExpect(status().is(405))
                 .andExpect(header().stringValues("Error:", "Manifest with id=300 wasn't found in TTT TPA3"))
                 .andExpect(jsonPath("$.tttID").value(2));;
     }

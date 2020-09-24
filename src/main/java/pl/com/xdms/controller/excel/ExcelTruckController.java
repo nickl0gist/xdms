@@ -2,6 +2,8 @@ package pl.com.xdms.controller.excel;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.http.HttpHeaders;
@@ -32,7 +34,13 @@ import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
 @Slf4j
 @RestController
 @RequestMapping("warehouse/{urlCode:^[a-z_]{5,8}$}")
+@PropertySource("classpath:messages.properties")
 public class ExcelTruckController {
+    @Value("${error.http.message}")
+    String errorMessage;
+
+    @Value("${message.http.message}")
+    String messageMessage;
 
     private final FileStorageService fileStorageService;
 
@@ -87,7 +95,7 @@ public class ExcelTruckController {
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TruckTimeTable truckTimeTable = truckService.getTttService().getTttById(tttId);
         if(!truckTimeTable.getWarehouse().equals(warehouse)){
-            return ResponseEntity.badRequest().header("Error:", "Given TTT is not in scope of given Warehouse").build();
+            return ResponseEntity.badRequest().header(errorMessage, "Given TTT is not in scope of given Warehouse").build();
         }
         Path filePath = fileStorageService.storeFile(file);
         String extension = file.getContentType();

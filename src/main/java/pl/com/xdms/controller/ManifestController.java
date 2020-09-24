@@ -12,8 +12,10 @@ import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TPAEnum;
+import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.domain.warehouse.WarehouseManifest;
 import pl.com.xdms.service.ManifestService;
 import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.WarehouseService;
@@ -45,6 +47,7 @@ public class ManifestController {
     private final ManifestService manifestService;
     private final WarehouseService warehouseService;
 
+
     @Autowired
     public ManifestController(TruckService truckService, RequestErrorService requestErrorService, ManifestService manifestService, WarehouseService warehouseService) {
         this.truckService = truckService;
@@ -72,29 +75,34 @@ public class ManifestController {
      * @return - Manifest if it was founded, status 404 if wasn't.
      */
     @GetMapping(value = "ttt/{tttId:^\\d+$}/manifest/{manifestId:^\\d+$}", headers = "truck=ttt")
-    public ResponseEntity<Manifest> getManifestById(@PathVariable String urlCode,  @PathVariable Long tttId, @PathVariable Long manifestId) {
+    public ResponseEntity<WarehouseManifest> getManifestById(@PathVariable String urlCode, @PathVariable Long tttId, @PathVariable Long manifestId) {
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TruckTimeTable ttt = truckService.getTttService().getTTTByWarehouseAndId(tttId, warehouse);
-
         Manifest manifest = manifestService.findManifestById(manifestId);
-        if (!ttt.getManifestSet().contains(manifest)) {
+        WarehouseManifest warehouseManifest = manifestService.getWarehouseManifestService().findByWarehouseAndManifest(warehouse, manifest);
+
+        if(warehouse == null || ttt == null){
+            return ResponseEntity.badRequest().header(errorMessage, String.format("Warehouse %s doesn't contain TTT with id=%d", urlCode, tttId)).build();
+        }
+        if (!ttt.getManifestSet().contains(manifest) && warehouseManifest == null) {
             return ResponseEntity.notFound().header(errorMessage, String.format("The manifest with id=%d is not existing", manifestId)).build();
         }
-        return ResponseEntity.ok(manifest);
+        return ResponseEntity.ok(warehouseManifest);
     }
 
     /**
-     * THe endpoint dedicated to adding the the reference to particular manifest
-     * @param manifestId - Long id of the manifest where the reference should be added
+     * The endpoint dedicated to adding the the reference to particular manifest
+     *
+     * @param manifestId        - Long id of the manifest where the reference should be added
      * @param manifestReference - the entity of ManifestReference with all required information
-     * @param bindingResult - BindingResult entity to check annotation conditions in given manifestReference
+     * @param bindingResult     - BindingResult entity to check annotation conditions in given manifestReference
      * @return Response with Manifest in the body. Possible statuses of response:
      * - 200 - if updating of the manifest was successful;
      * - 404 - if no manifests were found by the given id;
      * - 422 - if any of the annotation conditions in ManifestReference class were violated.
      */
     @PutMapping(value = "ttt/{tttId:^\\d+$}/manifest/{manifestId:^\\d+$}/addReference", headers = "truck=ttt")
-    public ResponseEntity<Manifest> addReferenceToManifest(@PathVariable String urlCode,  @PathVariable Long tttId,
+    public ResponseEntity<Manifest> addReferenceToManifest(@PathVariable String urlCode, @PathVariable Long tttId,
                                                            @PathVariable Long manifestId, @RequestBody @Valid ManifestReference manifestReference,
                                                            BindingResult bindingResult) {
 
@@ -102,7 +110,7 @@ public class ManifestController {
         TruckTimeTable ttt = truckService.getTttService().getTTTByWarehouseAndId(tttId, warehouse);
 
         Manifest manifest = manifestService.findManifestById(manifestId);
-        if(!ttt.getManifestSet().contains(manifest)) {
+        if (!ttt.getManifestSet().contains(manifest)) {
             log.info("Manifest with id={} wasn't found", manifestId);
             return ResponseEntity.notFound().header(errorMessage, String.format("Manifest with id=%d wasn't found in TTT=%d in Warehouse %s", manifestId, tttId, urlCode)).build();
         } else if (bindingResult.hasErrors()) {
@@ -118,9 +126,9 @@ public class ManifestController {
 
     /**
      * The endpoint dedicated to update the Manifest from DB with information given with Manifest Entity from the request.
-     * Only four parameters are allowed to be updated: setBoxQtyReal, setPalletQtyReal, setTotalLdmReal, setTotalWeightReal.
+     * Only four parameters are allowed to be updated: boxQtyReal, palletQtyReal, TotalLdmReal, TotalWeightReal.
      *
-     * @param manifestUpdated Manifest entity given by user in request.
+     * @param warehouseManifestUpdated ManifestWarehouse entity given by user in request.
      * @param bindingResult   BindingResult to check if the given Manifest corresponds to annotation conditions.
      * @return Response entity with Manifest in body. Possible cases:
      * - 200 - if The given Entity is corresponding to all required conditions amd updating was successful;
@@ -129,31 +137,35 @@ public class ManifestController {
      * - 412 - if the given manifest does not correspond to annotation conditions of Manifest class
      */
     @PutMapping("ttt/{tttId:^\\d+$}/manifest/update")
-    public ResponseEntity<Manifest> updateManifest(@PathVariable String urlCode,  @PathVariable Long tttId,
-                                                   @RequestBody @Valid Manifest manifestUpdated, BindingResult bindingResult) {
+    public ResponseEntity<WarehouseManifest> updateManifest(@PathVariable String urlCode, @PathVariable Long tttId,
+                                                   @RequestBody @Valid WarehouseManifest warehouseManifestUpdated, BindingResult bindingResult) {
 
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TruckTimeTable ttt = truckService.getTttService().getTTTByWarehouseAndId(tttId, warehouse);
 
-        Long id = manifestUpdated.getManifestID();
-        Manifest manifestFromDb = manifestUpdated.getManifestID() == null ? null : manifestService.findManifestById(manifestUpdated.getManifestID());
+        Long id = warehouseManifestUpdated.getManifest().getManifestID();
+        Manifest manifestFromDb = id == null ? null : manifestService.findManifestById(id);
+
+        WarehouseManifest warehouseManifestFromDB = manifestService.getWarehouseManifestService().findByWarehouseAndManifest(warehouse, manifestFromDb);
 
         if (ttt != null && ttt.getManifestSet().contains(manifestFromDb)) {
-                //If manifest wasn't found by Id
-                if (manifestFromDb == null) {
-                    log.info("Given Manifest with id={} does not exist in DB and could not be updated", id);
-                    return ResponseEntity.notFound().header(errorMessage, String.format("The manifest with id=%d is not existing", id)).build();
-                } else if (bindingResult.hasErrors()) {
-                    //if given entity doesn't correspond conditions of parameters annotation in Manifest class
-                    HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
-                    return ResponseEntity.status(412).headers(headers).body(manifestUpdated);
-                }
-                //If all conditions are Ok Update manifest with given data
-                manifestFromDb = manifestService.updateManifest(manifestUpdated);
+            //If manifest wasn't found by Id
+            if (warehouseManifestFromDB == null) {
+                log.info("Given Manifest with id={} does not exist in scope of Warehouse {} and could not be updated", id, urlCode);
+                return ResponseEntity.notFound().header(errorMessage, String.format("The manifest with id=%d is not existing in Warehouse %s", id, urlCode)).build();
+            } else if (bindingResult.hasErrors()) {
+                //if given entity doesn't correspond conditions of parameters annotation in Manifest class
+                HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
+                return ResponseEntity.status(412).headers(headers).body(warehouseManifestUpdated);
+            }
+            //If all conditions are Ok Update manifest with given data
+            warehouseManifestFromDB = manifestService.updateWarehouseManifest(warehouseManifestUpdated);
+
+            if(!ttt.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED))
                 truckService.getTttService().setArrive(ttt);
 
-                return ResponseEntity.ok().header(messageMessage, String.format("The Manifest with id=%d was successfully updated", id)).body(manifestFromDb);
-            }
+            return ResponseEntity.ok().header(messageMessage, String.format("The Manifest with id=%d was successfully updated", id)).body(warehouseManifestFromDB);
+        }
         return ResponseEntity.badRequest().header(errorMessage, "Does not Exist").build();
     }
 
@@ -172,8 +184,9 @@ public class ManifestController {
         TruckTimeTable ttt = truckService.getTttService().getTTTByWarehouseAndId(tttId, warehouse);
 
         Manifest manifest = manifestService.findManifestById(manifestId);
+        WarehouseManifest warehouseManifest = manifestService.getWarehouseManifestByTttAndManifest(ttt, manifest);
         HttpHeaders headers = new HttpHeaders();
-        if (ttt == null || !ttt.getManifestSet().contains(manifest) || manifest == null) {
+        if (ttt == null || !ttt.getManifestSet().contains(manifest) || manifest == null || warehouseManifest == null) {
             log.info("Manifest with id: {} not found in TTT {} for Warehouse {}, returning error", manifestId, tttId, urlCode);
             headers.set(errorMessage, String.format("Manifest with id=%d Not Found in DB", manifestId));
             return ResponseEntity.notFound().headers(headers).build();//404
@@ -182,8 +195,7 @@ public class ManifestController {
             headers.set(messageMessage, String.format("Manifest with id=%d arrived already and couldn't be deleted", manifestId));
             return ResponseEntity.unprocessableEntity().headers(headers).build();//422
         }
-        ttt.getManifestSet().remove(manifest);
-        manifestService.delete(manifest);
+        manifestService.removeManifest(manifest, ttt);
         log.info("Manifest with id: {} was deleted", manifestId);
         headers.set(messageMessage, String.format("Manifest %s was removed from TTT with id=%d", manifest.getManifestCode(), tttId));
         return ResponseEntity.ok().headers(headers).body(ttt);//200
@@ -225,19 +237,10 @@ public class ManifestController {
             headers.add(errorMessage, String.format("Manifest with code=%s has Given Supplier isActive = %b, Customer isActive = %b", manifest.getManifestCode(), manifest.getSupplier().getIsActive(), manifest.getCustomer().getIsActive()));
             return ResponseEntity.status(409).headers(headers).body(manifest);
         } else {
-            Manifest manifestToSave = new Manifest();
-            manifestToSave.setManifestCode(manifest.getManifestCode());
-            manifestToSave.setBoxQtyPlanned(manifest.getBoxQtyPlanned());
-            manifestToSave.setPalletQtyPlanned(manifest.getPalletQtyPlanned());
-            manifestToSave.setTotalLdmPlanned(manifest.getTotalLdmPlanned());
-            manifestToSave.setTotalWeightPlanned(manifest.getTotalWeightPlanned());
-            manifestToSave.setSupplier(manifest.getSupplier());
-            manifestToSave.setCustomer(manifest.getCustomer());
-            manifestToSave.getTruckTimeTableSet().add(ttt);
-            manifestToSave = manifestService.save(manifestToSave);
+            Manifest manifestToSave = manifestService.addManifestToTruckTimeTableWithinWarehouse(warehouse, ttt, manifest);
             log.info("The manifest {} was successfully saved with id={}", manifestToSave.getManifestCode(), manifestToSave.getManifestID());
             headers.add(messageMessage, String.format("The manifest %s was successfully saved with id=%d", manifestToSave.getManifestCode(), manifestToSave.getManifestID()));
-            return ResponseEntity.ok().headers(headers).body(manifestService.save(manifestToSave));
+            return ResponseEntity.ok().headers(headers).body(manifestToSave);
         }
     }
 
@@ -257,6 +260,7 @@ public class ManifestController {
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TPA tpa = truckService.getTpaService().getTpaByWarehouseAndId(tpaId, warehouse);
         Manifest manifest = manifestService.findManifestById(manifestId);
+        WarehouseManifest warehouseManifest = manifestService.getWarehouseManifestService().findByWarehouseAndManifest(warehouse, manifest);
 
         HttpHeaders headers = new HttpHeaders();
         if (tpa == null) {
@@ -267,9 +271,8 @@ public class ManifestController {
             log.info("TPA with id={} has bean CLOSED already", tpaId);
             headers.add(errorMessage, String.format("TPA with id=%d has bean already CLOSED", tpaId));
             return ResponseEntity.badRequest().headers(headers).body(tpa);
-        } else if (manifest != null) {
-            tpa.getManifestSet().remove(manifest);
-            truckService.getTpaService().save(tpa);
+        } else if (manifest != null && warehouseManifest != null) {
+            truckService.removeManifestFromTpa(warehouseManifest, tpa);
             log.info("Manifest {} was removed from TPA with id={}", manifest.getManifestCode(), tpaId);
             headers.add(messageMessage, String.format("Manifest %s was removed from TPA with id=%d", manifest.getManifestCode(), tpaId));
             return ResponseEntity.ok().headers(headers).body(tpa);
@@ -295,6 +298,7 @@ public class ManifestController {
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TruckTimeTable ttt = truckService.getTttService().getTTTByWarehouseAndId(tttId, warehouse);
         Manifest manifest = manifestService.findManifestById(manifestId);
+        WarehouseManifest warehouseManifest = manifestService.getWarehouseManifestService().findByTttAndManifest(ttt, manifest);
 
         HttpHeaders headers = new HttpHeaders();
         if (ttt == null || warehouse == null) {
@@ -302,18 +306,18 @@ public class ManifestController {
             headers.add(errorMessage, String.format("TTT with id=%d wasn't found in Warehouse %s", tttId, urlCode));
             return ResponseEntity.notFound().headers(headers).build();
 
-        } else if (manifest != null) {
-
-            ttt.getManifestSet().remove(manifest);
-            truckService.getTttService().save(ttt);
-            manifestService.delete(manifest);
+        } else if (manifest != null && (warehouseManifest.getPalletQty() == null && warehouseManifest.getBoxQtyReal() == null)) {
+            truckService.removeManifestFromWarehouse(manifest, ttt);
             log.info("Manifest {} was removed from TTT with id={}", manifest.getManifestCode(), tttId);
             headers.add(messageMessage, String.format("Manifest %s was removed from TTT with id=%d", manifest.getManifestCode(), tttId));
             return ResponseEntity.ok().headers(headers).body(ttt);
         } else {
             log.info("The manifest with id={} wasn't found in TTT {}", manifestId, ttt.getTruckName());
             headers.add(errorMessage, String.format("Manifest with id=%d wasn't found in TTT %s", manifestId, ttt.getTruckName()));
-            return ResponseEntity.status(404).headers(headers).body(ttt);//Method Not Allowed
+            return ResponseEntity.status(405).headers(headers).body(ttt);//Method Not Allowed
         }
     }
+
+    //TODO
+    //@PostMapping("tpa/{tpaIdFrom:^\d+$}/manifest/{manifestId:^\d+$}/move_to/tpa/{tpaIdTo:^\d+$}")
 }

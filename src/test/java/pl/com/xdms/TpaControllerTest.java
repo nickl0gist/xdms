@@ -21,6 +21,7 @@ import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.service.ManifestReferenceService;
+import pl.com.xdms.service.WarehouseManifestService;
 import pl.com.xdms.service.truck.TruckService;
 
 import javax.persistence.EntityManager;
@@ -64,6 +65,8 @@ public class TpaControllerTest {
     @Autowired
     private TruckService truckService;
 
+    @Autowired
+    private WarehouseManifestService warehouseManifestService;
     private TPA newTpa;
 
     @Before
@@ -416,6 +419,8 @@ public class TpaControllerTest {
      */
     @Test
     public void deleteTpaByIdStatus200() throws Exception {
+        //1. Check TPA which is assigned to manifest from TTT
+
         mockMvc.perform(delete("/warehouse/cc_swie/tpa/1"))
                 .andDo(print())
                 .andExpect(status().is(204))

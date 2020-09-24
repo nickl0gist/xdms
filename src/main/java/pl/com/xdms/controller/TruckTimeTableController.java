@@ -2,6 +2,8 @@ package pl.com.xdms.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -28,7 +30,14 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("warehouse/{urlCode:^[a-z_]{5,8}$}")
+@PropertySource("classpath:messages.properties")
 public class TruckTimeTableController {
+
+    @Value("${error.http.message}")
+    String errorMessage;
+
+    @Value("${message.http.message}")
+    String messageMessage;
 
     private final TruckService truckService;
     private final WarehouseService warehouseService;
@@ -119,23 +128,23 @@ public class TruckTimeTableController {
     public ResponseEntity<String> deleteTruckTimeTable(@PathVariable String urlCode, @PathVariable Long id) {
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TruckTimeTable truckTimeTable = truckService.getTttService().getTTTByWarehouseAndId(id, warehouse);
-        String message = "Message";
+
         HttpHeaders headers = new HttpHeaders();
         if (truckTimeTable == null) {
             log.info("TTT with id: {} not found, returning error", id);
-            headers.set(message, "TTT Not Found");
+            headers.set(errorMessage, "TTT Not Found");
             return ResponseEntity.notFound().headers(headers).build();//404
         } else if (truckTimeTable.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED)) {
             log.info("The TTT {} has already arrived and cannot be removed", truckTimeTable.getTruckName());
-            headers.set(message, String.format("TTT with id=%d has status Arrived", id));
+            headers.set(messageMessage, String.format("TTT with id=%d has status Arrived", id));
             return ResponseEntity.status(422).headers(headers).build();
         } else if (truckService.deleteTtt(truckTimeTable)) {
             log.info("TTT with id: {} was removed in Database in Warehouse {} (code {})", id,
                     truckTimeTable.getWarehouse().getName(), truckTimeTable.getWarehouse().getUrlCode());
-            headers.set(message, String.format("TTT with id=%d was successfully removed.", id));
+            headers.set(messageMessage, String.format("TTT with id=%d was successfully removed.", id));
             return ResponseEntity.ok().headers(headers).build(); //200
         }
-        headers.set(message, "TTT could not be deleted. Check Manifests from this TTT");
+        headers.set(errorMessage, "TTT could not be deleted. Check Manifests from this TTT");
         return ResponseEntity.badRequest().headers(headers).build(); // 400
     }
 
@@ -158,7 +167,7 @@ public class TruckTimeTableController {
             TruckTimeTable tttFromDataBase = truckService.getTttService().getTTTByWarehouseAndId(id, warehouse);
             if (tttFromDataBase == null) {
                 log.warn("TTT with id: {} not found, returning error", id);
-                headers.set("Error:", String.format("TTT with id=%d not found, returning error", id));
+                headers.set(errorMessage, String.format("TTT with id=%d not found, returning error", id));
                 return ResponseEntity.notFound().headers(headers).build(); // 404
             } else if (bindingResult.hasErrors()){
                 //if given entity doesn't correspond conditions of parameters annotation in TTT class
@@ -168,14 +177,14 @@ public class TruckTimeTableController {
                     LocalDateTime.parse(truckTimeTable.getTttArrivalDatePlan()).isBefore(LocalDateTime.now())) {
                 log.info("TTT with id: {} has status ARRIVED and couldn't be changed: {}", id, tttFromDataBase.getTttStatus().getTttStatusName());
                 log.info("Also check the ETA in given TTT, the Date couldn't be in the past. Is in the Past? : {}", LocalDateTime.parse(truckTimeTable.getTttArrivalDatePlan()).isBefore(LocalDateTime.now()));
-                return ResponseEntity.status(422).header("Error:", String.format("TTT id=%d has status ARRIVED or ETA date is in the Past", id)).build(); //UNPROCESSABLE_ENTITY
+                return ResponseEntity.status(422).header(errorMessage, String.format("TTT id=%d has status ARRIVED or ETA date is in the Past", id)).build(); //UNPROCESSABLE_ENTITY
             }
             tttFromDataBase.setTttArrivalDatePlan(truckTimeTable.getTttArrivalDatePlan());
             tttFromDataBase.setTruckName(truckTimeTable.getTruckName());
             truckService.getTttService().save(tttFromDataBase);
-            return ResponseEntity.status(200).header("Message:", String.format("TTT with id=%d was successfully updated", id)).build(); //OK
+            return ResponseEntity.status(200).header(messageMessage, String.format("TTT with id=%d was successfully updated", id)).build(); //OK
         }
-        return ResponseEntity.notFound().header("ERROR", "Not Existing").build();
+        return ResponseEntity.notFound().header(errorMessage, "Not Existing").build();
     }
 
 }

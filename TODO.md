@@ -154,10 +154,16 @@ not done
 Not done
 -
 
--.Get file from TPA with placed References.
+-. Get file from TPA with placed References.
 
--. Create Entity WarehouseManifest to truck changes of the manifest when it goes through the Warehouse. connection between Warehouse And Manifest, check KPI in each warehouse. check Real qty?  
+-. Movement of Manifest between TTT and TPA. Check  
 
+
+-. Create Entity WarehouseManifest to truck changes of the manifest when it goes through the Warehouse. 
+    -+ connection between Warehouse And Manifest, check KPI in each warehouse. check Real qty?  
+    --Show real qty of ManifestWarehouse as real qty of TTT and TPA in each certain Warehouse  
+    
+    
 -. Truck Types, LDM calculation, Truck utilization 
 
 -. if defined by default TPA was changed, the changes should be implemented to TTT at the Warehouse where this TPA goes to.

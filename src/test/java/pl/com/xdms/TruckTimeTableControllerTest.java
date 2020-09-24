@@ -22,6 +22,8 @@ import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.service.ManifestReferenceService;
+import pl.com.xdms.service.ManifestService;
+import pl.com.xdms.service.WarehouseManifestService;
 import pl.com.xdms.service.WarehouseService;
 import pl.com.xdms.service.excel.ExcelManifestReferenceService;
 import pl.com.xdms.service.truck.TruckService;
@@ -40,7 +42,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 /**
  * Created on 12.04.2020
@@ -75,6 +76,12 @@ public class TruckTimeTableControllerTest {
 
     @Autowired
     private ManifestReferenceService manifestReferenceService;
+
+    @Autowired
+    private WarehouseManifestService warehouseManifestService;
+
+    @Autowired
+    private ManifestService manifestService;
 
     private TruckTimeTable newTtt;
 
@@ -148,6 +155,7 @@ public class TruckTimeTableControllerTest {
     /**
      * When user sends TTT with warehouse which Id is another then current warehouse.
      * In this case Current warehouse will be added to this TTT and it will be saved if no other conditions are corrupted.
+     *
      * @throws Exception for mockMvc
      */
     @Test
@@ -234,6 +242,7 @@ public class TruckTimeTableControllerTest {
      * When user removes TTT in any CC all manifest from this TTT should be moved to new TTT in the XD with arrival date
      * the same as date in the TTT which used to deliver each manifest from CC to XD. The old TTT in XD will not contain any
      * manifests from removed TTT in CC.
+     * Case Manifest goes: Supplier -> CC -> XD -> customer
      *
      * @throws Exception exception for mockMvc
      */
@@ -259,14 +268,26 @@ public class TruckTimeTableControllerTest {
 
         //4.Get qty of all TTTs in DB
         int qtyOfTttInDbBeforeRequest = truckService.getTttService().getAllTtt().size();
+        TruckTimeTable ttt = truckService.getTttService().getTttById(5L);
+        //4a Check qty of WarehouseManifest entities in DB for TTT=5 Before Request.
+        Assert.assertEquals(1, warehouseManifestService.findAllByTtt(ttt).size());
+        //4b Check ID of the TTT which is assigned to WarehouseManifest entity for Warehouse=4 and Manifest=5 Before Request
+        Assert.assertEquals(new Long(8L), warehouseManifestService.findByWarehouseAndManifest(warehouseService.getWarehouseById(4L), manifestService.findManifestById(5L)).getTtt().getTttID());
 
-        //5.Perform deletion of one of the TTT with id 5 name: ABSD01
+
+        //5.Perform deletion of TTT with id 5 name: ABSD01
         mockMvc.perform(delete("/warehouse/cc_arad/ttt/delete/5"))
                 .andDo(print())
                 .andExpect(status().isOk());
 
         //6.Get qty of all TTTs in DB after deletion was performed
         int qtyOfTttInDbAfterRequest = truckService.getTttService().getAllTtt().size();
+
+        //6.a Check qty of WarehouseManifest entities in DB for TTT=5 After Request.
+        Assert.assertEquals(0, warehouseManifestService.findAllByTtt(ttt).size());
+
+        //6b. Check ID of the TTT which is assigned to WarehouseManifest entity for Warehouse=4 and Manifest=5 Before Request
+        Assert.assertEquals(new Long(33), warehouseManifestService.findByWarehouseAndManifest(warehouseService.getWarehouseById(4L), manifestService.findManifestById(5L)).getTtt().getTttID());
 
         //7.Assertion to compare before and after deletion,
         // The QTy should be the same - deleted TTT from CC and created new one in XD
@@ -322,6 +343,14 @@ public class TruckTimeTableControllerTest {
         //4.Get qty of all TTTs in DB
         int qtyOfTttInDbBeforeRequest = truckService.getTttService().getAllTtt().size();
 
+        TruckTimeTable ttt = truckService.getTttService().getTttById(3L);
+
+        //4a Check qty of WarehouseManifest entities in DB for TTT=3 Before Request.
+        Assert.assertEquals(1, warehouseManifestService.findAllByTtt(ttt).size());
+
+        //4b Check ID of the TTT which is assigned to WarehouseManifest entity for Warehouse=2 and Manifest=3 Before Request
+        Assert.assertEquals(new Long(9L), warehouseManifestService.findByWarehouseAndManifest(warehouseService.getWarehouseById(2L), manifestService.findManifestById(3L)).getTtt().getTttID());
+
         //5.Perform deletion of one of the TTT with id 3 name: BART01
         mockMvc.perform(delete("/warehouse/cc_swie/ttt/delete/3"))
                 .andDo(print())
@@ -329,6 +358,13 @@ public class TruckTimeTableControllerTest {
 
         //6.Get qty of all TTTs in DB after deletion was performed
         int qtyOfTttInDbAfterRequest = truckService.getTttService().getAllTtt().size();
+
+        //6.a Check qty of WarehouseManifest entities in DB for TTT=3 After Request.
+        Assert.assertEquals(0, warehouseManifestService.findAllByTtt(ttt).size());
+
+        //6b. Check ID of the TTT which is assigned to WarehouseManifest entity for Warehouse=2 and Manifest=3 Before Request
+        Assert.assertEquals(new Long(34L), warehouseManifestService.findByWarehouseAndManifest(warehouseService.getWarehouseById(2L), manifestService.findManifestById(3L)).getTtt().getTttID());
+
         //7.Assertion to compare before and after deletion,
         // The QTy should be the same - deleted TTT from CC and created new one in TXD
         Assert.assertEquals(qtyOfTttInDbAfterRequest, qtyOfTttInDbBeforeRequest);
@@ -363,13 +399,13 @@ public class TruckTimeTableControllerTest {
         mockMvc.perform(delete("/warehouse/xd_std/ttt/delete/15"))
                 .andDo(print())
                 .andExpect(status().is(400))
-                .andExpect(header().stringValues("Message", "TTT could not be deleted. Check Manifests from this TTT"));
+                .andExpect(header().stringValues("Error:", "TTT could not be deleted. Check Manifests from this TTT"));
     }
 
     /**
      * The test case when user tries to delete TTT in XD which contains 2 manifests:
      * 1. Supplier -> CC -> XD -> TXD -> Customer
-     * Both of them will be departure from XD with different TPA. The 1st TPA has 2 manifest the second one - 1 manifest
+     * Both of them will be departure from XD with different TPA. The 1st TPA has 2 manifests the second one - 1 manifest
      * When the TTT will be deleted from XD next changes should be provided:
      * - TTT EXT1 should be deleted from XD;
      * - TTT with truckName EXT1 should be created in TXD for date 2020-05-14T13:13;
@@ -389,19 +425,34 @@ public class TruckTimeTableControllerTest {
                 .andExpect(jsonPath("$[?(@.truckName == \"EXT1\")]").exists())
                 .andExpect(jsonPath("$[?(@.truckName == \"NN001\")]").exists());
 
-        //2. Check how many Manifests in TPA with ID 12=GRO-X (TPA from Stadthagen on 2020-05-11T14:30)
+        //2a. Check how many Manifests in TPA with ID 12=GRO-X (TPA from Stadthagen on 2020-05-11T14:30)
         mockMvc.perform(get("/warehouse/xd_std/tpa/12"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestSet']", hasSize(2)));
+
+        //2b. Check how many Manifests in TPA with ID 17=GRO-X2 (TPA from Stadthagen on 2020-05-11T14:30)
+        mockMvc.perform(get("/warehouse/xd_std/tpa/17"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$['manifestSet']", hasSize(1)));
 
         //3.Check how many TTT in TXD GRO Warehouse on 14.05.2020 before TTT in CC removed
         mockMvc.perform(get("/warehouse/xd_gro/ttt/2020-05-14"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
+
         //4.Get qty of all TTTs in DB
         int qtyOfTttInDbBeforeRequest = truckService.getTttService().getAllTtt().size();
+
+        TruckTimeTable ttt = truckService.getTttService().getTttById(16L);
+        //4a Check qty of WarehouseManifest entities in DB for TTT=3 Before Request.
+        Assert.assertEquals(2, warehouseManifestService.findAllByTtt(ttt).size());
+
+        //4b Check ID of the TTT which is assigned to WarehouseManifest entity for Warehouse=4 and Manifest=7 Before Request
+        Assert.assertEquals(new Long(16L), warehouseManifestService.findByWarehouseAndManifest(warehouseService.getWarehouseById(4L), manifestService.findManifestById(7L)).getTtt().getTttID());
+        Assert.assertEquals(new Long(16L), warehouseManifestService.findByWarehouseAndManifest(warehouseService.getWarehouseById(4L), manifestService.findManifestById(13L)).getTtt().getTttID());
 
         //5.Perform deletion of one of the TTT with id 16 name: EXT1
         mockMvc.perform(delete("/warehouse/xd_std/ttt/delete/16"))
@@ -410,6 +461,14 @@ public class TruckTimeTableControllerTest {
 
         //6.Get qty of all TTTs in DB after deletion was performed
         int qtyOfTttInDbAfterRequest = truckService.getTttService().getAllTtt().size();
+
+        //6.a Check qty of WarehouseManifest entities in DB for TTT=16 After Request.
+        Assert.assertEquals(0, warehouseManifestService.findAllByTtt(ttt).size());
+
+        //6b. Check ID of the TTT which is assigned to WarehouseManifest entity for Warehouse=2 and Manifest=7 and 13 Before Request
+        Assert.assertEquals(new Long(31L), warehouseManifestService.findByWarehouseAndManifest(warehouseService.getWarehouseById(2L), manifestService.findManifestById(7L)).getTtt().getTttID());
+        Assert.assertEquals(new Long(30L), warehouseManifestService.findByWarehouseAndManifest(warehouseService.getWarehouseById(2L), manifestService.findManifestById(13L)).getTtt().getTttID());
+
         //7.Assertion to compare before and after deletion,
         // The QTy should be the same - deleted TTT from CC and created new 2 TTT (EXT1 with date 14.05.2020 and EXT1 with date 13.05.2020)
         Assert.assertEquals(qtyOfTttInDbAfterRequest, qtyOfTttInDbBeforeRequest + 1);
@@ -464,13 +523,26 @@ public class TruckTimeTableControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$['manifestReferenceSet']", hasSize(2)));
 
+        TruckTimeTable ttt = truckService.getTttService().getTttById(21L);
+        //1a Check qty of WarehouseManifest entities in DB for TTT=21 Before Request.
+        Assert.assertEquals(1, warehouseManifestService.findAllByTtt(ttt).size());
+
+        //1 Check ID of the TTT which is assigned to WarehouseManifest entity for Warehouse=2 and Manifest=15 Before Request
+        Assert.assertEquals(new Long(21L), warehouseManifestService.findByWarehouseAndManifest(warehouseService.getWarehouseById(2L), manifestService.findManifestById(15L)).getTtt().getTttID());
+
         //2. Removing TTT 24 from DB
         mockMvc.perform(delete("/warehouse/xd_gro/ttt/delete/21"))
                 .andDo(print())
                 .andExpect(status().is(200))
-                .andExpect(header().stringValues("Message", "TTT with id=21 was successfully removed."));
+                .andExpect(header().stringValues("Message:", "TTT with id=21 was successfully removed."));
 
-        //3. Check the size of manifestReferenceSet in TPA 24 after TTT 21 removing
+        //3a Check qty of WarehouseManifest entities in DB for TTT=21 After Request.
+        Assert.assertEquals(0, warehouseManifestService.findAllByTtt(ttt).size());
+
+        //3b. Check is there any TTT which is assigned to WarehouseManifest entity for Warehouse=2 and Manifest=15 After Request
+        Assert.assertNull( warehouseManifestService.findByWarehouseAndManifest(warehouseService.getWarehouseById(2L), manifestService.findManifestById(15L)));
+
+        //3c Check the size of manifestReferenceSet in TPA 24 after TTT 21 removing
         mockMvc.perform(get("/warehouse/xd_gro/tpa/24"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -488,7 +560,7 @@ public class TruckTimeTableControllerTest {
         mockMvc.perform(delete("/warehouse/xd_gro/ttt/delete/27"))
                 .andDo(print())
                 .andExpect(status().is(400))
-                .andExpect(header().stringValues("Message", "TTT could not be deleted. Check Manifests from this TTT"));
+                .andExpect(header().stringValues("Error:", "TTT could not be deleted. Check Manifests from this TTT"));
     }
 
     /**
@@ -501,7 +573,7 @@ public class TruckTimeTableControllerTest {
         mockMvc.perform(delete("/warehouse/xd_gro/ttt/delete/127"))
                 .andDo(print())
                 .andExpect(status().is(404))
-                .andExpect(header().stringValues("Message", "TTT Not Found"));
+                .andExpect(header().stringValues("Error:", "TTT Not Found"));
     }
 
     /**
@@ -514,7 +586,7 @@ public class TruckTimeTableControllerTest {
         mockMvc.perform(delete("/warehouse/xd_gro/ttt/delete/28"))
                 .andDo(print())
                 .andExpect(status().is(422))
-                .andExpect(header().stringValues("Message", "TTT with id=28 has status Arrived"));
+                .andExpect(header().stringValues("Message:", "TTT with id=28 has status Arrived"));
     }
 
     /**
@@ -616,7 +688,7 @@ public class TruckTimeTableControllerTest {
         mockMvc.perform(put("/warehouse/cc_swie/ttt/update").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(404))
-                .andExpect(header().stringValues("ERROR", "Not Existing"));
+                .andExpect(header().stringValues("Error:", "Not Existing"));
     }
 
     /**

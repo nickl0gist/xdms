@@ -1,9 +1,13 @@
 package pl.com.xdms.service;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.domain.manifest.Manifest;
+import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
+import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.domain.warehouse.WarehouseManifest;
 import pl.com.xdms.repository.ManifestRepository;
 
 import java.util.List;
@@ -16,13 +20,16 @@ import java.util.Optional;
  */
 @Slf4j
 @Service
+@Data
 public class ManifestService {
 
     private final ManifestRepository manifestRepository;
+    private WarehouseManifestService warehouseManifestService;
 
     @Autowired
-    public ManifestService(ManifestRepository manifestRepository) {
+    public ManifestService(ManifestRepository manifestRepository, WarehouseManifestService warehouseManifestService) {
         this.manifestRepository = manifestRepository;
+        this.warehouseManifestService = warehouseManifestService;
     }
 
     public boolean isManifestExisting(Manifest manifest) {
@@ -65,5 +72,55 @@ public class ManifestService {
         manifestFromDb.setTotalLdmReal(manifestUpdated.getTotalLdmReal());
         manifestFromDb.setTotalWeightReal(manifestUpdated.getTotalWeightReal());
         return save(manifestFromDb);
+    }
+
+    public Manifest addManifestToTruckTimeTableWithinWarehouse(Warehouse warehouse, TruckTimeTable ttt, Manifest manifest) {
+        Manifest manifestToSave = new Manifest();
+        manifestToSave.setManifestCode(manifest.getManifestCode());
+        manifestToSave.setBoxQtyPlanned(manifest.getBoxQtyPlanned());
+        manifestToSave.setPalletQtyPlanned(manifest.getPalletQtyPlanned());
+        manifestToSave.setTotalLdmPlanned(manifest.getTotalLdmPlanned());
+        manifestToSave.setTotalWeightPlanned(manifest.getTotalWeightPlanned());
+        manifestToSave.setSupplier(manifest.getSupplier());
+        manifestToSave.setCustomer(manifest.getCustomer());
+        manifestToSave.getTruckTimeTableSet().add(ttt);
+        manifestToSave = save(manifestToSave);
+        warehouseManifestService.addNewWarehouseManifestTtt(warehouse, ttt, manifestToSave);
+        return manifestToSave;
+    }
+
+    public WarehouseManifest updateWarehouseManifest(WarehouseManifest warehouseManifestUpdated) {
+        WarehouseManifest warehouseManifestFromDb = warehouseManifestService.findByWarehouseAndManifest(warehouseManifestUpdated.getWarehouse(), warehouseManifestUpdated.getManifest());
+        Manifest manifest = warehouseManifestFromDb.getManifest();
+
+        manifest.setBoxQtyReal(warehouseManifestUpdated.getBoxQtyReal());
+        manifest.setPalletQtyReal(warehouseManifestUpdated.getPalletQty());
+        //FIXME
+        // manifest.setTotalLdmReal(calculate LDM);
+        manifest.setTotalWeightReal(warehouseManifestUpdated.getGrossWeight());
+
+        warehouseManifestFromDb.setPalletQty(warehouseManifestUpdated.getPalletQty());
+        warehouseManifestFromDb.setBoxQtyReal(warehouseManifestUpdated.getBoxQtyReal());
+        warehouseManifestFromDb.setGrossWeight(warehouseManifestUpdated.getGrossWeight());
+        warehouseManifestFromDb.setNetWeightReal(warehouseManifestUpdated.getNetWeightReal());
+        warehouseManifestFromDb.setPalletHeight(warehouseManifestUpdated.getPalletHeight());
+        warehouseManifestFromDb.setPalletWidth(warehouseManifestUpdated.getPalletWidth());
+        warehouseManifestFromDb.setPalletLength(warehouseManifestUpdated.getPalletLength());
+        warehouseManifestFromDb.setKpiLabel(warehouseManifestUpdated.getKpiLabel());
+        warehouseManifestFromDb.setKpiDocument(warehouseManifestUpdated.getKpiDocument());
+        warehouseManifestFromDb.setKpiManifest(warehouseManifestUpdated.getKpiManifest());
+
+        save(manifest);
+        return warehouseManifestService.save(warehouseManifestFromDb);
+    }
+
+    public WarehouseManifest getWarehouseManifestByTttAndManifest(TruckTimeTable ttt, Manifest manifest) {
+        return warehouseManifestService.findByTttAndManifest(ttt, manifest);
+    }
+
+    public void removeManifest(Manifest manifest, TruckTimeTable ttt) {
+        ttt.getManifestSet().remove(manifest);
+        warehouseManifestService.deleteByTttAndManifest(ttt, manifest);
+        delete(manifest);
     }
 }

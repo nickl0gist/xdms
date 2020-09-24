@@ -329,7 +329,7 @@ public class TpaController {
             headers.add(errorMessage, String.format("TPA with id=%d has status CLOSED and couldn't be deleted", id));
             return ResponseEntity.status(403).headers(headers).build();
         } else {
-            truckService.getTpaService().removeTpaBiId(id);
+            truckService.getTpaService().removeTpaById(id);
             log.info("TPA with id={} was successfully deleted", id);
             headers.add(messageMessage, String.format("TPA with id=%d was successfully deleted", id));
             return ResponseEntity.status(204).headers(headers).build();// No Content

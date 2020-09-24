@@ -1,5 +1,6 @@
 package pl.com.xdms.domain.warehouse;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.ToString;
 
@@ -11,6 +12,7 @@ import java.util.Objects;
 @Table(name = "warehouses")
 @Data
 @ToString
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Warehouse {
 
     @Id

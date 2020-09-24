@@ -1,11 +1,13 @@
 package pl.com.xdms.domain.trucktimetable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.serializers.WarehouseSerializer;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -48,6 +50,7 @@ public class TruckTimeTable {
     @NotNull
     @ManyToOne
     @JoinColumn
+    @JsonSerialize(using = WarehouseSerializer.class)
     private Warehouse warehouse;
 
     @Transient
