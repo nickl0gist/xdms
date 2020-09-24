@@ -3,7 +3,10 @@ package pl.com.xdms.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.manifest.ManifestReference;
+import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.domain.warehouse.WarehouseManifest;
 import pl.com.xdms.repository.ManifestReferenceRepository;
 
 import java.util.List;
@@ -19,10 +22,12 @@ import java.util.stream.Collectors;
 @Service
 public class ManifestReferenceService {
     private final ManifestReferenceRepository manifestReferenceRepository;
+    private final ManifestService manifestService;
 
     @Autowired
-    public ManifestReferenceService(ManifestReferenceRepository manifestReferenceRepository) {
+    public ManifestReferenceService(ManifestReferenceRepository manifestReferenceRepository, ManifestService manifestService) {
         this.manifestReferenceRepository = manifestReferenceRepository;
+        this.manifestService = manifestService;
     }
 
     public List<ManifestReference> saveAll(List<ManifestReference> manifestReferenceSet) {
@@ -41,21 +46,26 @@ public class ManifestReferenceService {
         return manifestReferenceRepository.findById(id).orElse(null);
     }
 
+    //FIXME - Get manifestReferences without TPA only from TTT's from current Warehouse
     public List<ManifestReference> getAbandonedManifestReferences() {
         return manifestReferenceRepository.findAllByTpaIsNull();
     }
 
-    public List<ManifestReference> reception(List<ManifestReference> manifestReferenceList) {
-        return manifestReferenceList.stream().map(this::receipt).collect(Collectors.toList());
+    public List<ManifestReference> reception(List<ManifestReference> manifestReferenceList, Warehouse warehouse) {
+        return manifestReferenceList.stream().map(mr -> receipt(mr, warehouse)).collect(Collectors.toList());
     }
 
     public List<ManifestReference> getManRefListWithinIdSet(Set<Long> ids){
         return manifestReferenceRepository.findAllByManifestReferenceIdIn(ids);
     }
 
-    private ManifestReference receipt(ManifestReference mr) {
+    private ManifestReference receipt(ManifestReference mr, Warehouse warehouse) {
         ManifestReference manifestReference = findById(mr.getManifestReferenceId());
-        if(manifestReference == null)
+        Manifest manifest = manifestReference == null ? null : manifestReference.getManifest();
+
+        WarehouseManifest warehouseManifest = manifestService.getWarehouseManifestByWarehouseAndManifest(warehouse, manifest);
+
+        if(manifestReference == null || warehouseManifest == null)
             return null;
         manifestReference.setReceptionNumber(mr.getReceptionNumber());
         manifestReference.setDeliveryNumber(mr.getDeliveryNumber());

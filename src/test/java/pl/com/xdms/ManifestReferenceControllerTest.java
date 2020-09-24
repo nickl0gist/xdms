@@ -75,7 +75,7 @@ public class ManifestReferenceControllerTest {
      */
     @Test
     public void findAllAbandonedManifestReferencesTest() throws Exception {
-        mockMvc.perform(get("/man_ref/abandoned"))
+        mockMvc.perform(get("/warehouse/some_wh/man_ref/abandoned"))
                 .andDo(print())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$.[0].manifestReferenceId").value(12));
@@ -102,7 +102,7 @@ public class ManifestReferenceControllerTest {
 
         Assert.assertEquals(25, (long) manifestReferenceToUpdate.getTpa().getTpaID());
 
-        mockMvc.perform(put("/man_ref/move_to_tpa/24").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/man_ref/move_to_tpa/24").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(header().string("Message:", "The ManifestReference with ID=11 was moved to TPA ID=24"));
@@ -123,7 +123,7 @@ public class ManifestReferenceControllerTest {
         Assert.assertEquals(25, (long) manifestReference.getTpa().getTpaID());
         String json = om.writeValueAsString(manifestReference);
 
-        mockMvc.perform(put("/man_ref/move_to_tpa/24").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/man_ref/move_to_tpa/24").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
@@ -139,10 +139,10 @@ public class ManifestReferenceControllerTest {
         Assert.assertEquals(25, (long) manifestReference.getTpa().getTpaID());
         String json = om.writeValueAsString(manifestReference);
 
-        mockMvc.perform(put("/man_ref/move_to_tpa/200").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/man_ref/move_to_tpa/200").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(417))
-                .andExpect(header().string("Error:", "The TPA with ID=200 wasn't found"));
+                .andExpect(header().string("Error:", "The ManifestReference with ID=11 wasn't found or TPA where parts should be placed does not exist=true"));
     }
 
     /**
@@ -156,10 +156,10 @@ public class ManifestReferenceControllerTest {
         manifestReference.setManifestReferenceId(1000L);
         String json = om.writeValueAsString(manifestReference);
 
-        mockMvc.perform(put("/man_ref/move_to_tpa/20").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/man_ref/move_to_tpa/20").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(417))
-                .andExpect(header().string("Error:", "The ManifestReference with ID=1000 wasn't found"));
+                .andExpect(header().string("Error:", "The ManifestReference with ID=1000 wasn't found or TPA where parts should be placed does not exist=false"));
     }
 
     /**
@@ -186,7 +186,7 @@ public class ManifestReferenceControllerTest {
 
         Assert.assertEquals(25, (long) manifestReferenceToUpdate.getTpa().getTpaID());
 
-        mockMvc.perform(put("/man_ref/move_to_tpa/24").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/man_ref/move_to_tpa/24").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(403))
                 .andExpect(header().string("Error:", "The TPA where parts suppose to be taken from or TPA where the parts suppose to be placed are CLOSED"));
@@ -218,7 +218,7 @@ public class ManifestReferenceControllerTest {
 
         Assert.assertEquals(25, (long) manifestReferenceToUpdate.getTpa().getTpaID());
 
-        mockMvc.perform(put("/man_ref/move_to_tpa/24").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/man_ref/move_to_tpa/24").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().is(403))
                 .andExpect(header().string("Error:", "The TPA where parts suppose to be taken from or TPA where the parts suppose to be placed are CLOSED"));
@@ -249,7 +249,7 @@ public class ManifestReferenceControllerTest {
 
         String json = om.writeValueAsString(theList);
 
-        mockMvc.perform(put("/man_ref/reception").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/man_ref/reception").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(3)))
@@ -260,7 +260,7 @@ public class ManifestReferenceControllerTest {
 
     /**
      * Attempt of updating reception information for each element of <code>List<ManifestReference></></code>.
-     * TestCase when one element of the List has Id which not found im DB.
+     * TestCase when one element of the List has Id which not found in DB.
      */
     @Test
     public void receptionForListOfManifestEntitiesWithOneWrongEntityTest() throws Exception {
@@ -282,7 +282,7 @@ public class ManifestReferenceControllerTest {
 
         String json = om.writeValueAsString(theList);
 
-        mockMvc.perform(put("/man_ref/reception").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        mockMvc.perform(put("/warehouse/xd_gro/man_ref/reception").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(3)))
@@ -316,7 +316,7 @@ public class ManifestReferenceControllerTest {
 
         String json = om.writeValueAsString(theList);
 
-        MvcResult result = mockMvc.perform(put("/man_ref/reception").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
+        MvcResult result = mockMvc.perform(put("/warehouse/xd_gro/man_ref/reception").contentType(MediaType.APPLICATION_JSON_UTF8).content(json))
                 .andDo(print())
                 .andExpect(status().isBadRequest()).andReturn();
 

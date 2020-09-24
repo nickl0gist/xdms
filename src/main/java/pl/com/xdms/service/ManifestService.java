@@ -123,4 +123,8 @@ public class ManifestService {
         warehouseManifestService.deleteByTttAndManifest(ttt, manifest);
         delete(manifest);
     }
+
+    public WarehouseManifest getWarehouseManifestByWarehouseAndManifest(Warehouse warehouse, Manifest manifest) {
+        return warehouseManifestService.findByWarehouseAndManifest(warehouse, manifest);
+    }
 }
