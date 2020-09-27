@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("coordinator/excel")
+@RequestMapping()
 public class ExcelStorageLocationController implements ExcelController<StorageLocation> {
 
     private StorageLocationService storageLocationService;
@@ -45,14 +45,14 @@ public class ExcelStorageLocationController implements ExcelController<StorageLo
     }
 
     @Override
-    @GetMapping("/download/storage_locations.xlsx")
+    @GetMapping("coordinator/excel/download/storage_locations.xlsx")
     public ResponseEntity<InputStreamSource> downloadBase() throws IOException {
         return getInputStreamSourceResponseEntity(excelStorageLocationService, "storage_locations");
     }
 
     @SuppressWarnings("Duplicates")
     @Override
-    @PostMapping("/storage_locations/uploadFile")
+    @PostMapping("admin/excel/storage_locations/uploadFile")
     public List<StorageLocation> uploadFile(MultipartFile file) {
         Path filePath = fileStorageService.storeFile(file);
         Map<Long, StorageLocation> storageLocationMap = excelStorageLocationService.readExcel(filePath.toFile());
@@ -72,7 +72,7 @@ public class ExcelStorageLocationController implements ExcelController<StorageLo
     }
 
     @Override
-    @PostMapping("/storage_locations/save_all")
+    @PostMapping("admin/excel/storage_locations/save_all")
     public ResponseEntity<List<StorageLocation>> saveAllEntities(List<StorageLocation> storageLocationList) {
         storageLocationList.forEach(x -> log.info("Storage Location to be save: {}", x.toString()));
         storageLocationService.save(storageLocationList.stream()

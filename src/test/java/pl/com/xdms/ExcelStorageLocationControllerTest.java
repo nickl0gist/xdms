@@ -91,7 +91,7 @@ public class ExcelStorageLocationControllerTest {
         MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file.toPath()));
 
         //uploading of the file and parsing objects from it.
-        MvcResult result = mockMvc.perform(multipart("/coordinator/excel/storage_locations/uploadFile").file(mockMultipartFile))
+        MvcResult result = mockMvc.perform(multipart("/admin/excel/storage_locations/uploadFile").file(mockMultipartFile))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(10)))
@@ -111,7 +111,7 @@ public class ExcelStorageLocationControllerTest {
         JSONArray jsonObjects = JsonPath.read(result.getResponse().getContentAsString(), "$");
 
         //Save attempt of the received JSON objects to database.
-        mockMvc.perform(post("/coordinator/excel/storage_locations/save_all")
+        mockMvc.perform(post("/admin/excel/storage_locations/save_all")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(jsonObjects.toJSONString()))
                 .andExpect(status().isCreated());
