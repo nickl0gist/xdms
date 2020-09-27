@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("coordinator/excel")
+@RequestMapping()
 public class ExcelSupplierController implements ExcelController<Supplier> {
 
     private final ExcelSupplierService excelSupplierService;
@@ -44,14 +44,14 @@ public class ExcelSupplierController implements ExcelController<Supplier> {
     }
 
     @Override
-    @GetMapping("/download/suppliers.xlsx")
+    @GetMapping("coordinator/excel/download/suppliers.xlsx")
     public ResponseEntity<InputStreamSource> downloadBase() throws IOException {
         return getInputStreamSourceResponseEntity(excelSupplierService, "suppliers");
     }
 
     @SuppressWarnings("Duplicates")
     @Override
-    @PostMapping("/suppliers/uploadFile")
+    @PostMapping("admin/excel/suppliers/uploadFile")
     public List<Supplier> uploadFile(MultipartFile file) {
         Path filePath = fileStorageService.storeFile(file);
         Map<Long, Supplier> referenceMap = excelSupplierService.readExcel(filePath.toFile());
@@ -71,7 +71,7 @@ public class ExcelSupplierController implements ExcelController<Supplier> {
     }
 
     @Override
-    @PostMapping("/suppliers/save_all")
+    @PostMapping("admin/excel/suppliers/save_all")
     public ResponseEntity<List<Supplier>> saveAllEntities(List<Supplier> supplierList) {
         supplierList.forEach(x -> log.info("Supplier to be save: {}", x.toString()));
         supplierService.save(supplierList.stream()

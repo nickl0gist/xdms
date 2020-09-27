@@ -94,7 +94,7 @@ public class ExcelSupplierControllerTest {
         MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file.toPath()));
 
         //uploading of the file and parsing objects from it.
-        MvcResult result = mockMvc.perform(multipart("/coordinator/excel/suppliers/uploadFile").file(mockMultipartFile))
+        MvcResult result = mockMvc.perform(multipart("/admin/excel/suppliers/uploadFile").file(mockMultipartFile))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(12)))
@@ -116,7 +116,7 @@ public class ExcelSupplierControllerTest {
         JSONArray jsonObjects = JsonPath.read(result.getResponse().getContentAsString(), "$");
 
         //Save attempt of the received JSON objects to database.
-        mockMvc.perform(post("/coordinator/excel/suppliers/save_all")
+        mockMvc.perform(post("/admin/excel/suppliers/save_all")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(jsonObjects.toJSONString()))
                 .andExpect(status().isCreated());
