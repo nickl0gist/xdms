@@ -10,10 +10,7 @@ import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TpaDaysSetting;
 import pl.com.xdms.domain.tpa.WorkingDay;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
-import pl.com.xdms.domain.warehouse.WHTypeEnum;
-import pl.com.xdms.domain.warehouse.Warehouse;
-import pl.com.xdms.domain.warehouse.WarehouseManifest;
-import pl.com.xdms.domain.warehouse.WhCustomer;
+import pl.com.xdms.domain.warehouse.*;
 import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.ManifestService;
 
@@ -160,6 +157,7 @@ public class TruckService {
                 .filter(Manifest::getIsActive)
                 .collect(Collectors.toList());
         manifestsFromDB = manifestService.saveAll(manifestsFromDB);
+        //manifestService.createWarehouseManifestEntities(manifestsFromDB);
 
         //4. Add TPA and Manifest to each ManifestReferences. Save all and receive them as entities from DB
         List<ManifestReference> manifestReferencesFromDB = connectManiRefToManifestAndTPA(new ArrayList<>(manifestReferenceSetDTO), manifestsFromDB, tpaListFromDB)
@@ -169,7 +167,8 @@ public class TruckService {
         manifestReferencesFromDB = manifestReferenceService.saveAll(manifestReferencesFromDB);
 
         //5. Create Connections Warehouse-Manifest-TTT-TPA in WarehouseManifest table in DB
-        manifestService.getWarehouseManifestService().createWarehouseReferenceRecords(manifestsFromDB, manifestReferencesFromDB);
+        //manifestService.getWarehouseManifestService().createWarehouseReferenceRecords(manifestsFromDB, manifestReferencesFromDB);
+        manifestService.createWarehouseManifestEntities(manifestsFromDB);
 
     }
 

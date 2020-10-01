@@ -75,7 +75,7 @@ public class ReferenceController {
      * @return List\<Reference\>
      */
     @GetMapping("/active")
-    public List<Reference> getActiveSuppliers(){
+    public List<Reference> getActiveReferences(){
         return referenceService.getReferenceWhereIsActive(true);
     }
 
@@ -95,7 +95,7 @@ public class ReferenceController {
      * @return List\<Reference\>
      */
     @GetMapping("/not_active")
-    public List<Reference> getNotActiveSuppliers(){
+    public List<Reference> getNotActiveReferences(){
         return referenceService.getReferenceWhereIsActive(false);
     }
 

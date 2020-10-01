@@ -101,7 +101,7 @@ public class ManifestController {
      * - 404 - if no manifests were found by the given id;
      * - 422 - if any of the annotation conditions in ManifestReference class were violated.
      */
-    @PutMapping(value = "ttt/{tttId:^\\d+$}/manifest/{manifestId:^\\d+$}/addReference", headers = "truck=ttt")
+    @PutMapping(value = "ttt/{tttId:^\\d+$}/manifest/{manifestId:^\\d+$}/addReference")//, headers = "truck=ttt")
     public ResponseEntity<Manifest> addReferenceToManifest(@PathVariable String urlCode, @PathVariable Long tttId,
                                                            @PathVariable Long manifestId, @RequestBody @Valid ManifestReference manifestReference,
                                                            BindingResult bindingResult) {
@@ -110,7 +110,7 @@ public class ManifestController {
         TruckTimeTable ttt = truckService.getTttService().getTTTByWarehouseAndId(tttId, warehouse);
 
         Manifest manifest = manifestService.findManifestById(manifestId);
-        if (!ttt.getManifestSet().contains(manifest)) {
+        if (ttt == null || !ttt.getManifestSet().contains(manifest)) {
             log.info("Manifest with id={} wasn't found", manifestId);
             return ResponseEntity.notFound().header(errorMessage, String.format("Manifest with id=%d wasn't found in TTT=%d in Warehouse %s", manifestId, tttId, urlCode)).build();
         } else if (bindingResult.hasErrors()) {

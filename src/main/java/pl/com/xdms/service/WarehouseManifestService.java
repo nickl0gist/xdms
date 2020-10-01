@@ -5,10 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.com.xdms.domain.manifest.Manifest;
-import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
-import pl.com.xdms.domain.warehouse.WHTypeEnum;
 import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.domain.warehouse.WarehouseManifest;
 import pl.com.xdms.domain.warehouse.WarehouseManifestId;
@@ -32,7 +30,7 @@ public class WarehouseManifestService {
         this.warehouseManifestRepository = warehouseManifestRepository;
     }
 
-    public void createWarehouseReferenceRecords(List<Manifest> manifestsFromDB, List<ManifestReference> manifestReferencesFromDB) {
+/*    public void createWarehouseReferenceRecords(List<Manifest> manifestsFromDB, List<ManifestReference> manifestReferencesFromDB) {
         manifestsFromDB.forEach(manifest -> {
             //1. find stop at CC warehouse
             createConnectionForCC(manifest);
@@ -124,6 +122,7 @@ public class WarehouseManifestService {
             warehouseManifestRepository.save(warehouseManifest);
         }
     }
+*/
 
     public WarehouseManifest addNewWarehouseManifestTtt(Warehouse warehouse, TruckTimeTable ttt, Manifest manifest){
         WarehouseManifest warehouseManifest = new WarehouseManifest();
@@ -167,4 +166,7 @@ public class WarehouseManifestService {
         return warehouseManifestRepository.findByWarehouseAndManifest(warehouse, manifest).orElse(null);
     }
 
+    public List<WarehouseManifest> findAll() {
+        return warehouseManifestRepository.findAll();
+    }
 }

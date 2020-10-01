@@ -95,7 +95,7 @@ public class ExcelManifestControllerTest {
             Assert.assertEquals(excelProperties.getWarehousesSheetName(), fifthSheet.getSheetName());
 
         } catch (IOException e) {
-            log.warn("Error occurred while creating file one received from endpoint", e.getMessage());
+            log.warn("Error occurred while creating file one received from endpoint {}", e.getMessage());
 
         }
     }
@@ -202,7 +202,8 @@ public class ExcelManifestControllerTest {
         Assert.assertEquals(2, excelManifestService.getManifestReferenceService().getAllManifestReferences().size());
         Assert.assertEquals(7, excelManifestService.getTruckService().getTpaService().getAllTpa().size());
         Assert.assertEquals(7, excelManifestService.getTruckService().getTttService().getAllTtt().size());
-
+        int size = excelManifestService.getManifestService().getWarehouseManifestService().findAll().size();
+        Assert.assertEquals(5, size);
     }
 
     /**
@@ -338,7 +339,6 @@ public class ExcelManifestControllerTest {
     @Test
     public void alreadyExistingTpaAndTttInDatabase() throws Exception{
         updateManifestForecastWithProperInfo("excelTests/manifestUploadGoodForecastAndExistingAlreadyTPAinDB.xlsx");
-
         ClassLoader classLoader = getClass().getClassLoader();
         File file2 = new File(classLoader.getResource("excelTests/manifestUploadGoodForecastAndExistingAlreadyTPAinDB.xlsx").getFile());
 
@@ -396,7 +396,7 @@ public class ExcelManifestControllerTest {
         updateManifestForecastWithTpaAndTttWithDatesInThePast();
 
         ClassLoader classLoader = getClass().getClassLoader();
-        File file2 = new File(classLoader.getResource("excelTests/manifestUploadWithLateDatesForTpaOrTtt.xlsx").getFile());
+        File file2 = new File(classLoader.getResource("excelTests/manifestUploadWithLateDatesForTpaOrTtt.xlsx").getFile()); //B3 should be today()+1
         MockMultipartFile mockMultipartFile = new MockMultipartFile("file", Files.readAllBytes(file2.toPath()));
 
         mockMvc.perform(multipart("/coordinator/excel/manifests/uploadFile").file(mockMultipartFile))

@@ -5,9 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.com.xdms.domain.manifest.Manifest;
+import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.domain.warehouse.WarehouseManifest;
+import pl.com.xdms.domain.warehouse.WarehouseManifestId;
 import pl.com.xdms.repository.ManifestRepository;
 
 import java.util.List;
@@ -15,6 +17,7 @@ import java.util.Optional;
 
 /**
  * Created on 01.12.2019
+ *
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
@@ -36,7 +39,7 @@ public class ManifestService {
         return findManifest(manifest) != null;
     }
 
-    public Manifest findManifest(Manifest manifest){
+    public Manifest findManifest(Manifest manifest) {
         Optional<Manifest> manifestFromDB = manifestRepository.findByManifestCode(manifest.getManifestCode());
         return manifestFromDB.orElse(null);
     }
@@ -45,7 +48,7 @@ public class ManifestService {
         return manifestRepository.saveAll(manifests);
     }
 
-    public List<Manifest> getAllManifests(){
+    public List<Manifest> getAllManifests() {
         return manifestRepository.findAll();
     }
 
@@ -62,7 +65,7 @@ public class ManifestService {
     }
 
     public void delete(Manifest manifest) {
-       manifestRepository.delete(manifest);
+        manifestRepository.delete(manifest);
     }
 
     public Manifest updateManifest(Manifest manifestUpdated) {
@@ -126,5 +129,31 @@ public class ManifestService {
 
     public WarehouseManifest getWarehouseManifestByWarehouseAndManifest(Warehouse warehouse, Manifest manifest) {
         return warehouseManifestService.findByWarehouseAndManifest(warehouse, manifest);
+    }
+
+    public WarehouseManifest saveWarehouseManifest(WarehouseManifest wh) {
+        return warehouseManifestService.save(wh);
+    }
+
+    public void createWarehouseManifestEntities(List<Manifest> manifests) {
+        manifests.forEach(manifest -> manifest.getTruckTimeTableSet()
+                .forEach(ttt -> {
+                    WarehouseManifest wh = new WarehouseManifest();
+                    WarehouseManifestId wh_id = new WarehouseManifestId(ttt.getWarehouse().getWarehouseID(), manifest.getManifestID());
+                    wh.setWarehouseManifestId(wh_id);
+                    wh.setManifest(manifest);
+                    wh.setWarehouse(ttt.getWarehouse());
+                    wh.setTtt(ttt);
+                    TPA tpa = manifest.getTpaSet().stream().filter(t -> t.getTpaDaysSetting()
+                            .getWhCustomer()
+                            .getWarehouse()
+                            .getWarehouseID()
+                            .equals(ttt.getWarehouse()
+                                    .getWarehouseID()))
+                            .findFirst().orElse(null);
+                    log.info("TPA {}", tpa);
+                    wh.setTpa(tpa);
+                    saveWarehouseManifest(wh);
+                }));
     }
 }

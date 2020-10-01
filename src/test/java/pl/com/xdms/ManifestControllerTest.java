@@ -635,7 +635,7 @@ public class ManifestControllerTest {
         manifestReference.setPalletLength(referenceList.get(0).getPalletLength());
         manifestReference.setStackability(referenceList.get(0).getStackability());
 
-        mockMvc.perform(put("/manifest/8/addReference").contentType(MediaType.APPLICATION_JSON_UTF8).content(om.writeValueAsString(manifestReference)))
+        mockMvc.perform(put("/warehouse/xd_gro/ttt/17/manifest/8/addReference").contentType(MediaType.APPLICATION_JSON_UTF8).content(om.writeValueAsString(manifestReference)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(header().string("Message:", String.format("Reference %s was added to Manifest %s", referenceList.get(0).getNumber(), manifest.getManifestCode())));
@@ -655,10 +655,10 @@ public class ManifestControllerTest {
         manifestReference.setGrossWeightPlanned(200);
         manifestReference.setPalletQtyPlanned(1);
 
-        mockMvc.perform(put("/manifest/1000/addReference").contentType(MediaType.APPLICATION_JSON_UTF8).content(om.writeValueAsString(manifestReference)))
+        mockMvc.perform(put("/warehouse/xd_gro/ttt/17/manifest/1000/addReference").contentType(MediaType.APPLICATION_JSON_UTF8).content(om.writeValueAsString(manifestReference)))
                 .andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(header().string("Error:", "Manifest with id=1000 wasn't found"));
+                .andExpect(header().string("Error:", "Manifest with id=1000 wasn't found in TTT=17 in Warehouse xd_gro"));
 
     }
 
@@ -684,7 +684,7 @@ public class ManifestControllerTest {
         manifestReference.setQtyPlanned(100);
 
 
-        mockMvc.perform(put("/manifest/8/addReference").contentType(MediaType.APPLICATION_JSON_UTF8).content(om.writeValueAsString(manifestReference)))
+        mockMvc.perform(put("/warehouse/xd_gro/ttt/17/manifest/8/addReference").contentType(MediaType.APPLICATION_JSON_UTF8).content(om.writeValueAsString(manifestReference)))
                 .andDo(print())
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(header().string("manifestReference-stackability_Min", "must be greater than or equal to 1"));

@@ -2,7 +2,6 @@ package pl.com.xdms.domain.warehouse;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
-import lombok.ToString;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import pl.com.xdms.domain.manifest.Manifest;
@@ -26,7 +25,6 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table(name = "warehouse_manifest")
 @Data
-@ToString
 public class WarehouseManifest {
 
     @EmbeddedId
@@ -43,7 +41,6 @@ public class WarehouseManifest {
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name="manifest_id")
-    @ToString.Exclude
     @NotNull
     @JsonSerialize(using = ManifestSerializer.class)
     private Manifest manifest;
@@ -51,13 +48,11 @@ public class WarehouseManifest {
     @NotNull
     @ManyToOne
     @JoinColumn(name="ttt_id")
-    @ToString.Exclude
     @JsonSerialize(using = WarehouseManifestTttSerializer.class)
     private TruckTimeTable ttt;
 
     @ManyToOne
     @JoinColumn(name="tpa_id")
-    @ToString.Exclude
     @JsonSerialize(using = WarehouseManifestTpaSerializer.class)
     private TPA tpa;
 
@@ -87,4 +82,26 @@ public class WarehouseManifest {
     private Boolean kpiDocument;
 
     private Boolean kpiManifest;
+
+    @Override
+    public String toString() {
+        String tpaStr = tpa == null ? "" : tpa.getTpaID() + " " + tpa.getName();
+        return "WarehouseManifest{" +
+                "warehouseManifestId=" + warehouseManifestId +
+                ", warehouse=" + warehouse.getWarehouseID() + " " + warehouse.getName() +
+                ", manifest=" + manifest.getManifestID() + " " + manifest.getManifestCode() +
+                ", ttt=" + ttt.getTttID() + " " + ttt.getTruckName() +
+                ", tpa=" + tpaStr +
+                ", palletQty=" + palletQty +
+                ", boxQtyReal=" + boxQtyReal +
+                ", grossWeight=" + grossWeight +
+                ", netWeightReal=" + netWeightReal +
+                ", palletHeight=" + palletHeight +
+                ", palletWidth=" + palletWidth +
+                ", palletLength=" + palletLength +
+                ", kpiLabel=" + kpiLabel +
+                ", kpiDocument=" + kpiDocument +
+                ", kpiManifest=" + kpiManifest +
+                '}';
+    }
 }
