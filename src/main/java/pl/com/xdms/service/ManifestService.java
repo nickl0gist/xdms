@@ -139,8 +139,8 @@ public class ManifestService {
         manifests.forEach(manifest -> manifest.getTruckTimeTableSet()
                 .forEach(ttt -> {
                     WarehouseManifest wh = new WarehouseManifest();
-                    WarehouseManifestId wh_id = new WarehouseManifestId(ttt.getWarehouse().getWarehouseID(), manifest.getManifestID());
-                    wh.setWarehouseManifestId(wh_id);
+                    WarehouseManifestId whId = new WarehouseManifestId(ttt.getWarehouse().getWarehouseID(), manifest.getManifestID());
+                    wh.setWarehouseManifestId(whId);
                     wh.setManifest(manifest);
                     wh.setWarehouse(ttt.getWarehouse());
                     wh.setTtt(ttt);

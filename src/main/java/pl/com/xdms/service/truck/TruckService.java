@@ -454,4 +454,18 @@ public class TruckService {
         warehouseManifest.setTpa(null);
         manifestService.getWarehouseManifestService().save(warehouseManifest);
     }
+
+    public TPA moveManifestFromCurrentTpaToAnother(Warehouse warehouse, TPA tpaFrom, TPA tpaTo, Manifest manifest) {
+        WarehouseManifest warehouseManifest = manifestService.getWarehouseManifestByWarehouseAndManifest(warehouse, manifest);
+        warehouseManifest.setTpa(tpaTo);
+        //tpaFrom.getManifestSet().remove(manifest);
+        //tpaTo.getManifestSet().add(manifest);
+        manifest.getTpaSet().remove(tpaFrom);
+        manifest.getTpaSet().add(tpaTo);
+        manifestService.save(manifest);
+        //tpaService.save(tpaFrom);
+        tpaFrom = tpaService.getTpaById(tpaFrom.getTpaID());
+        manifestService.getWarehouseManifestService().save(warehouseManifest);
+        return tpaFrom;
+    }
 }

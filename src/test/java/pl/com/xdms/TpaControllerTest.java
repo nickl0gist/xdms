@@ -20,6 +20,8 @@ import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TPAEnum;
+import pl.com.xdms.domain.warehouse.WarehouseManifest;
+import pl.com.xdms.domain.warehouse.WarehouseManifestId;
 import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.WarehouseManifestService;
 import pl.com.xdms.service.truck.TruckService;
@@ -751,5 +753,68 @@ public class TpaControllerTest {
 //        manifestReferenceList.sort(comparator);
 //        Assert.assertEquals(referenceList.stream().map(ManifestReference::getManifestReferenceId).collect(Collectors.toList()),
 //        manifestReferenceList.stream().map(ManifestReference::getManifestReferenceId).collect(Collectors.toList()));
+    }
+
+    /**
+     * Test of movement particular Manifest from current TPA to another TPA within the same Warehouse
+     */
+    @Test
+    public void moveManifestFromOneTpaToAnotherWithinSameWarehouse() throws Exception{
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+        TPA tpaFrom = entityManager.find(TPA.class, 5L);
+        TPA tpaTo = entityManager.find(TPA.class, 6L);
+
+        Assert.assertEquals(1, tpaFrom.getManifestSet().size());
+        Assert.assertEquals(1, tpaTo.getManifestSet().size());
+
+        WarehouseManifest warehouseManifest1 = entityManager.find(WarehouseManifest.class, new WarehouseManifestId(6L, 4L));
+        WarehouseManifest warehouseManifest2 = entityManager.find(WarehouseManifest.class, new WarehouseManifestId(6L, 5L));
+
+        Assert.assertEquals(5L, warehouseManifest1.getTpa().getTpaID().longValue());
+        Assert.assertEquals(6L, warehouseManifest2.getTpa().getTpaID().longValue());
+        entityManager.getTransaction().commit();
+        entityManager.close();
+
+        mockMvc.perform(put("/warehouse/txd_std/tpa/5/manifest/4/move_to/tpa/6"))
+                .andDo(print())
+                .andExpect(status().isOk())
+        .andExpect(header().string("Message:", "Manifest TEST-MAN-02 was moved from TPA GRO2 to TPA BRA1"));
+
+        EntityManager entityManager2 = entityManagerFactory.createEntityManager();
+        entityManager2.getTransaction().begin();
+        TPA tpaFromAfter = entityManager2.find(TPA.class, 5L);
+        TPA tpaToAfter = entityManager2.find(TPA.class, 6L);
+
+        Assert.assertEquals(0, tpaFromAfter.getManifestSet().size());
+        Assert.assertEquals(2, tpaToAfter.getManifestSet().size());
+
+        WarehouseManifest warehouseManifest1After = entityManager2.find(WarehouseManifest.class, new WarehouseManifestId(6L, 4L));
+        WarehouseManifest warehouseManifest2After = entityManager2.find(WarehouseManifest.class, new WarehouseManifestId(6L, 5L));
+
+        Assert.assertEquals(6L, warehouseManifest1After.getTpa().getTpaID().longValue());
+        Assert.assertEquals(6L, warehouseManifest2After.getTpa().getTpaID().longValue());
+        entityManager2.getTransaction().commit();
+        entityManager2.close();
+    }
+
+    /**
+     * Test of movement particular Manifest from current TPA to another TPA within the same Warehouse when one of the TPA has status CLOSED
+     */
+    @Test
+    public void moveManifestFromOneTpaToAnotherWithinSameWarehouseTpaFromClosed() throws Exception{
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+        TPA tpaFrom = entityManager.find(TPA.class, 5L);
+        tpaFrom.setStatus(truckService.getTpaService().getTpaStatusByEnum(TPAEnum.CLOSED));
+        entityManager.persist(tpaFrom);
+        entityManager.getTransaction().commit();
+        entityManager.close();
+
+        mockMvc.perform(put("/warehouse/txd_std/tpa/5/manifest/4/move_to/tpa/6"))
+                .andDo(print())
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(header().string("Error:", "You cannot move manifest within TPA where at least one of them is CLOSED"));
+
     }
 }

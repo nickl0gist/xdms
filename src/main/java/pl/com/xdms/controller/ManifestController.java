@@ -81,7 +81,7 @@ public class ManifestController {
         Manifest manifest = manifestService.findManifestById(manifestId);
         WarehouseManifest warehouseManifest = manifestService.getWarehouseManifestService().findByWarehouseAndManifest(warehouse, manifest);
 
-        if(warehouse == null || ttt == null){
+        if (warehouse == null || ttt == null) {
             return ResponseEntity.badRequest().header(errorMessage, String.format("Warehouse %s doesn't contain TTT with id=%d", urlCode, tttId)).build();
         }
         if (!ttt.getManifestSet().contains(manifest) && warehouseManifest == null) {
@@ -129,7 +129,7 @@ public class ManifestController {
      * Only four parameters are allowed to be updated: boxQtyReal, palletQtyReal, TotalLdmReal, TotalWeightReal.
      *
      * @param warehouseManifestUpdated ManifestWarehouse entity given by user in request.
-     * @param bindingResult   BindingResult to check if the given Manifest corresponds to annotation conditions.
+     * @param bindingResult            BindingResult to check if the given Manifest corresponds to annotation conditions.
      * @return Response entity with Manifest in body. Possible cases:
      * - 200 - if The given Entity is corresponding to all required conditions amd updating was successful;
      * - 400 - if id of the given manifest is null;
@@ -138,7 +138,7 @@ public class ManifestController {
      */
     @PutMapping("ttt/{tttId:^\\d+$}/manifest/update")
     public ResponseEntity<WarehouseManifest> updateManifest(@PathVariable String urlCode, @PathVariable Long tttId,
-                                                   @RequestBody @Valid WarehouseManifest warehouseManifestUpdated, BindingResult bindingResult) {
+                                                            @RequestBody @Valid WarehouseManifest warehouseManifestUpdated, BindingResult bindingResult) {
 
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TruckTimeTable ttt = truckService.getTttService().getTTTByWarehouseAndId(tttId, warehouse);
@@ -161,7 +161,7 @@ public class ManifestController {
             //If all conditions are Ok Update manifest with given data
             warehouseManifestFromDB = manifestService.updateWarehouseManifest(warehouseManifestUpdated);
 
-            if(!ttt.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED))
+            if (!ttt.getTttStatus().getTttStatusName().equals(TTTEnum.ARRIVED))
                 truckService.getTttService().setArrive(ttt);
 
             return ResponseEntity.ok().header(messageMessage, String.format("The Manifest with id=%d was successfully updated", id)).body(warehouseManifestFromDB);
@@ -178,7 +178,7 @@ public class ManifestController {
      * - 422 - if Manifest has information about real quantities of pallets or boxes. The manifest would not be deleted
      * - 404 - if no manifest was found by given Id.
      */
-    @DeleteMapping(value = "ttt/{tttId:^\\d+$}/remove_manifest/{manifestId:^\\d+$}")//, headers = "truck=remove")
+    @DeleteMapping(value = "ttt/{tttId:^\\d+$}/remove_manifest/{manifestId:^\\d+$}")
     public ResponseEntity<TruckTimeTable> deleteManifest(@PathVariable String urlCode, @PathVariable Long tttId, @PathVariable Long manifestId) {
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TruckTimeTable ttt = truckService.getTttService().getTTTByWarehouseAndId(tttId, warehouse);
@@ -318,6 +318,30 @@ public class ManifestController {
         }
     }
 
-    //TODO
-    //@PostMapping("tpa/{tpaIdFrom:^\d+$}/manifest/{manifestId:^\d+$}/move_to/tpa/{tpaIdTo:^\d+$}")
+    @PutMapping("tpa/{tpaIdFrom:^\\d+$}/manifest/{manifestId:^\\d+$}/move_to/tpa/{tpaIdTo:^\\d+$}")
+    public ResponseEntity<TPA> moveManifestFromCurrentTpaToAnother(@PathVariable String urlCode, @PathVariable Long tpaIdFrom,
+                                                                   @PathVariable Long manifestId, @PathVariable Long tpaIdTo) {
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
+        TPA tpaFrom = truckService.getTpaService().getTpaById(tpaIdFrom);
+        TPA tpaTo = truckService.getTpaService().getTpaById(tpaIdTo);
+        Manifest manifest = manifestService.findManifestById(manifestId);
+
+        if (manifest == null || tpaFrom == null || tpaTo == null || !tpaFrom.getTpaDaysSetting().getWhCustomer().getWarehouse().equals(warehouse) ||
+                !tpaTo.getTpaDaysSetting().getWhCustomer().getWarehouse().equals(warehouse) ||
+                !manifest.getTpaSet().contains(tpaFrom)) {
+            return ResponseEntity
+                    .badRequest()
+                    .header(errorMessage,
+                            String.format("There are bad parameters in request, some entities could not be found: tpaFromId=%d, tpaToId=%d, Warehouse urlCode=%s, manifestId=%d",
+                                    tpaIdFrom,
+                                    tpaIdTo,
+                                    urlCode,
+                                    manifestId)).build();
+        } else if (tpaFrom.getStatus().getStatusName().equals(TPAEnum.CLOSED) ||
+                tpaTo.getStatus().getStatusName().equals(TPAEnum.CLOSED)) {
+            return ResponseEntity.unprocessableEntity().header(errorMessage, "You cannot move manifest within TPA where at least one of them is CLOSED").build();
+        }
+        tpaFrom = truckService.moveManifestFromCurrentTpaToAnother(warehouse, tpaFrom, tpaTo, manifest);
+        return ResponseEntity.ok().header(messageMessage, String.format("Manifest %s was moved from TPA %s to TPA %s", manifest.getManifestCode(), tpaFrom.getName(), tpaTo.getName())).build();
+    }
 }

@@ -122,8 +122,6 @@ Loaded file and give it back to validation.
                                     √ with bad dates, 
                                     √ too late dates, 
                                     √ what if there no appropriate WH_CUST settings -> ~~NullPointerException ? Create Handler ?~~ TPA -> Error
-+22
-not done
 
 +22 Code Refactoring for ExcelManifestController: create Validator class to move all the validations into it.
 
@@ -154,7 +152,7 @@ not done
 Not done
 -
 
--. Get file from TPA with placed References.
++. Get file from TPA with placed References.
 
 -. Movement of Manifest between TTT and TPA. Check  
 
