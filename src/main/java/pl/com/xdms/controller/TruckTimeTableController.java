@@ -27,6 +27,7 @@ import java.util.List;
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
+@CrossOrigin
 @Slf4j
 @RestController
 @RequestMapping("warehouse/{urlCode:^[a-z_]{5,8}$}")

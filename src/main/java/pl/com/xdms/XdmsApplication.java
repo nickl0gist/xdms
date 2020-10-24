@@ -3,10 +3,11 @@ package pl.com.xdms;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import pl.com.xdms.configuration.ExcelProperties;
 import pl.com.xdms.configuration.FileStorageProperties;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
-
+@CrossOrigin
 @SpringBootApplication
 @EnableConfigurationProperties({
 		FileStorageProperties.class,

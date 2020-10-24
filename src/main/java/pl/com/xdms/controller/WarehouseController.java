@@ -19,6 +19,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("warehouse")
+@CrossOrigin
 public class WarehouseController {
 
     private final WarehouseService warehouseService;
