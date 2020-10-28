@@ -8,10 +8,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import pl.com.xdms.domain.dto.TttWarehouseManifestDTO;
 import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TTTStatus;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.domain.warehouse.WarehouseManifest;
+import pl.com.xdms.service.ManifestService;
 import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.WarehouseService;
 import pl.com.xdms.service.truck.TruckService;
@@ -19,6 +22,7 @@ import pl.com.xdms.service.truck.TruckService;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,12 +47,14 @@ public class TruckTimeTableController {
     private final TruckService truckService;
     private final WarehouseService warehouseService;
     private final RequestErrorService requestErrorService;
+    private final ManifestService manifestService;
 
     @Autowired
-    public TruckTimeTableController(TruckService truckService, WarehouseService warehouseService, RequestErrorService requestErrorService) {
+    public TruckTimeTableController(TruckService truckService, WarehouseService warehouseService, RequestErrorService requestErrorService, ManifestService manifestService) {
         this.truckService = truckService;
         this.warehouseService = warehouseService;
         this.requestErrorService = requestErrorService;
+        this.manifestService = manifestService;
     }
 
     /**
@@ -81,6 +87,24 @@ public class TruckTimeTableController {
             log.warn("TruckTimeTable with id: {} not found, returning error", id);
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /**
+     * This endpoint used to get All WarehouseManifest entities which are bounded with certain TTT in particular Warehouse
+     *
+     * @param id of the TTT in Database
+     * @return WarehouseManifest list.
+     */
+    @GetMapping("ttt/full/{tttArrivalDatePlan:^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]?$}")
+    public ResponseEntity<List<TttWarehouseManifestDTO>> getWarehouseManifestListByTtt(@PathVariable String urlCode, @PathVariable String tttArrivalDatePlan) {
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
+        List<TruckTimeTable> truckTimeTabletSet = truckService.getTttService().getTttByWarehouseAndDay(warehouse, tttArrivalDatePlan);
+        List<TttWarehouseManifestDTO> responseDtoList = new ArrayList<>();
+            truckTimeTabletSet.forEach(ttt -> {
+                List<WarehouseManifest> whManifestList = manifestService.getListOfWarehouseManifestByWarehouseAndTtt(warehouse, ttt);
+                responseDtoList.add(new TttWarehouseManifestDTO(ttt, whManifestList));
+            });
+            return ResponseEntity.ok(responseDtoList);
     }
 
     /**

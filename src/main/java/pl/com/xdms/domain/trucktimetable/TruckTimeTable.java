@@ -65,6 +65,9 @@ public class TruckTimeTable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<Manifest> manifestSet;
 
+    @NotNull
+    private String dispatchedFrom;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

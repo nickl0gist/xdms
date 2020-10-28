@@ -487,10 +487,16 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
         int xdNameColumn = 8;
         int txdNameColumn = 12;
         TruckTimeTable directTTT;
+
+        //if current manifest goes through CC from Direct Supplier
         if (getStringFromCell(row.getCell(ccNameColumn)) != null) {
             directTTT = getTTT(row, directTruckNameColumn, ccNameColumn);
+
+        //if current manifest goes through XD from Direct Supplier
         } else if (getStringFromCell(row.getCell(xdNameColumn)) != null) {
             directTTT = getTTT(row, directTruckNameColumn, xdNameColumn);
+
+        //if current manifest goes through TXD from Direct Supplier
         } else if (getStringFromCell(row.getCell(txdNameColumn)) != null) {
             directTTT = getTTT(row, directTruckNameColumn, txdNameColumn);
         } else {
@@ -506,6 +512,7 @@ public class ExcelManifestService implements ExcelService<ManifestTpaTttDTO> {
             Warehouse warehouse = warehouseService.getWarehouseByName(warehouseName);
             LocalDateTime etaDateTime = getLocalDateTime(row.getCell(warehouseNameColumn + 1), row.getCell(warehouseNameColumn + 2));
             String truckName = getStringFromCell(row.getCell(truckNameColumn));
+            ttt.setDispatchedFrom(getStringFromCell(row.getCell(truckNameColumn-3)));
             ttt.setWarehouse(warehouse);
             ttt.setTruckName(truckName);
             ttt.setTttArrivalDatePlan(etaDateTime.toString());

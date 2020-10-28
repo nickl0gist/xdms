@@ -156,4 +156,8 @@ public class ManifestService {
                     saveWarehouseManifest(wh);
                 }));
     }
+
+    public List<WarehouseManifest> getListOfWarehouseManifestByWarehouseAndTtt(Warehouse warehouse, TruckTimeTable truckTimeTable) {
+        return warehouseManifestService.findAllByWarehouseAndTtt(warehouse, truckTimeTable);
+    }
 }
