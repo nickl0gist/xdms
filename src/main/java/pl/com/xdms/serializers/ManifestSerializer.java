@@ -3,7 +3,9 @@ package pl.com.xdms.serializers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.manifest.Manifest;
+import pl.com.xdms.domain.supplier.Supplier;
 
 import java.io.IOException;
 
@@ -37,6 +39,17 @@ public class ManifestSerializer extends StdSerializer<Manifest> {
         manifestSerialized.setManifestsReferenceSet(manifest.getManifestsReferenceSet());
         manifestSerialized.setTruckTimeTableSet(manifest.getTruckTimeTableSet());
         manifestSerialized.setTpaSet(manifest.getTpaSet());
+
+        Supplier supplier = new Supplier();
+        supplier.setSupplierID(manifest.getSupplier().getSupplierID());
+        supplier.setName(manifest.getSupplier().getName());
+        manifestSerialized.setSupplier(supplier);
+
+        Customer customer = new Customer();
+        customer.setName(manifest.getCustomer().getName());
+        customer.setCustomerID(manifest.getCustomer().getCustomerID());
+        manifestSerialized.setCustomer(customer);
+
         jsonGenerator.writeObject(manifestSerialized);
     }
 }

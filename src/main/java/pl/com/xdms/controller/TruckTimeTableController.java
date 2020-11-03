@@ -77,12 +77,14 @@ public class TruckTimeTableController {
      * @return TruckTimeTable and status 200 if found. 404 if will not.
      */
     @GetMapping("ttt/{id:^\\d+$}")
-    public ResponseEntity<TruckTimeTable> getTruckTimeTableById(@PathVariable String urlCode, @PathVariable Long id) {
+    public ResponseEntity<TttWarehouseManifestDTO> getTruckTimeTableById(@PathVariable String urlCode, @PathVariable Long id) {
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TruckTimeTable truckTimeTable = truckService.getTttService().getTTTByWarehouseAndId(id, warehouse);
         if (truckTimeTable != null) {
             log.info("TruckTimeTable was found {}", truckTimeTable);
-            return ResponseEntity.ok(truckTimeTable);
+            List<WarehouseManifest> whM = manifestService.getListOfWarehouseManifestByWarehouseAndTtt(warehouse, truckTimeTable);
+            TttWarehouseManifestDTO result = new TttWarehouseManifestDTO(truckTimeTable, whM);
+            return ResponseEntity.ok(result);
         } else {
             log.warn("TruckTimeTable with id: {} not found, returning error", id);
             return ResponseEntity.notFound().build();

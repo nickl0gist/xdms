@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import pl.com.xdms.domain.tpa.TPA;
+import pl.com.xdms.domain.tpa.TpaDaysSetting;
 
 import java.io.IOException;
 
@@ -32,6 +33,11 @@ public class WarehouseManifestTpaSerializer extends StdSerializer<TPA> {
         tpaSerialized.setDeparturePlan(tpa.getDeparturePlan());
         tpaSerialized.setDepartureReal(tpa.getDepartureReal());
         tpaSerialized.setStatus(tpa.getStatus());
+
+        TpaDaysSetting tpaDaysSetting = new TpaDaysSetting();
+        tpaDaysSetting.setTransitTime(tpa.getTpaDaysSetting().getTransitTime());
+
+        tpaSerialized.setTpaDaysSetting(tpaDaysSetting);
 
         jsonGenerator.writeObject(tpaSerialized);
     }
