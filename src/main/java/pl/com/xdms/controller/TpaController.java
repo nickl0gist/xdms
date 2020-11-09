@@ -8,10 +8,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.domain.warehouse.WhCustomer;
 import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.WarehouseService;
@@ -35,7 +37,7 @@ import java.util.List;
 @RestController
 @RequestMapping("warehouse/{urlCode:^[a-z_]{5,8}$}")
 @PropertySource("classpath:messages.properties")
-public class  TpaController {
+public class TpaController {
 
     @Value("${error.http.message}")
     String errorMessage;
@@ -97,6 +99,24 @@ public class  TpaController {
             log.warn("TPA with id: {} was not found, in scope of Warehouse {}", id, urlCode);
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /**
+     * Endpoint dedicated to retrieve list of not CLOSED tpa for certain Customer within current Warehouse.
+     * @param customerId - customer ID
+     * @param urlCode - urlCode of Warehouse
+     * @return - Response with result and status 200 or 404 if any of the parameters specified with errors.
+     */
+    @GetMapping("tpa/customer/{customerId:^\\d+$}")
+    public ResponseEntity<List<TPA>> getNotClosedTpaForCertainCustomer(@PathVariable Long customerId, @PathVariable String urlCode) {
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
+        Customer customer = warehouseService.getCustomerById(customerId);
+        WhCustomer whCustomer = warehouseService.getWhCustomerByWarehouseAndCustomer(warehouse, customer);
+        if (whCustomer != null) {
+            List<TPA> result = truckService.getNotClosedTpaForCertainWhCustomer(whCustomer);
+            return ResponseEntity.ok(result);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     /**
@@ -277,7 +297,7 @@ public class  TpaController {
     public ResponseEntity<TPA> createTpa(@PathVariable String urlCode, @RequestBody @Valid TPA tpaToCreate, BindingResult bindingResult) {
         HttpHeaders headers = new HttpHeaders();
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
-        if(!tpaToCreate.getTpaDaysSetting().getWhCustomer().getWarehouse().equals(warehouse)){
+        if (!tpaToCreate.getTpaDaysSetting().getWhCustomer().getWarehouse().equals(warehouse)) {
             return ResponseEntity.status(404).header(errorMessage, String.format("Given TPA is could not be saved out of scope of Warehouse %s", urlCode)).body(tpaToCreate);
         }
         if (bindingResult.hasErrors()) {

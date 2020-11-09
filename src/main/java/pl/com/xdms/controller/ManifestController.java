@@ -34,6 +34,7 @@ import java.util.List;
 @RestController
 @RequestMapping("warehouse/{urlCode:^[a-z_]{5,8}$}")
 @PropertySource("classpath:messages.properties")
+@CrossOrigin
 public class ManifestController {
 
     @Value("${error.http.message}")

@@ -11,6 +11,7 @@ import pl.com.xdms.repository.TpaStatusRepository;
 import pl.com.xdms.service.WhCustomerService;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -127,6 +128,12 @@ public class TPAService {
     public List<TPA> getAllNotClosedForWarehouse(Warehouse warehouse) {
         List<WhCustomer> whCustomerList = whCustomerService.getAllWhCustomerByWarehouse(warehouse);
         List<TpaDaysSetting> tpaDaysSettingList = tpaDaysSettingsService.getAllTpaDaySettingsInWhCustomerList(whCustomerList);
+        TpaStatus tpaStatus = tpaStatusRepository.findByStatusName(TPAEnum.CLOSED).orElse(null);
+        return tpaRepository.findAllByStatusIsNotInAndTpaDaysSettingIn(tpaStatus, tpaDaysSettingList);
+    }
+
+    public List<TPA> getAllNotClosedForWhCustomer(WhCustomer whCustomer) {
+        List<TpaDaysSetting> tpaDaysSettingList = tpaDaysSettingsService.getAllTpaDaySettingsInWhCustomerList(Collections.singletonList(whCustomer));
         TpaStatus tpaStatus = tpaStatusRepository.findByStatusName(TPAEnum.CLOSED).orElse(null);
         return tpaRepository.findAllByStatusIsNotInAndTpaDaysSettingIn(tpaStatus, tpaDaysSettingList);
     }

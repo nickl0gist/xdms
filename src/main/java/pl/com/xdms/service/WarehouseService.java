@@ -174,4 +174,12 @@ public class WarehouseService {
     public WorkingDay getWorkingDayById(Long workingDayId) {
         return whCustomerService.getWorkingDyById(workingDayId);
     }
+
+    public Customer getCustomerById(Long customerId) {
+        return customerService.getCustomerById(customerId);
+    }
+
+    public WhCustomer getWhCustomerByWarehouseAndCustomer(Warehouse warehouse, Customer customer) {
+        return whCustomerService.findByWarehouseAndCustomer(warehouse, customer);
+    }
 }

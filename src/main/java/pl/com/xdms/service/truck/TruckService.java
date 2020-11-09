@@ -4,13 +4,17 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
 import pl.com.xdms.domain.tpa.TpaDaysSetting;
 import pl.com.xdms.domain.tpa.WorkingDay;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
-import pl.com.xdms.domain.warehouse.*;
+import pl.com.xdms.domain.warehouse.WHTypeEnum;
+import pl.com.xdms.domain.warehouse.Warehouse;
+import pl.com.xdms.domain.warehouse.WarehouseManifest;
+import pl.com.xdms.domain.warehouse.WhCustomer;
 import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.ManifestService;
 
@@ -458,14 +462,15 @@ public class TruckService {
     public TPA moveManifestFromCurrentTpaToAnother(Warehouse warehouse, TPA tpaFrom, TPA tpaTo, Manifest manifest) {
         WarehouseManifest warehouseManifest = manifestService.getWarehouseManifestByWarehouseAndManifest(warehouse, manifest);
         warehouseManifest.setTpa(tpaTo);
-        //tpaFrom.getManifestSet().remove(manifest);
-        //tpaTo.getManifestSet().add(manifest);
         manifest.getTpaSet().remove(tpaFrom);
         manifest.getTpaSet().add(tpaTo);
         manifestService.save(manifest);
-        //tpaService.save(tpaFrom);
         tpaFrom = tpaService.getTpaById(tpaFrom.getTpaID());
         manifestService.getWarehouseManifestService().save(warehouseManifest);
         return tpaFrom;
+    }
+
+    public List<TPA> getNotClosedTpaForCertainWhCustomer(WhCustomer whCustomer) {
+        return tpaService.getAllNotClosedForWhCustomer(whCustomer);
     }
 }
