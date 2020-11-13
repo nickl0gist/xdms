@@ -121,4 +121,8 @@ public class ManifestReferenceService {
 
         return save(manifestReferenceToSplit);
     }
+
+    public ManifestService getManifestService() {
+        return manifestService;
+    }
 }

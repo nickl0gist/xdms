@@ -16,6 +16,7 @@ import pl.com.xdms.domain.trucktimetable.TTTEnum;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.domain.warehouse.WarehouseManifest;
+import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.ManifestService;
 import pl.com.xdms.service.RequestErrorService;
 import pl.com.xdms.service.WarehouseService;
@@ -47,13 +48,15 @@ public class ManifestController {
     private final RequestErrorService requestErrorService;
     private final ManifestService manifestService;
     private final WarehouseService warehouseService;
+    private final ManifestReferenceService manifestReferenceService;
 
 
     @Autowired
-    public ManifestController(TruckService truckService, RequestErrorService requestErrorService, ManifestService manifestService, WarehouseService warehouseService) {
+    public ManifestController(TruckService truckService, RequestErrorService requestErrorService, WarehouseService warehouseService, ManifestReferenceService manifestReferenceService) {
         this.truckService = truckService;
         this.requestErrorService = requestErrorService;
-        this.manifestService = manifestService;
+        this.manifestReferenceService = manifestReferenceService;
+        this.manifestService = manifestReferenceService.getManifestService();
         this.warehouseService = warehouseService;
     }
 
@@ -80,6 +83,7 @@ public class ManifestController {
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TruckTimeTable ttt = truckService.getTttService().getTTTByWarehouseAndId(tttId, warehouse);
         Manifest manifest = manifestService.findManifestById(manifestId);
+        log.info("Manifest {}: {}", manifest.getManifestCode(), manifest.getManifestsReferenceSet());
         WarehouseManifest warehouseManifest = manifestService.getWarehouseManifestService().findByWarehouseAndManifest(warehouse, manifest);
 
         if (warehouse == null || ttt == null) {
@@ -119,7 +123,8 @@ public class ManifestController {
             HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
             return ResponseEntity.unprocessableEntity().headers(headers).body(manifest); //422
         }
-        manifest.getManifestsReferenceSet().add(manifestReference);
+
+        manifest.getManifestsReferenceSet().add(manifestReferenceService.save(manifestReference));
         manifest = manifestService.save(manifest);
         log.info("Reference {} was added to Manifest {}", manifestReference.getReference().getNumber(), manifest.getManifestCode());
         return ResponseEntity.ok().header(messageMessage, String.format("Reference %s was added to Manifest %s", manifestReference.getReference().getNumber(), manifest.getManifestCode())).body(manifest);

@@ -19,6 +19,7 @@ import java.util.List;
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
+@CrossOrigin
 @RestController
 @RequestMapping("coordinator/references")
 @Slf4j
