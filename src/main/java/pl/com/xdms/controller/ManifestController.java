@@ -113,9 +113,9 @@ public class ManifestController {
 
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TruckTimeTable ttt = truckService.getTttService().getTTTByWarehouseAndId(tttId, warehouse);
-
+        TPA tpa = truckService.getTpaService().getTpaById(manifestReference.getTpa().getTpaID());
         Manifest manifest = manifestService.findManifestById(manifestId);
-        if (ttt == null || !ttt.getManifestSet().contains(manifest)) {
+        if (tpa == null || ttt == null || !ttt.getManifestSet().contains(manifest)) {
             log.info("Manifest with id={} wasn't found", manifestId);
             return ResponseEntity.notFound().header(errorMessage, String.format("Manifest with id=%d wasn't found in TTT=%d in Warehouse %s", manifestId, tttId, urlCode)).build();
         } else if (bindingResult.hasErrors()) {
@@ -123,7 +123,7 @@ public class ManifestController {
             HttpHeaders headers = requestErrorService.getErrorHeaders(bindingResult);
             return ResponseEntity.unprocessableEntity().headers(headers).body(manifest); //422
         }
-
+        manifestReference.setTpa(tpa);
         manifest.getManifestsReferenceSet().add(manifestReferenceService.save(manifestReference));
         manifest = manifestService.save(manifest);
         log.info("Reference {} was added to Manifest {}", manifestReference.getReference().getNumber(), manifest.getManifestCode());

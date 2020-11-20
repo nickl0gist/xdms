@@ -98,7 +98,7 @@ public class ManifestService {
 
         manifest.setBoxQtyReal(warehouseManifestUpdated.getBoxQtyReal());
         manifest.setPalletQtyReal(warehouseManifestUpdated.getPalletQty());
-        //FIXME
+        //TODO
         // manifest.setTotalLdmReal(calculate LDM);
         manifest.setTotalWeightReal(warehouseManifestUpdated.getGrossWeight());
 

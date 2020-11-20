@@ -24,6 +24,7 @@ import java.util.List;
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
+@CrossOrigin
 @Validated
 @RestController
 @Slf4j

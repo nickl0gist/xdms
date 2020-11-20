@@ -1,11 +1,13 @@
 package pl.com.xdms.domain.manifest;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import pl.com.xdms.domain.reference.Reference;
 import pl.com.xdms.domain.tpa.TPA;
+import pl.com.xdms.serializers.WarehouseManifestTpaSerializer;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
@@ -95,12 +97,12 @@ public class ManifestReference {
     @NotNull
     private Reference reference;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "tpa_manifest_reference",
             joinColumns = @JoinColumn(name = "manifest_reference_id"),
             inverseJoinColumns = @JoinColumn(name = "tpaID"))
-    @JsonIgnore
+    @JsonSerialize(using = WarehouseManifestTpaSerializer.class)
     @ToString.Exclude
     private TPA tpa;
 
