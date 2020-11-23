@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pl.com.xdms.domain.customer.Customer;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
@@ -472,5 +471,15 @@ public class TruckService {
 
     public List<TPA> getNotClosedTpaForCertainWhCustomer(WhCustomer whCustomer) {
         return tpaService.getAllNotClosedForWhCustomer(whCustomer);
+    }
+
+    public List<ManifestReference> reception(List<ManifestReference> manifestReferenceList, Warehouse warehouse) {
+        manifestReferenceList.forEach( mR -> {
+                if(mR.getTpa() != null){
+                    TPA tpa = tpaService.getTpaById(mR.getTpa().getTpaID());
+                    mR.setTpa(tpa);
+                }
+        });
+        return manifestReferenceService.reception(manifestReferenceList, warehouse);
     }
 }

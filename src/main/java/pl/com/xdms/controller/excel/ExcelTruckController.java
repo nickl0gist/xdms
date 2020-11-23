@@ -31,6 +31,7 @@ import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
  * @author Mykola Horkov
  * mykola.horkov@gmail.com
  */
+@CrossOrigin
 @Slf4j
 @RestController
 @RequestMapping("warehouse/{urlCode:^[a-z_]{5,8}$}")
@@ -100,8 +101,12 @@ public class ExcelTruckController {
         Path filePath = fileStorageService.storeFile(file);
         String extension = file.getContentType();
         log.info("extension {}", extension);
-        excelManifestReferenceService.saveReceptions(filePath.toFile(), warehouse);
-        return ResponseEntity.ok().build();
+        try{
+            excelManifestReferenceService.saveReceptions(filePath.toFile(), warehouse);
+            return ResponseEntity.ok().build();
+        } catch (Exception e){
+            return ResponseEntity.unprocessableEntity().header(errorMessage, e.toString()).build();
+        }
     }
 
     @GetMapping("tpa/{id:^\\d+$}/tpaPackingList.xlsx")

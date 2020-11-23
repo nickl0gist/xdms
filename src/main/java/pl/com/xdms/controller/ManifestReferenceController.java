@@ -107,7 +107,7 @@ public class ManifestReferenceController {
     @PutMapping("/reception")
     public ResponseEntity<List<ManifestReference>> reception(@PathVariable String urlCode, @RequestBody List<@Valid  ManifestReference> manifestReferenceList) {
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
-        List <ManifestReference> responseList = manifestReferenceService.reception(manifestReferenceList, warehouse);
+        List <ManifestReference> responseList = truckService.reception(manifestReferenceList, warehouse);
         return ResponseEntity.ok().header(messageMessage,"The given list of ManifestReferences was successfully updated").body(responseList);
     }
 }

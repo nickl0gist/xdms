@@ -75,6 +75,7 @@ public class ManifestReferenceService {
         manifestReference.setPalletQtyReal(mr.getPalletQtyReal());
         manifestReference.setPalletId(mr.getPalletId());
         manifestReference.setStackability(mr.getStackability());
+        manifestReference.setTpa(mr.getTpa());
         log.info("ManifestReference id={} is being Receipted", manifestReference.getManifestReferenceId());
         return save(manifestReference);
     }

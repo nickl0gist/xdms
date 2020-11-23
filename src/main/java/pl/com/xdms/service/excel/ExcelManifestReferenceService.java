@@ -15,6 +15,7 @@ import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
 import pl.com.xdms.domain.warehouse.WHTypeEnum;
 import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.service.ManifestReferenceService;
+import sun.plugin.dom.exception.WrongDocumentException;
 
 import java.io.*;
 import java.util.*;
@@ -108,14 +109,14 @@ public class ExcelManifestReferenceService implements ExcelService<ManifestRefer
                 .getWarehouse().getWarehouseID());
     }
 
-    public void saveReceptions(File receptionFile, Warehouse warehouse) {
+    public void saveReceptions(File receptionFile, Warehouse warehouse) throws Exception{
         Map<Long, String> parsedValues = readReceptionExcel(receptionFile, warehouse);
         List<ManifestReference> manifestReferenceList = manifestReferenceService.getManRefListWithinIdSet(parsedValues.keySet());
         manifestReferenceList.iterator().forEachRemaining(m -> m.setReceptionNumber(parsedValues.get(m.getManifestReferenceId())));
         manifestReferenceService.saveAll(manifestReferenceList);
     }
 
-    private Map<Long, String> readReceptionExcel(File file, Warehouse warehouse) {
+    private Map<Long, String> readReceptionExcel(File file, Warehouse warehouse) throws Exception{
         log.info("File with Receptions received {}", file.getPath());
         Map<Long, String> map = readReceptionFile(file, excelProperties.getTttTruckSheetName(), warehouse);
         if (map.isEmpty()) {
@@ -124,7 +125,7 @@ public class ExcelManifestReferenceService implements ExcelService<ManifestRefer
         return map;
     }
 
-    private Map<Long, String> readReceptionFile(File file, String sheetName, Warehouse warehouse){
+    private Map<Long, String> readReceptionFile(File file, String sheetName, Warehouse warehouse) throws Exception{
         try(Workbook workbook = WorkbookFactory.create(file)) {
             Sheet sheet = workbook.getSheet(sheetName);
             return readReceptionSheet(sheet, warehouse);
@@ -139,25 +140,37 @@ public class ExcelManifestReferenceService implements ExcelService<ManifestRefer
      * @param warehouse- Warehouse entity where the reception was done.
      * @return Map<Long, String> - Long - id of the ManifestReference, String - SAP number
      */
-    private Map<Long, String> readReceptionSheet(Sheet sheet, Warehouse warehouse) {
-        Iterator<Row> rowIterator = sheet.rowIterator();
-        Map<Long, String> longManifestReferenceHashMap = new HashMap<>();
-        while (rowIterator.hasNext()) {
-            Row row = rowIterator.next();
+    private Map<Long, String> readReceptionSheet(Sheet sheet, Warehouse warehouse) throws Exception {
+        try{
+            Iterator<Row> rowIterator = sheet.rowIterator();
+            Map<Long, String> longManifestReferenceHashMap = new HashMap<>();
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
 
-            if (row.getRowNum() == 0 || row.getRowNum() == 1) continue;
+                if (row.getRowNum() == 0 || row.getRowNum() == 1) continue;
 
-            if (row.getCell(4) != null){
-                String manRefIdAndWhId = getStringFromCell(row.getCell(13));
-                String manRefId = manRefIdAndWhId.substring(0, manRefIdAndWhId.indexOf(tttWarehouseDivider));
-                String whId = manRefIdAndWhId.substring(manRefIdAndWhId.indexOf(tttWarehouseDivider)+1);
+                if (row.getCell(4) != null){
+                    try {
+                        String manRefIdAndWhId = getStringFromCell(row.getCell(13));
+                        String manRefId = manRefIdAndWhId.substring(0, manRefIdAndWhId.indexOf(tttWarehouseDivider));
+                        String whId = manRefIdAndWhId.substring(manRefIdAndWhId.indexOf(tttWarehouseDivider)+1);
 
-                if (!warehouse.getWarehouseID().equals(Long.parseLong(whId))) continue;
+                        if (!warehouse.getWarehouseID().equals(Long.parseLong(whId))) continue;
+                        String reception = getStringFromNumericCell(row.getCell(4));
+                        reception = reception.length() == 0 ? null : reception;
+                        longManifestReferenceHashMap.put(Long.parseLong(manRefId), reception);
 
-                longManifestReferenceHashMap.put(Long.parseLong(manRefId), getStringFromNumericCell(row.getCell(4)));
+                    }catch (StringIndexOutOfBoundsException siobe){
+                        log.info(String.format("Error occurred on row %d", row.getRowNum()));
+                        throw new WrongDocumentException(String.format("Error occurred on row %d", row.getRowNum()));
+                    }
+                }
             }
+            return longManifestReferenceHashMap;
+        }catch (NullPointerException npe){
+            log.info(String.format("No sheet with name %s", excelProperties.getTttTruckSheetName()));
+            throw new WrongDocumentException(String.format("No sheet with name %s", excelProperties.getTttTruckSheetName()));
         }
-        return longManifestReferenceHashMap;
     }
 
 
