@@ -78,7 +78,7 @@ public class TTTService {
 
     public void setArrive(TruckTimeTable ttt) {
         String time = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).toString();
-        ttt.getTttStatus().setTttStatusName(TTTEnum.ARRIVED);
+        ttt.setTttStatus(getTttStatusByEnum(TTTEnum.ARRIVED));
         ttt.setTttArrivalDateReal(time);
         save(ttt);
     }
