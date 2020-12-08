@@ -19,6 +19,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("coordinator/customers")
+@CrossOrigin
 public class CustomerController {
 
     private final CustomerService customerService;
