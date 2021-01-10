@@ -208,7 +208,7 @@ public class ManifestController {
     }
 
     /**
-     * Endpoint dedicated to manual creation f Manifest in chosen TTT.
+     * Endpoint dedicated to manual creation of Manifest in chosen TTT.
      * The given manifest should correspond to all Annotation conditions declared in Manifest.class.
      *
      * @param tttId         - Long Id of the TTT where tha manifest should be added.
@@ -243,7 +243,7 @@ public class ManifestController {
             headers.add(errorMessage, String.format("Manifest with code=%s has Given Supplier isActive = %b, Customer isActive = %b", manifest.getManifestCode(), manifest.getSupplier().getIsActive(), manifest.getCustomer().getIsActive()));
             return ResponseEntity.status(409).headers(headers).body(manifest);
         } else {
-            Manifest manifestToSave = manifestService.addManifestToTruckTimeTableWithinWarehouse(warehouse, ttt, manifest);
+            Manifest manifestToSave = this.truckService.addManifestToTruckTimeTableWithinWarehouse(warehouse, ttt, manifest);
             log.info("The manifest {} was successfully saved with id={}", manifestToSave.getManifestCode(), manifestToSave.getManifestID());
             headers.add(messageMessage, String.format("The manifest %s was successfully saved with id=%d", manifestToSave.getManifestCode(), manifestToSave.getManifestID()));
             return ResponseEntity.ok().headers(headers).body(manifestToSave);

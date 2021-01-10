@@ -60,6 +60,27 @@ public class TruckService {
     }
 
     /**
+     * Method used to create new manifest in Database. The manifest provided by manual creation initiated by user.
+     * The manifest should have one TPA in tpa set to connect it with manifest in DB,
+     * @param warehouse - warehouse where the manifest was created
+     * @param ttt - TTT where manifest was created
+     * @param manifest - the manifest provided by user
+     * @return - saved manifest.
+     */
+    public Manifest addManifestToTruckTimeTableWithinWarehouse(Warehouse warehouse, TruckTimeTable ttt, Manifest manifest) {
+        Manifest manifestSaved =  manifestService.addManifestToTruckTimeTableWithinWarehouse(warehouse, ttt, manifest);
+        if (!manifest.getTpaSet().isEmpty()){
+            TPA tpa = tpaService.getTpaById(manifest.getTpaSet().iterator().next().getTpaID());
+            manifestSaved.getTpaSet().add(tpa);
+            manifestSaved = manifestService.save(manifestSaved);
+            WarehouseManifest warehouseManifest = manifestService.getWarehouseManifestByWarehouseAndManifest(warehouse, manifestSaved);
+            warehouseManifest.setTpa(tpa);
+            manifestService.saveWarehouseManifest(warehouseManifest);
+        }
+        return manifestSaved;
+    }
+
+    /**
      * Calculates ZonedDateTime of ETD manifest from Warehouse according to existing TPA days settings for
      * current Warehouse and Customer.
      *
