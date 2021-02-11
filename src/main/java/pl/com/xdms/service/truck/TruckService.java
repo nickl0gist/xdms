@@ -62,14 +62,15 @@ public class TruckService {
     /**
      * Method used to create new manifest in Database. The manifest provided by manual creation initiated by user.
      * The manifest should have one TPA in tpa set to connect it with manifest in DB,
+     *
      * @param warehouse - warehouse where the manifest was created
-     * @param ttt - TTT where manifest was created
-     * @param manifest - the manifest provided by user
+     * @param ttt       - TTT where manifest was created
+     * @param manifest  - the manifest provided by user
      * @return - saved manifest.
      */
     public Manifest addManifestToTruckTimeTableWithinWarehouse(Warehouse warehouse, TruckTimeTable ttt, Manifest manifest) {
-        Manifest manifestSaved =  manifestService.addManifestToTruckTimeTableWithinWarehouse(warehouse, ttt, manifest);
-        if (!manifest.getTpaSet().isEmpty()){
+        Manifest manifestSaved = manifestService.addManifestToTruckTimeTableWithinWarehouse(warehouse, ttt, manifest);
+        if (!manifest.getTpaSet().isEmpty()) {
             TPA tpa = tpaService.getTpaById(manifest.getTpaSet().iterator().next().getTpaID());
             manifestSaved.getTpaSet().add(tpa);
             manifestSaved = manifestService.save(manifestSaved);
@@ -290,10 +291,11 @@ public class TruckService {
      * Performs deletion of the TTT in TXD.
      * Only If each Manifest in Manifest Set of given TTT doesn't have any TPA or the Manifest Set is Empty at all. The TTT
      * will be removed. And all ManifestReferences in each Set of Manifests will be removed from TPA from TXD.
+     *
      * @param truckTimeTable - to be deleted.
      * @return boolean.
-     *      True - if removing was successful;
-     *      False - if wasn't;
+     * True - if removing was successful;
+     * False - if wasn't;
      */
     private boolean deleteTttFromTxd(TruckTimeTable truckTimeTable) {
         //Get all Manifests from TTT
@@ -303,7 +305,7 @@ public class TruckService {
                 .filter(manifest -> !manifest.getTpaSet().isEmpty())
                 .collect(Collectors.toSet());
         //If there are no any XD, CC TPA in any Manifest
-        if(manifestsWithTpa.isEmpty()){
+        if (manifestsWithTpa.isEmpty()) {
             // Delete connection of All ManifestReference entities with their TPA and save them to DB
             manifestSet.stream()
                     .flatMap(manifest -> manifest.getManifestsReferenceSet().stream())
@@ -321,6 +323,7 @@ public class TruckService {
     /**
      * Deletes the TTT if it is for Warehouse which has type XD. Also deletes all manifests in TPA this manifests belongs to.
      * If Manifests should go through TXD, method will create new TTT in TXD from CC or Direct connection
+     *
      * @param truckTimeTable - TruckTimeTable to delete.
      * @param warehouse      - Warehouse which has this TTT.
      * @return boolean. True - if TTT was deleted, False - wasn't.
@@ -386,6 +389,7 @@ public class TruckService {
 
     /**
      * Deletes the TTT if it is for Warehouse which has type CC. Also deletes all manifests in TPA this manifests belongs to.
+     *
      * @param truckTimeTable - TruckTimeTable to delete.
      * @param warehouse      - Warehouse which has this TTT.
      * @return boolean. True - if TTT was deleted. Never returns False.
@@ -437,6 +441,7 @@ public class TruckService {
 
     /**
      * Filling info in new TTT
+     *
      * @param tttName - Name of the New TTT
      * @param oldTtt  - TTT donor of the info
      * @return - New TTT with filled info.
@@ -459,11 +464,11 @@ public class TruckService {
     }
 
     public void removeManifestFromWarehouse(Manifest manifest, TruckTimeTable ttt) {
-        if(ttt.getManifestSet().contains(manifest)){
+        if (ttt.getManifestSet().contains(manifest)) {
             ttt.getManifestSet().remove(manifest);
             WarehouseManifest warehouseManifest = manifestService.getWarehouseManifestService().findByTttAndManifest(ttt, manifest);
             TPA tpa = warehouseManifest.getTpa();
-            if(tpa != null){
+            if (tpa != null) {
                 tpa.getManifestSet().remove(manifest);
                 tpaService.save(tpa);
             }
@@ -495,11 +500,11 @@ public class TruckService {
     }
 
     public List<ManifestReference> reception(List<ManifestReference> manifestReferenceList, Warehouse warehouse) {
-        manifestReferenceList.forEach( mR -> {
-                if(mR.getTpa() != null){
-                    TPA tpa = tpaService.getTpaById(mR.getTpa().getTpaID());
-                    mR.setTpa(tpa);
-                }
+        manifestReferenceList.forEach(mR -> {
+            if (mR.getTpa() != null) {
+                TPA tpa = tpaService.getTpaById(mR.getTpa().getTpaID());
+                mR.setTpa(tpa);
+            }
         });
         return manifestReferenceService.reception(manifestReferenceList, warehouse);
     }

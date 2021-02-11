@@ -1,7 +1,6 @@
 package pl.com.xdms.domain.manifest;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
 import lombok.Setter;
@@ -81,7 +80,7 @@ public class Manifest {
     private Supplier supplier;
 
     @OneToMany(mappedBy = "manifest", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
-    @JsonManagedReference
+    //@JsonManagedReference
     @ToString.Exclude
     private Set<ManifestReference> manifestsReferenceSet;
 

@@ -26,4 +26,6 @@ public interface TPARepository extends JpaRepository<TPA, Long> {
 
     List<TPA> findAllByStatusIsNotInAndTpaDaysSettingIn(TpaStatus status, List<TpaDaysSetting> tpaDaysSettingList);
 
+    List<TPA> findAllByDeparturePlanStartingWith(String tpaDepartureDatePlan);
+
 }

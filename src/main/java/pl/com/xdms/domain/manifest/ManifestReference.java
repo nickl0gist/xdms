@@ -7,6 +7,7 @@ import lombok.Setter;
 import lombok.ToString;
 import pl.com.xdms.domain.reference.Reference;
 import pl.com.xdms.domain.tpa.TPA;
+import pl.com.xdms.serializers.TpaManifestReferenceSerializer;
 import pl.com.xdms.serializers.WarehouseManifestTpaSerializer;
 
 import javax.persistence.*;
@@ -85,7 +86,7 @@ public class ManifestReference {
 
     @ManyToOne
     @JoinColumn(name = "manifestID", nullable = false)
-    @JsonBackReference
+    @JsonSerialize(using = TpaManifestReferenceSerializer.class)
     @ToString.Exclude
     private Manifest manifest;
 

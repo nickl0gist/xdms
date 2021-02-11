@@ -9,8 +9,7 @@ import pl.com.xdms.domain.warehouse.Warehouse;
 import pl.com.xdms.domain.warehouse.WarehouseManifest;
 import pl.com.xdms.repository.ManifestReferenceRepository;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -52,7 +51,8 @@ public class ManifestReferenceService {
     }
 
     public List<ManifestReference> reception(List<ManifestReference> manifestReferenceList, Warehouse warehouse) {
-        return manifestReferenceList.stream().map(mr -> receipt(mr, warehouse)).collect(Collectors.toList());
+        Set<ManifestReference> mRset = sortManifestReference(manifestReferenceList.stream().map(mr -> receipt(mr, warehouse)).collect(Collectors.toSet()));
+        return new ArrayList<>(mRset);
     }
 
     public List<ManifestReference> getManRefListWithinIdSet(Set<Long> ids){
@@ -125,5 +125,19 @@ public class ManifestReferenceService {
 
     public ManifestService getManifestService() {
         return manifestService;
+    }
+
+
+    public Set<ManifestReference> sortManifestReference(Set<ManifestReference> manifestReferenceSet) {
+        LinkedHashSet<ManifestReference> nullPalletId = manifestReferenceSet.stream()
+                .filter(mR -> mR.getPalletId() == null)
+                .sorted(Comparator.comparingLong(ManifestReference::getManifestReferenceId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        LinkedHashSet<ManifestReference> withPalletId = manifestReferenceSet.stream()
+                .filter(mR -> mR.getPalletId() != null)
+                .sorted(Comparator.comparing(ManifestReference::getPalletId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        nullPalletId.addAll(withPalletId);
+        return nullPalletId;
     }
 }

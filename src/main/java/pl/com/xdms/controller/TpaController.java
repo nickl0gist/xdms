@@ -79,7 +79,7 @@ public class TpaController {
         } catch (ParseException pe) {
             return ResponseEntity.badRequest().header(errorMessage, String.format("Given Date is not correct %s", tpaDepartureDatePlan)).build();
         }
-        return ResponseEntity.ok(truckService.getTpaService().getTpaByWarehouseAndDay(warehouse, tpaDepartureDatePlan));
+        return ResponseEntity.ok(truckService.getTpaService().getTpaByWarehouseAndDayLike(warehouse, tpaDepartureDatePlan));
     }
 
     /**
@@ -93,6 +93,7 @@ public class TpaController {
         Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
         TPA tpa = truckService.getTpaService().getTpaByWarehouseAndId(id, warehouse);
         if (tpa != null) {
+            tpa.setManifestReferenceSet(truckService.getManifestReferenceService().sortManifestReference(tpa.getManifestReferenceSet()));
             log.info("TPA was found {}", tpa);
             return ResponseEntity.ok(tpa);
         } else {

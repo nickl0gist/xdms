@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created on 08.12.2019
@@ -87,6 +88,13 @@ public class TPAService {
             return null;
         }
         return tpa;
+    }
+
+    public List<TPA> getTpaByWarehouseAndDayLike(Warehouse warehouse, String tpaDepartureDatePlan){
+        List<TPA> tpaList = tpaRepository.findAllByDeparturePlanStartingWith(tpaDepartureDatePlan);
+        return tpaList.stream()
+                .filter(tpa -> tpa.getTpaDaysSetting().getWhCustomer().getWarehouse().equals(warehouse))
+                .collect(Collectors.toList());
     }
 
     public TPA getTpaById(Long id) {
