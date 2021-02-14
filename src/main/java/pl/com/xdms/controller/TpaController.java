@@ -79,7 +79,7 @@ public class TpaController {
         } catch (ParseException pe) {
             return ResponseEntity.badRequest().header(errorMessage, String.format("Given Date is not correct %s", tpaDepartureDatePlan)).build();
         }
-        return ResponseEntity.ok(truckService.getTpaService().getTpaByWarehouseAndDayLike(warehouse, tpaDepartureDatePlan));
+        return ResponseEntity.ok(truckService.getTpaService().getTpaByWarehouseAndDayLikeAndDelayed(warehouse, tpaDepartureDatePlan));
     }
 
     /**
@@ -104,8 +104,9 @@ public class TpaController {
 
     /**
      * Endpoint dedicated to retrieve list of not CLOSED tpa for certain Customer within current Warehouse.
+     *
      * @param customerId - customer ID
-     * @param urlCode - urlCode of Warehouse
+     * @param urlCode    - urlCode of Warehouse
      * @return - Response with result and status 200 or 404 if any of the parameters specified with errors.
      */
     @GetMapping("tpa/customer/{customerId:^\\d+$}")
@@ -222,6 +223,26 @@ public class TpaController {
             return ResponseEntity.ok().header(messageMessage, String.format("TPA with ID=%d was successfully updated", id)).body(truckService.getTpaService().save(tpaToUpdate));
         }
         return ResponseEntity.notFound().header("ERROR", "Not Existing").build();
+    }
+
+    /**
+     * Endpoint used when TPA has to be closed.
+     * @param urlCode - Warehouse Irl Code;
+     * @param tpaId - ID of the TPA.
+     * @return 200 and closed TPA if TPA does exist in DB,
+     * 404 - if warehouse or TPA does not exist in DB.
+     */
+    @PutMapping("tpa/{tpaId:^\\d+$}/close")
+    public ResponseEntity<TPA> closeTpa(@PathVariable String urlCode, @PathVariable Long tpaId) {
+        HttpHeaders headers = new HttpHeaders();
+        Warehouse warehouse = warehouseService.getWarehouseByUrl(urlCode);
+        TPA tpa = truckService.getTpaService().getTpaByWarehouseAndId(tpaId, warehouse);
+        if (tpa == null) {
+            log.info("Given TPA does not exist in DB");
+            headers.set(messageMessage, "Given TPA does not exist in DB");
+            return ResponseEntity.notFound().headers(headers).build();
+        }
+        return ResponseEntity.ok().header(messageMessage, String.format("TPA with ID=%d was successfully closed", tpaId)).body(truckService.closeTpa(tpa));
     }
 
     /**

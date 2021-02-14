@@ -145,4 +145,12 @@ public class TPAService {
         TpaStatus tpaStatus = tpaStatusRepository.findByStatusName(TPAEnum.CLOSED).orElse(null);
         return tpaRepository.findAllByStatusIsNotInAndTpaDaysSettingIn(tpaStatus, tpaDaysSettingList);
     }
+
+    public List<TPA> getTpaByWarehouseAndDayLikeAndDelayed(Warehouse warehouse, String tpaDepartureDatePlan) {
+        List<TPA> delayed = getAllDelayedForWarehouse(warehouse);
+        List<TPA> listForToday = getTpaByWarehouseAndDayLike(warehouse, tpaDepartureDatePlan);
+        listForToday.removeAll(delayed);
+        delayed.addAll(listForToday);
+        return delayed;
+    }
 }

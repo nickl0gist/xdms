@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import pl.com.xdms.domain.manifest.Manifest;
 import pl.com.xdms.domain.manifest.ManifestReference;
 import pl.com.xdms.domain.tpa.TPA;
+import pl.com.xdms.domain.tpa.TPAEnum;
 import pl.com.xdms.domain.tpa.TpaDaysSetting;
 import pl.com.xdms.domain.tpa.WorkingDay;
 import pl.com.xdms.domain.trucktimetable.TruckTimeTable;
@@ -18,10 +19,8 @@ import pl.com.xdms.service.ManifestReferenceService;
 import pl.com.xdms.service.ManifestService;
 
 import javax.transaction.Transactional;
-import java.time.DayOfWeek;
-import java.time.Duration;
-import java.time.LocalTime;
-import java.time.ZonedDateTime;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -507,5 +506,12 @@ public class TruckService {
             }
         });
         return manifestReferenceService.reception(manifestReferenceList, warehouse);
+    }
+
+    public TPA closeTpa(TPA tpa) {
+        String time = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).toString();
+        tpa.setDepartureReal(time);
+        tpa.setStatus(tpaService.getTpaStatusByEnum(TPAEnum.CLOSED));
+        return tpaService.save(tpa);
     }
 }
