@@ -103,8 +103,9 @@ public class ManifestReferenceService {
         result.setPalletQtyReal(manifestReference.getPalletQtyReal());
         result.setQtyReal(manifestReference.getQtyReal());
         result.setBoxQtyReal(manifestReference.getBoxQtyReal());
-        result.setGrossWeightReal(manifestReferenceToSplit.getGrossWeightReal() * result.getQtyReal() / manifestReferenceToSplit.getQtyReal());
-        result.setNetWeight(manifestReferenceToSplit.getNetWeight() * result.getQtyReal() / manifestReferenceToSplit.getQtyReal());
+        result.setGrossWeightReal(manifestReferenceToSplit.getGrossWeightReal());
+        double newNetWeight = Math.round((manifestReferenceToSplit.getNetWeight() * result.getQtyReal() / manifestReferenceToSplit.getQtyReal()) * 1000.0) / 1000.0;
+        result.setNetWeight(newNetWeight);
 
         return save(result);
     }
